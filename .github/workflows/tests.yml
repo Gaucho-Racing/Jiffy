@@ -6,7 +6,7 @@ on: [push]
 jobs:
     go_unit_test:
         runs-on: ubuntu-latest
-        name: unit
+        name: jiffy
         defaults:
             run:
                 shell: bash
@@ -35,7 +35,7 @@ jobs:
 
     web_lint_check:
         runs-on: ubuntu-latest
-        name: web lint
+        name: web
         defaults:
             run:
                 shell: bash
