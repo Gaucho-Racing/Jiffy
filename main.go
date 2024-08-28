@@ -1,9 +1,26 @@
 package main
 
 import (
-	"fmt"
+	"jiffy/api"
+	"jiffy/config"
+	"jiffy/database"
+	"jiffy/service"
+	"jiffy/utils"
 )
 
 func main() {
-	fmt.Println("Hello, World!")
+	config.PrintStartupBanner()
+	utils.InitializeLogger()
+	utils.VerifyConfig()
+	defer utils.Logger.Sync()
+
+	database.InitializeDB()
+	service.ConnectDiscord()
+
+	router := api.SetupRouter()
+	api.InitializeRoutes(router)
+	err := router.Run(":" + config.Port)
+	if err != nil {
+		utils.SugarLogger.Fatalln(err)
+	}
 }
