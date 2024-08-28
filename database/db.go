@@ -18,7 +18,7 @@ func InitializeDB() {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=UTC", config.DatabaseUser, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseName)
 	db, err := gorm.Open(singlestore.Open(dsn), &gorm.Config{})
 	if err != nil {
-		if dbRetries < 15 {
+		if dbRetries < 5 {
 			dbRetries++
 			utils.SugarLogger.Errorln("failed to connect database, retrying in 5s... ")
 			time.Sleep(time.Second * 5)
