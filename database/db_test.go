@@ -62,9 +62,14 @@ func TestInitializeDB(t *testing.T) {
 	t.Run("Retry Mechanism", func(t *testing.T) {
 		config.DatabaseHost = "non-existent-host"
 
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("The code did not panic as expected")
+			}
+		}()
+
 		InitializeDB()
-		assert.NotNil(t, DB, "DB should not be nil after successful retry")
-		assert.IsType(t, &gorm.DB{}, DB, "DB should be of type *gorm.DB")
+		t.Errorf("InitializeDB() did not panic as expected")
 	})
 
 	// // Test max retries

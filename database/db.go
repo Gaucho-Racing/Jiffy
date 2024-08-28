@@ -24,7 +24,7 @@ func InitializeDB() {
 			time.Sleep(time.Second * 5)
 			InitializeDB()
 		} else {
-			utils.SugarLogger.Fatalln("failed to connect database after 15 attempts, terminating program...")
+			utils.SugarLogger.Fatalln("failed to connect database after 5 attempts, terminating program...")
 		}
 	} else {
 		utils.SugarLogger.Infoln("Connected to database")
