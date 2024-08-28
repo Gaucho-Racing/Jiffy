@@ -1,0 +1,18 @@
+services:
+  db:
+    container_name: db
+    image: ghcr.io/singlestore-labs/singlestoredb-dev:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    volumes:
+      - s2data:/data
+      - ./singlestore/init.sql:/init.sql
+    ports:
+      - "3306:3306"
+      - "8080:8080"
+      - "9000:9000"
+    environment:
+      ROOT_PASSWORD: "password"
+
+volumes:
+  s2data:
