@@ -14,12 +14,15 @@ func main() {
 	utils.VerifyConfig()
 	defer utils.Logger.Sync()
 
-	database.InitializeDB()
+	err := database.InitializeDB()
+	if err != nil {
+		utils.SugarLogger.Fatalln(err)
+	}
 	service.ConnectDiscord()
 
 	router := api.SetupRouter()
 	api.InitializeRoutes(router)
-	err := router.Run(":" + config.Port)
+	err = router.Run(":" + config.Port)
 	if err != nil {
 		utils.SugarLogger.Fatalln(err)
 	}

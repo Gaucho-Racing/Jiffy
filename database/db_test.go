@@ -61,29 +61,7 @@ func TestInitializeDB(t *testing.T) {
 	// Test retry mechanism
 	t.Run("Retry Mechanism", func(t *testing.T) {
 		config.DatabaseHost = "non-existent-host"
-
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic as expected")
-			}
-		}()
-
-		InitializeDB()
-		t.Errorf("InitializeDB() did not panic as expected")
+		err := InitializeDB()
+		assert.Error(t, err, "InitializeDB() should return an error")
 	})
-
-	// // Test max retries
-	// t.Run("Max Retries", func(t *testing.T) {
-	// 	originalHost := config.DatabaseHost
-	// 	config.DatabaseHost = "non-existent-host"
-
-	// 	defer func() {
-	// 		if r := recover(); r == nil {
-	// 			t.Errorf("The code did not panic")
-	// 		}
-	// 		config.DatabaseHost = originalHost
-	// 	}()
-
-	// 	InitializeDB()
-	// })
 }
