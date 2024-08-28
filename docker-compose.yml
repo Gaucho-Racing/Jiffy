@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     volumes:
       - s2data:/data
-      - ./singlestore/init.sql:/init.sql
+      - ./init.sql:/init.sql
     ports:
       - "3306:3306"
       - "8080:8080"
