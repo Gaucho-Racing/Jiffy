@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"sentinel/config"
+	"jiffy/config"
 	"testing"
 )
 
 func TestInitializeLogger(t *testing.T) {
-	t.Run("Logger Test 1", func(t *testing.T) {
+	t.Run("Logger Test Env DEV", func(t *testing.T) {
 		config.Env = "DEV"
 		InitializeLogger()
 		if Logger == nil {
@@ -16,7 +16,7 @@ func TestInitializeLogger(t *testing.T) {
 			t.Error("Expected SugarLogger to not be nil")
 		}
 	})
-	t.Run("Logger Test 2", func(t *testing.T) {
+	t.Run("Logger Test Env PROD", func(t *testing.T) {
 		config.Env = "PROD"
 		InitializeLogger()
 		if Logger == nil {
