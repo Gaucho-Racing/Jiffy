@@ -41,7 +41,7 @@ func PingSentinel() bool {
 }
 
 func ExchangeCodeForToken(code string) (SentinelTokenResponse, error) {
-	resp, err := http.PostForm(SentinelURL+"/oauth2/token", url.Values{
+	resp, err := http.PostForm(SentinelURL+"/oauth/token", url.Values{
 		"grant_type":    {"authorization_code"},
 		"client_id":     {SentinelClientID},
 		"client_secret": {SentinelClientSecret},
