@@ -4,17 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"jiffy/config"
 	"jiffy/model"
 	"jiffy/utils"
 	"net/http"
 	"net/url"
-	"os"
 )
-
-var SentinelURL = "https://sentinel-api.gauchoracing.com"
-var SentinelClientID = os.Getenv("SENTINEL_CLIENT_ID")
-var SentinelClientSecret = os.Getenv("SENTINEL_CLIENT_SECRET")
-var SentinelRedirectURI = os.Getenv("SENTINEL_REDIRECT_URI")
 
 type SentinelError struct {
 	Code    int
@@ -30,7 +25,7 @@ type SentinelTokenResponse struct {
 }
 
 func PingSentinel() bool {
-	resp, err := http.Get(SentinelURL + "/ping")
+	resp, err := http.Get(config.Sentinel.Url + "/ping")
 	if err != nil {
 		utils.SugarLogger.Errorln("Failed to ping sentinel:", err)
 		return false
@@ -41,12 +36,12 @@ func PingSentinel() bool {
 }
 
 func ExchangeCodeForToken(code string) (SentinelTokenResponse, error) {
-	resp, err := http.PostForm(SentinelURL+"/oauth/token", url.Values{
+	resp, err := http.PostForm(config.Sentinel.Url+"/oauth/token", url.Values{
 		"grant_type":    {"authorization_code"},
-		"client_id":     {SentinelClientID},
-		"client_secret": {SentinelClientSecret},
+		"client_id":     {config.Sentinel.ClientID},
+		"client_secret": {config.Sentinel.ClientSecret},
 		"code":          {code},
-		"redirect_uri":  {SentinelRedirectURI},
+		"redirect_uri":  {config.Sentinel.RedirectURI},
 	})
 	if err != nil {
 		utils.SugarLogger.Errorln("Failed to exchange code for token:", err)
@@ -79,8 +74,16 @@ func ExchangeCodeForToken(code string) (SentinelTokenResponse, error) {
 	return tokenResponse, nil
 }
 
-func GetAllUsers() ([]model.User, error) {
-	resp, err := http.Get(SentinelURL + "/users")
+func GetAllUsers(accessToken string) ([]model.User, error) {
+	req, err := http.NewRequest("GET", config.Sentinel.Url+"/users", nil)
+	if err != nil {
+		utils.SugarLogger.Errorln("Failed to create request for users:", err)
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		utils.SugarLogger.Errorln("Failed to get users from sentinel:", err)
 		return nil, err
@@ -113,8 +116,16 @@ func GetAllUsers() ([]model.User, error) {
 	return users, nil
 }
 
-func GetUser(id string) (model.User, error) {
-	resp, err := http.Get(SentinelURL + "/users/" + id)
+func GetUser(id string, accessToken string) (model.User, error) {
+	req, err := http.NewRequest("GET", config.Sentinel.Url+"/users/"+id, nil)
+	if err != nil {
+		utils.SugarLogger.Errorln("Failed to create request for user:", err)
+		return model.User{}, err
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		utils.SugarLogger.Errorln("Failed to get user from sentinel:", err)
 		return model.User{}, err

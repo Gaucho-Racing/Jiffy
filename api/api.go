@@ -2,6 +2,7 @@ package api
 
 import (
 	"jiffy/config"
+	"jiffy/service"
 	"jiffy/utils"
 	"net/http"
 	"strings"
@@ -40,21 +41,22 @@ func AuthChecker() gin.HandlerFunc {
 		if c.GetHeader("Authorization") != "" {
 			authHeader := c.GetHeader("Authorization")
 			if strings.HasPrefix(authHeader, "Bearer ") {
-				// claims, err := service.ValidateJWT(strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
-				// if err != nil {
-				// 	utils.SugarLogger.Errorln("Failed to validate token: " + err.Error())
-				// 	c.AbortWithStatusJSON(401, gin.H{"message": err.Error()})
-				// } else {
-				// 	utils.SugarLogger.Infof("Decoded token: %s (%s)", claims.ID, claims.Email)
-				// 	utils.SugarLogger.Infof("↳ Client ID: %s", claims.Audience[0])
-				// 	utils.SugarLogger.Infof("↳ Scope: %s", claims.Scope)
-				// 	utils.SugarLogger.Infof("↳ Issued at: %s", claims.IssuedAt.String())
-				// 	utils.SugarLogger.Infof("↳ Expires at: %s", claims.ExpiresAt.String())
-				// 	c.Set("Auth-UserID", claims.ID)
-				// 	c.Set("Auth-Email", claims.Email)
-				// 	c.Set("Auth-Audience", claims.Audience[0])
-				// 	c.Set("Auth-Scope", claims.Scope)
-				// }
+				claims, err := service.ValidateJWT(strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
+				if err != nil {
+					utils.SugarLogger.Errorln("Failed to validate token: " + err.Error())
+					c.AbortWithStatusJSON(401, gin.H{"message": err.Error()})
+				} else {
+					utils.SugarLogger.Infof("Decoded token: %s (%s)", claims.ID, claims.Email)
+					utils.SugarLogger.Infof("↳ Client ID: %s", claims.Audience[0])
+					utils.SugarLogger.Infof("↳ Scope: %s", claims.Scope)
+					utils.SugarLogger.Infof("↳ Issued at: %s", claims.IssuedAt.String())
+					utils.SugarLogger.Infof("↳ Expires at: %s", claims.ExpiresAt.String())
+					c.Set("Auth-Token", strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
+					c.Set("Auth-UserID", claims.ID)
+					c.Set("Auth-Email", claims.Email)
+					c.Set("Auth-Audience", claims.Audience[0])
+					c.Set("Auth-Scope", claims.Scope)
+				}
 			}
 		}
 		c.Next()

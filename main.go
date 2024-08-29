@@ -15,6 +15,7 @@ func main() {
 	defer utils.Logger.Sync()
 
 	database.InitializeDB()
+	service.InitializeKeys()
 	service.ConnectDiscord()
 	service.PingSentinel()
 
