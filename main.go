@@ -16,6 +16,7 @@ func main() {
 
 	database.InitializeDB()
 	service.ConnectDiscord()
+	service.PingSentinel()
 
 	router := api.SetupRouter()
 	api.InitializeRoutes(router)

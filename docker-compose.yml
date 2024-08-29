@@ -1,3 +1,5 @@
+name: jiffy
+
 services:
   db:
     container_name: db

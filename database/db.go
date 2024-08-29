@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"jiffy/config"
+	"jiffy/model"
 	"jiffy/utils"
 	"time"
 
@@ -28,7 +29,7 @@ func InitializeDB() error {
 		}
 	} else {
 		utils.SugarLogger.Infoln("Connected to database")
-		db.AutoMigrate()
+		db.AutoMigrate(&model.UserRole{})
 		utils.SugarLogger.Infoln("AutoMigration complete")
 		DB = db
 	}
