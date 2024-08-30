@@ -136,6 +136,7 @@ func TestRequestUserFunctions(t *testing.T) {
 			assert.False(t, RequestUserHasID(c, "user456"))
 			assert.True(t, RequestUserHasEmail(c, "user@example.com"))
 			assert.False(t, RequestUserHasEmail(c, "other@example.com"))
+			assert.False(t, RequestUserHasRole(c, "admin"))
 			assert.Equal(t, "user123", GetRequestUserID(c))
 			assert.Equal(t, "user@example.com", GetRequestUserEmail(c))
 			c.String(200, "OK")
