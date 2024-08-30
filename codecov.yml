@@ -1,3 +1,5 @@
 ignore:
+  - "main.go"
+  - "config/"
   - "model/"
   - "service/sentinel.go"
