@@ -17,6 +17,7 @@ func TestMain(m *testing.M) {
 	// Initialize the logger
 	logger, _ := zap.NewDevelopment()
 	utils.SugarLogger = logger.Sugar()
+	InitializeKeys()
 
 	// Start MySQL container
 	ctx := context.Background()
@@ -53,4 +54,8 @@ func TestMain(m *testing.M) {
 	utils.SugarLogger.Sync()
 
 	os.Exit(code)
+}
+
+func ResetDB() {
+	database.DB.Exec("DELETE FROM user_roles")
 }
