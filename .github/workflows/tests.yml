@@ -24,7 +24,8 @@ jobs:
                 go get .
             - name: Run tests
               run: |
-                make test
+                . scripts/test-env.sh
+                go test ./... -race -covermode=atomic -coverprofile=coverage.out
             - name: Upload coverage to Codecov
               uses: codecov/codecov-action@v3
               env:
