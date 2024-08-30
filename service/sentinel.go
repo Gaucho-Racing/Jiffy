@@ -62,9 +62,9 @@ func ExchangeCodeForToken(code string) (SentinelTokenResponse, error) {
 		utils.SugarLogger.Errorln("Failed to read token response body:", err)
 		return SentinelTokenResponse{}, err
 	}
-	utils.SugarLogger.Infof("Response body: %s", string(body))
 
 	if resp.StatusCode != http.StatusOK {
+		utils.SugarLogger.Infof("Response body: %s", string(body))
 		var sentinelErr SentinelError
 		if err := json.Unmarshal(body, &sentinelErr); err != nil {
 			utils.SugarLogger.Errorln("Failed to unmarshal sentinel error:", err)
@@ -105,9 +105,9 @@ func GetAllUsers(accessToken string) ([]model.User, error) {
 		utils.SugarLogger.Errorln("Failed to read users from sentinel:", err)
 		return nil, err
 	}
-	utils.SugarLogger.Infof("Response body: %s", string(body))
 
 	if resp.StatusCode != http.StatusOK {
+		utils.SugarLogger.Infof("Response body: %s", string(body))
 		var sentinelErr SentinelError
 		if err := json.Unmarshal(body, &sentinelErr); err != nil {
 			utils.SugarLogger.Errorln("Failed to unmarshal sentinel error:", err)
@@ -149,9 +149,9 @@ func GetUser(id string, accessToken string) (model.User, error) {
 		utils.SugarLogger.Errorln("Failed to read user from sentinel:", err)
 		return model.User{}, err
 	}
-	utils.SugarLogger.Infof("Response body: %s", string(body))
 
 	if resp.StatusCode != http.StatusOK {
+		utils.SugarLogger.Infof("Response body: %s", string(body))
 		var sentinelErr SentinelError
 		if err := json.Unmarshal(body, &sentinelErr); err != nil {
 			utils.SugarLogger.Errorln("Failed to unmarshal sentinel error:", err)
@@ -192,9 +192,9 @@ func GetCurrentUser(accessToken string) (model.User, error) {
 		utils.SugarLogger.Errorln("Failed to read user from sentinel:", err)
 		return model.User{}, err
 	}
-	utils.SugarLogger.Infof("Response body: %s", string(body))
 
 	if resp.StatusCode != http.StatusOK {
+		utils.SugarLogger.Infof("Response body: %s", string(body))
 		var sentinelErr SentinelError
 		if err := json.Unmarshal(body, &sentinelErr); err != nil {
 			utils.SugarLogger.Errorln("Failed to unmarshal sentinel error:", err)
