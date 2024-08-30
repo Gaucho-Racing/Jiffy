@@ -1,6 +1,7 @@
 package api
 
 import (
+	"jiffy/service"
 	"jiffy/utils"
 	"os"
 	"testing"
@@ -12,6 +13,7 @@ func TestMain(m *testing.M) {
 	// Initialize the logger
 	logger, _ := zap.NewDevelopment()
 	utils.SugarLogger = logger.Sugar()
+	service.InitializeKeys()
 
 	// Run the tests
 	code := m.Run()
