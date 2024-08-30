@@ -8,7 +8,7 @@ import (
 )
 
 func GetAllUsers(c *gin.Context) {
-	users, err := service.GetAllUsers(c.GetString("Auth-Token"))
+	users, err := service.GetAllUsers()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
@@ -17,7 +17,7 @@ func GetAllUsers(c *gin.Context) {
 }
 
 func GetUser(c *gin.Context) {
-	user, err := service.GetUser(c.Param("userID"), c.GetString("Auth-Token"))
+	user, err := service.GetUser(c.Param("userID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return

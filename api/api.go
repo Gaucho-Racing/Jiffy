@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 func SetupRouter() *gin.Engine {
@@ -81,21 +82,76 @@ func UnauthorizedPanicHandler() gin.HandlerFunc {
 	}
 }
 
-// RequireAll checks if all conditions are true, otherwise aborts the request
-func RequireAll(c *gin.Context, conditions ...bool) {
-	for _, condition := range conditions {
-		if !condition {
-			panic("Unauthorized")
-		}
+// Require checks if a condition is true, otherwise aborts the request
+func Require(c *gin.Context, condition bool) {
+	if !condition {
+		panic("Unauthorized")
 	}
 }
 
-// RequireAny checks if any condition is true, otherwise aborts the request
-func RequireAny(c *gin.Context, conditions ...bool) {
+// Any checks if any condition is true, otherwise returns false
+func Any(conditions ...bool) bool {
 	for _, condition := range conditions {
 		if condition {
-			return
+			return true
 		}
 	}
-	panic("Unauthorized")
+	return false
+}
+
+// All checks if all conditions are true, otherwise returns false
+func All(conditions ...bool) bool {
+	for _, condition := range conditions {
+		if !condition {
+			return false
+		}
+	}
+	return true
+}
+
+func RequestUserHasID(c *gin.Context, id string) bool {
+	return GetRequestUserID(c) == id
+}
+
+func RequestUserHasEmail(c *gin.Context, email string) bool {
+	return GetRequestUserEmail(c) == email
+}
+
+func RequestUserHasRole(c *gin.Context, role string) bool {
+	roles := service.GetRolesForUser(GetRequestUserID(c))
+	return slices.Contains(roles, role)
+}
+
+func RequestTokenHasScope(c *gin.Context, scope string) bool {
+	scopes := GetRequestTokenScopes(c)
+	for _, s := range strings.Split(scopes, " ") {
+		if s == scope {
+			return true
+		}
+	}
+	return false
+}
+
+func GetRequestUserID(c *gin.Context) string {
+	id, exists := c.Get("Auth-UserID")
+	if !exists {
+		return ""
+	}
+	return id.(string)
+}
+
+func GetRequestUserEmail(c *gin.Context) string {
+	email, exists := c.Get("Auth-Email")
+	if !exists {
+		return ""
+	}
+	return email.(string)
+}
+
+func GetRequestTokenScopes(c *gin.Context) string {
+	scopes, exists := c.Get("Auth-Scope")
+	if !exists {
+		return ""
+	}
+	return scopes.(string)
 }

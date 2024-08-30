@@ -14,6 +14,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.33.0
 	go.uber.org/zap v1.27.0
+	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 	gorm.io/gorm v1.25.11
 )
 

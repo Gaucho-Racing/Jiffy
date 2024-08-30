@@ -83,14 +83,13 @@ func ExchangeCodeForToken(code string) (SentinelTokenResponse, error) {
 }
 
 // GetAllUsers gets all users from the sentinel API
-// Note that this currently requires the sentinel:all scope
-func GetAllUsers(accessToken string) ([]model.User, error) {
+func GetAllUsers() ([]model.User, error) {
 	req, err := http.NewRequest("GET", config.Sentinel.Url+"/users", nil)
 	if err != nil {
 		utils.SugarLogger.Errorln("Failed to create request for users:", err)
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Authorization", "Bearer "+config.Sentinel.Token)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -127,14 +126,13 @@ func GetAllUsers(accessToken string) ([]model.User, error) {
 }
 
 // GetUser gets a user from the sentinel API
-// Note that this currently requires the access token to have the correct user id attached
-func GetUser(id string, accessToken string) (model.User, error) {
+func GetUser(id string) (model.User, error) {
 	req, err := http.NewRequest("GET", config.Sentinel.Url+"/users/"+id, nil)
 	if err != nil {
 		utils.SugarLogger.Errorln("Failed to create request for user:", err)
 		return model.User{}, err
 	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Authorization", "Bearer "+config.Sentinel.Token)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
