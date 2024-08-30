@@ -6,6 +6,7 @@ import (
 	"jiffy/utils"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go/modules/mysql"
@@ -61,6 +62,18 @@ func TestInitializeDB(t *testing.T) {
 	// Test retry mechanism
 	t.Run("Retry Mechanism", func(t *testing.T) {
 		config.DatabaseHost = "non-existent-host"
-		InitializeDB()
+
+		done := make(chan bool)
+		go func() {
+			InitializeDB()
+			done <- true
+		}()
+
+		select {
+		case <-done:
+			t.Error("InitializeDB should not have succeeded with non-existent host")
+		case <-time.After(10 * time.Second):
+			// Test passes if it times out after 10 seconds
+		}
 	})
 }

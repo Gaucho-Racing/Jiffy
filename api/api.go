@@ -2,6 +2,7 @@ package api
 
 import (
 	"jiffy/config"
+	"jiffy/service"
 	"jiffy/utils"
 	"net/http"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 func SetupRouter() *gin.Engine {
@@ -30,6 +32,10 @@ func SetupRouter() *gin.Engine {
 
 func InitializeRoutes(router *gin.Engine) {
 	router.GET("/ping", Ping)
+	router.POST("/auth/login", Login)
+	router.GET("/users", GetAllUsers)
+	router.GET("/users/@me", GetCurrentUser)
+	router.GET("/users/:userID", GetUser)
 }
 
 func AuthChecker() gin.HandlerFunc {
@@ -37,21 +43,22 @@ func AuthChecker() gin.HandlerFunc {
 		if c.GetHeader("Authorization") != "" {
 			authHeader := c.GetHeader("Authorization")
 			if strings.HasPrefix(authHeader, "Bearer ") {
-				// claims, err := service.ValidateJWT(strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
-				// if err != nil {
-				// 	utils.SugarLogger.Errorln("Failed to validate token: " + err.Error())
-				// 	c.AbortWithStatusJSON(401, gin.H{"message": err.Error()})
-				// } else {
-				// 	utils.SugarLogger.Infof("Decoded token: %s (%s)", claims.ID, claims.Email)
-				// 	utils.SugarLogger.Infof("↳ Client ID: %s", claims.Audience[0])
-				// 	utils.SugarLogger.Infof("↳ Scope: %s", claims.Scope)
-				// 	utils.SugarLogger.Infof("↳ Issued at: %s", claims.IssuedAt.String())
-				// 	utils.SugarLogger.Infof("↳ Expires at: %s", claims.ExpiresAt.String())
-				// 	c.Set("Auth-UserID", claims.ID)
-				// 	c.Set("Auth-Email", claims.Email)
-				// 	c.Set("Auth-Audience", claims.Audience[0])
-				// 	c.Set("Auth-Scope", claims.Scope)
-				// }
+				claims, err := service.ValidateJWT(strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
+				if err != nil {
+					utils.SugarLogger.Errorln("Failed to validate token: " + err.Error())
+					c.AbortWithStatusJSON(401, gin.H{"message": err.Error()})
+				} else {
+					utils.SugarLogger.Infof("Decoded token: %s (%s)", claims.ID, claims.Email)
+					utils.SugarLogger.Infof("↳ Client ID: %s", claims.Audience[0])
+					utils.SugarLogger.Infof("↳ Scope: %s", claims.Scope)
+					utils.SugarLogger.Infof("↳ Issued at: %s", claims.IssuedAt.String())
+					utils.SugarLogger.Infof("↳ Expires at: %s", claims.ExpiresAt.String())
+					c.Set("Auth-Token", strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
+					c.Set("Auth-UserID", claims.ID)
+					c.Set("Auth-Email", claims.Email)
+					c.Set("Auth-Audience", claims.Audience[0])
+					c.Set("Auth-Scope", claims.Scope)
+				}
 			}
 		}
 		c.Next()
@@ -75,21 +82,58 @@ func UnauthorizedPanicHandler() gin.HandlerFunc {
 	}
 }
 
-// RequireAll checks if all conditions are true, otherwise aborts the request
-func RequireAll(c *gin.Context, conditions ...bool) {
-	for _, condition := range conditions {
-		if !condition {
-			panic("Unauthorized")
-		}
+// Require checks if a condition is true, otherwise aborts the request
+func Require(c *gin.Context, condition bool) {
+	if !condition {
+		panic("Unauthorized")
 	}
 }
 
-// RequireAny checks if any condition is true, otherwise aborts the request
-func RequireAny(c *gin.Context, conditions ...bool) {
+// Any checks if any condition is true, otherwise returns false
+func Any(conditions ...bool) bool {
 	for _, condition := range conditions {
 		if condition {
-			return
+			return true
 		}
 	}
-	panic("Unauthorized")
+	return false
+}
+
+// All checks if all conditions are true, otherwise returns false
+func All(conditions ...bool) bool {
+	for _, condition := range conditions {
+		if !condition {
+			return false
+		}
+	}
+	return true
+}
+
+func RequestUserHasID(c *gin.Context, id string) bool {
+	return GetRequestUserID(c) == id
+}
+
+func RequestUserHasEmail(c *gin.Context, email string) bool {
+	return GetRequestUserEmail(c) == email
+}
+
+func RequestUserHasRole(c *gin.Context, role string) bool {
+	roles := service.GetRolesForUser(GetRequestUserID(c))
+	return slices.Contains(roles, role)
+}
+
+func GetRequestUserID(c *gin.Context) string {
+	id, exists := c.Get("Auth-UserID")
+	if !exists {
+		return ""
+	}
+	return id.(string)
+}
+
+func GetRequestUserEmail(c *gin.Context) string {
+	email, exists := c.Get("Auth-Email")
+	if !exists {
+		return ""
+	}
+	return email.(string)
 }
