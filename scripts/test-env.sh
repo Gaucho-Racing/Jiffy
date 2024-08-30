@@ -11,7 +11,7 @@ export DATABASE_NAME=jiffy
 
 export DISCORD_TOKEN=MTI3ODQ2OTE2ODY4NTEyMTYxOQ.Go-MNW.6uslHpuRBcpIMw3SKakV5ly3L1bTofwgvSmfe8
 export DISCORD_GUILD=756738476887638107
-export DISCORD_LOG_CHANNEL=1215409300466438244
+export DISCORD_LOG_CHANNEL=1278978101396901958
 
 export SENTINEL_URL=https://sentinel-api.gauchoracing.com
 export SENTINEL_JWKS_URL=https://sentinel-api.gauchoracing.com/auth/keys.json
