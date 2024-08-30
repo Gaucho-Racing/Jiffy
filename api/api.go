@@ -122,16 +122,6 @@ func RequestUserHasRole(c *gin.Context, role string) bool {
 	return slices.Contains(roles, role)
 }
 
-func RequestTokenHasScope(c *gin.Context, scope string) bool {
-	scopes := GetRequestTokenScopes(c)
-	for _, s := range strings.Split(scopes, " ") {
-		if s == scope {
-			return true
-		}
-	}
-	return false
-}
-
 func GetRequestUserID(c *gin.Context) string {
 	id, exists := c.Get("Auth-UserID")
 	if !exists {
@@ -146,12 +136,4 @@ func GetRequestUserEmail(c *gin.Context) string {
 		return ""
 	}
 	return email.(string)
-}
-
-func GetRequestTokenScopes(c *gin.Context) string {
-	scopes, exists := c.Get("Auth-Scope")
-	if !exists {
-		return ""
-	}
-	return scopes.(string)
 }
