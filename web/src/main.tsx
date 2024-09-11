@@ -7,13 +7,7 @@ import "/node_modules/react-resizable/css/styles.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Toaster } from "./components/ui/sonner.tsx";
 import App from "./App.tsx";
-import LoginDiscordPage from "@/pages/auth/LoginDiscordPage.tsx";
 import LoginPage from "@/pages/auth/LoginPage.tsx";
-import EditUserPage from "@/pages/users/EditUserPage.tsx";
-import ApplicationsPage from "@/pages/applications/ApplicationsPage.tsx";
-import AuthorizePage from "@/pages/oauth/AuthorizePage.tsx";
-import UsersPage from "@/pages/users/UsersPage.tsx";
-import UserAnalyticsPage from "@/pages/users/UserAnalyticsPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -23,34 +17,6 @@ const router = createBrowserRouter([
   {
     path: "/auth/login",
     element: <LoginPage />,
-  },
-  {
-    path: "/auth/login/discord",
-    element: <LoginDiscordPage />,
-  },
-  {
-    path: "/oauth/authorize",
-    element: <AuthorizePage />,
-  },
-  {
-    path: "/users",
-    element: <UsersPage />,
-  },
-  {
-    path: "/users/analytics",
-    element: <UserAnalyticsPage />,
-  },
-  {
-    path: "/users/:id/edit",
-    element: <EditUserPage />,
-  },
-  {
-    path: "/applications",
-    element: <ApplicationsPage />,
-  },
-  {
-    path: "/applications/:id",
-    element: <ApplicationsPage />,
   },
 ]);
 

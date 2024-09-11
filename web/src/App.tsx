@@ -1,51 +1,9 @@
 import React from "react";
-import axios from "axios";
-import {
-  GITHUB_ORG_URL,
-  JIFFY_API_URL,
-  SHARED_DRIVE_URL,
-  WIKI_URL,
-} from "@/consts/config";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
-import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useNavigate } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowUpRightFromSquare,
-  faBook,
-  faCheckCircle,
-  faLock,
-  faUser,
-} from "@fortawesome/free-solid-svg-icons";
-import { checkCredentials, logout, saveAccessToken } from "@/lib/auth";
+import { checkCredentials } from "@/lib/auth";
 import Footer from "@/components/Footer";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  faAppStore,
-  faGithub,
-  faGoogleDrive,
-} from "@fortawesome/free-brands-svg-icons";
-import { ClientApplication } from "@/models/application";
-import { OutlineButton } from "@/components/ui/outline-button";
 import { AuthLoading } from "@/components/AuthLoading";
-import { notify } from "@/lib/notify";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { getUser, useUser } from "@/lib/store";
-import AppGrid from "@/components/AppGrid";
+import { useUser } from "@/lib/store";
 
 function App() {
   const navigate = useNavigate();
