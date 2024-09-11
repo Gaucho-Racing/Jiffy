@@ -9,16 +9,9 @@ import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 import { checkCredentials, saveAccessToken } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 import { OutlineButton } from "@/components/ui/outline-button";
-import {
-  faShield,
-  faShieldAlt,
-  faShieldHalved,
-} from "@fortawesome/free-solid-svg-icons";
 
 function LoginPage() {
   const navigate = useNavigate();
