@@ -8,14 +8,7 @@ import (
 )
 
 func Login(c *gin.Context) {
-	var loginRequest struct {
-		Code string `json:"code"`
-	}
-	if err := c.ShouldBindJSON(&loginRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request body"})
-		return
-	}
-	code := loginRequest.Code
+	code := c.Query("code")
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "code is required"})
 		return

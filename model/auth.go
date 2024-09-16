@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"jiffy/config"
 
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -29,6 +30,11 @@ func (c AuthClaims) Valid() error {
 	if !c.VerifyIssuer("https://sso.gauchoracing.com", true) {
 		vErr.Inner = jwt.ErrTokenInvalidIssuer
 		vErr.Errors |= jwt.ValidationErrorIssuer
+	}
+
+	if !c.VerifyAudience(config.Sentinel.ClientID, true) {
+		vErr.Inner = jwt.ErrTokenInvalidAudience
+		vErr.Errors |= jwt.ValidationErrorAudience
 	}
 
 	if vErr.Errors == 0 {
