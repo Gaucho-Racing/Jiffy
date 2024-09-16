@@ -29,7 +29,7 @@ func InitializeDB() error {
 		}
 	} else {
 		utils.SugarLogger.Infoln("Connected to database")
-		db.AutoMigrate(&model.UserRole{})
+		db.AutoMigrate(&model.UserRole{}, &model.Department{}, &model.DepartmentApprover{}, &model.DepartmentBudget{})
 		utils.SugarLogger.Infoln("AutoMigration complete")
 		DB = db
 	}

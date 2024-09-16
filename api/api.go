@@ -36,6 +36,9 @@ func InitializeRoutes(router *gin.Engine) {
 	router.GET("/users", GetAllUsers)
 	router.GET("/users/@me", GetCurrentUser)
 	router.GET("/users/:userID", GetUser)
+	router.GET("/departments", GetAllDepartments)
+	router.GET("/departments/:departmentID", GetDepartmentByID)
+	router.POST("/departments", CreateDepartment)
 }
 
 func AuthChecker() gin.HandlerFunc {
@@ -48,14 +51,13 @@ func AuthChecker() gin.HandlerFunc {
 					utils.SugarLogger.Errorln("Failed to validate token: " + err.Error())
 					c.AbortWithStatusJSON(401, gin.H{"message": err.Error()})
 				} else {
-					utils.SugarLogger.Infof("Decoded token: %s (%s)", claims.ID, claims.Email)
+					utils.SugarLogger.Infof("Decoded token: %s", claims.Subject)
 					utils.SugarLogger.Infof("↳ Client ID: %s", claims.Audience[0])
 					utils.SugarLogger.Infof("↳ Scope: %s", claims.Scope)
 					utils.SugarLogger.Infof("↳ Issued at: %s", claims.IssuedAt.String())
 					utils.SugarLogger.Infof("↳ Expires at: %s", claims.ExpiresAt.String())
 					c.Set("Auth-Token", strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
-					c.Set("Auth-UserID", claims.ID)
-					c.Set("Auth-Email", claims.Email)
+					c.Set("Auth-UserID", claims.Subject)
 					c.Set("Auth-Audience", claims.Audience[0])
 					c.Set("Auth-Scope", claims.Scope)
 				}
