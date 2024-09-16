@@ -18,7 +18,7 @@ func GetAllDepartments(c *gin.Context) {
 }
 
 func GetDepartmentByID(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("departmentID")
 	department, err := service.GetDepartmentByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

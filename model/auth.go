@@ -7,7 +7,6 @@ import (
 )
 
 type AuthClaims struct {
-	Email string `json:"email"`
 	Scope string `json:"scope"`
 	jwt.RegisteredClaims
 }
@@ -27,7 +26,7 @@ func (c AuthClaims) Valid() error {
 		vErr.Errors |= jwt.ValidationErrorIssuedAt
 	}
 
-	if !c.VerifyIssuer("https://sso.gauchoracing.com/", true) {
+	if !c.VerifyIssuer("https://sso.gauchoracing.com", true) {
 		vErr.Inner = jwt.ErrTokenInvalidIssuer
 		vErr.Errors |= jwt.ValidationErrorIssuer
 	}
