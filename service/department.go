@@ -40,7 +40,7 @@ func InitializeDepartments() {
 
 func GetAllDepartments() ([]model.Department, error) {
 	var departments []model.Department
-	err := database.DB.Find(&departments).Error
+	err := database.DB.Order("name").Find(&departments).Error
 	for i, department := range departments {
 		departments[i].Approvers = GetApproversForDepartment(department.ID)
 		departments[i].Budgets = GetBudgetsForDepartment(department.ID)
@@ -76,7 +76,7 @@ func CreateDepartment(department model.Department) (model.Department, error) {
 func GetApproversForDepartment(departmentID string) []model.User {
 	var approverIds []string
 	database.DB.Table("department_approver").Where("department_id = ?", departmentID).Pluck("user_id", &approverIds)
-	var approvers []model.User
+	approvers := make([]model.User, 0)
 	for _, approverId := range approverIds {
 		user, err := GetUser(approverId)
 		if err != nil {
