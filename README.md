@@ -1,6 +1,7 @@
 # Jiffy
 
 [![build](https://github.com/Gaucho-Racing/jiffy/actions/workflows/build.yml/badge.svg)](https://github.com/Gaucho-Racing/jiffy/actions/workflows/build.yml)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/c761998a-1e64-4f7c-9d31-7e69d63b30c0/deploy-status)](https://app.netlify.com/sites/gr-jiffy/deploys)
 [![Docker Pulls](https://img.shields.io/docker/pulls/gauchoracing/jiffy?style=flat-square)](https://hub.docker.com/r/gauchoracing/jiffy)
 [![Release](https://img.shields.io/github/release/gaucho-racing/jiffy.svg?style=flat-square)](https://github.com/gaucho-racing/jiffy/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
