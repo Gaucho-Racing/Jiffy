@@ -52,7 +52,7 @@ func GetAllDepartments() ([]model.Department, error) {
 
 func GetDepartmentByID(id string) (model.Department, error) {
 	var department model.Department
-	err := database.DB.First(&department, id).Error
+	err := database.DB.Where("id = ?", id).First(&department).Error
 	department.Approvers = GetApproversForDepartment(department.ID)
 	department.Budgets = GetBudgetsForDepartment(department.ID)
 	return department, err
