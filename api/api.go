@@ -39,6 +39,10 @@ func InitializeRoutes(router *gin.Engine) {
 	router.GET("/departments", GetAllDepartments)
 	router.GET("/departments/:departmentID", GetDepartmentByID)
 	router.POST("/departments", CreateDepartment)
+	router.POST("/departments/:departmentID/approvers/:approverID", AddApproverToDepartment)
+	router.DELETE("/departments/:departmentID/approvers/:approverID", RemoveApproverFromDepartment)
+	router.POST("/departments/:departmentID/budgets", AddBudgetToDepartment)
+	router.DELETE("/departments/:departmentID/budgets/:budgetID", RemoveBudgetFromDepartment)
 }
 
 func AuthChecker() gin.HandlerFunc {

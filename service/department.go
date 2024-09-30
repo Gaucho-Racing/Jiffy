@@ -5,6 +5,8 @@ import (
 	"jiffy/database"
 	"jiffy/model"
 	"jiffy/utils"
+
+	"github.com/google/uuid"
 )
 
 func InitializeDepartments() {
@@ -88,8 +90,51 @@ func GetApproversForDepartment(departmentID string) []model.User {
 	return approvers
 }
 
+func AddApproverToDepartment(departmentID string, approverID string) error {
+	result := database.DB.Create(&model.DepartmentApprover{
+		DepartmentID: departmentID,
+		UserID:       approverID,
+	})
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func RemoveApproverFromDepartment(departmentID string, approverID string) error {
+	result := database.DB.Exec("DELETE FROM department_approver WHERE department_id = ? AND user_id = ?", departmentID, approverID)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func GetBudgetsForDepartment(departmentID string) []model.DepartmentBudget {
 	var budgets []model.DepartmentBudget
 	database.DB.Where("department_id = ?", departmentID).Order("date").Find(&budgets)
 	return budgets
+}
+
+func AddBudgetToDepartment(departmentID string, budget model.DepartmentBudget) (*model.DepartmentBudget, error) {
+	if budget.ID == "" {
+		budget.ID = uuid.New().String()
+	}
+	if database.DB.Where("id = ?", budget.ID).Updates(&budget).RowsAffected == 0 {
+		utils.SugarLogger.Infoln("New budget created with id: " + budget.ID + " for department: " + departmentID)
+		result := database.DB.Create(&budget)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+	} else {
+		utils.SugarLogger.Infoln("Budget with id: " + budget.ID + " has been updated for department: " + departmentID)
+	}
+	return &budget, nil
+}
+
+func RemoveBudgetFromDepartment(departmentID string, budgetID string) error {
+	result := database.DB.Exec("DELETE FROM department_budget WHERE id = ?", budgetID)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }

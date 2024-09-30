@@ -9,6 +9,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/google/uuid v1.6.0
 	github.com/lestrrat-go/jwx v1.2.30
 	github.com/singlestore-labs/gorm-singlestore v1.2.0
 	go.uber.org/zap v1.27.0

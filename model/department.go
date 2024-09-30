@@ -26,6 +26,7 @@ func (DepartmentApprover) TableName() string {
 }
 
 type DepartmentBudget struct {
+	ID           string    `json:"id" gorm:"primaryKey"`
 	DepartmentID string    `json:"department_id"`
 	Date         time.Time `json:"date"`
 	Amount       int       `json:"amount"`
