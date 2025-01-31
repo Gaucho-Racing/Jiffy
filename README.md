@@ -12,6 +12,28 @@ Check out our wiki page [here](https://wiki.gauchoracing.com/books/jiffy) to lea
 
 ## Getting Started
 
+### Local Database
+
+Start by running SingleStore locally using the provided Docker image.
+
+```
+docker run \
+    -d --name singlestoredb-dev \
+    -e ROOT_PASSWORD="password" \
+    -p 3306:3306 -p 8080:8080 -p 9000:9000 \
+    ghcr.io/singlestore-labs/singlestoredb-dev:latest
+```
+
+Note the `--platform linux/amd64` instruction which is required when running on Apple Silicon.
+
+```
+docker run \
+    -d --name singlestoredb-dev \
+    -e ROOT_PASSWORD="password" \
+    --platform linux/amd64 \
+    -p 3306:3306 -p 8080:8080 -p 9000:9000 \
+    ghcr.io/singlestore-labs/singlestoredb-dev:latest
+```
 
 ## Contributing
 
