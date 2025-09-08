@@ -1,20 +1,16 @@
 name: jiffy
 
 services:
-  db:
-    container_name: db
-    image: ghcr.io/singlestore-labs/singlestoredb-dev:latest
-    platform: linux/amd64
-    restart: unless-stopped
-    volumes:
-      - s2data:/data
-      - ./init.sql:/init.sql
+  postgres:
+    image: postgres:17-alpine
     ports:
-      - "3306:3306"
-      - "8080:8080"
-      - "9000:9000"
+      - 5432:5432
     environment:
-      ROOT_PASSWORD: "password"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: jiffy
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
-  s2data:
+  pgdata:
