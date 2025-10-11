@@ -27,16 +27,28 @@ func InitializeDepartments() {
 		Name: "Data",
 	})
 	CreateDepartment(model.Department{
+		ID:   "DVT",
+		Name: "Drivetrain",
+	})
+	CreateDepartment(model.Department{
 		ID:   "ELC",
 		Name: "Electronics",
 	})
 	CreateDepartment(model.Department{
-		ID:   "PWT",
-		Name: "Powertrain",
+		ID:   "HVT",
+		Name: "High Voltage",
+	})
+	CreateDepartment(model.Department{
+		ID:   "LVT",
+		Name: "Low Voltage",
 	})
 	CreateDepartment(model.Department{
 		ID:   "SUS",
 		Name: "Suspension",
+	})
+	CreateDepartment(model.Department{
+		ID:   "SYS",
+		Name: "Systems",
 	})
 }
 
