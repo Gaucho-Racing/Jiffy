@@ -17,7 +17,7 @@ var DiscordToken = os.Getenv("DISCORD_TOKEN")
 var DiscordGuild = os.Getenv("DISCORD_GUILD")
 var DiscordLogChannel = os.Getenv("DISCORD_LOG_CHANNEL")
 
-var DepartmentNames = []string{"Aerodynamics", "Business", "Chassis", "Data", "Electronics", "Powertrain", "Suspension"}
+var DepartmentNames = []string{"Aerodynamics", "Business", "Chassis", "Data", "Drivetrain", "Electronics", "High Voltage", "Low Voltage", "Suspension", "Systems"}
 
 var Sentinel = struct {
 	Url          string

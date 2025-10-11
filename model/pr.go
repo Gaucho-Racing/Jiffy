@@ -3,34 +3,37 @@ package model
 import "time"
 
 type PurchaseRequest struct {
-	ID            string                  `json:"id" gorm:"primaryKey"`
-	DepartmentID  string                  `json:"department_id"`
-	UserID        string                  `json:"user_id"`
-	Status        []PurchaseRequestStatus `json:"status" gorm:"-"`
-	ItemName      string                  `json:"item_name"`
-	ItemPrice     int                     `json:"item_price"`
-	ItemQuantity  int                     `json:"item_quantity"`
-	ItemURL       string                  `json:"item_url"`
-	EstimatedCost int                     `json:"estimated_cost"`
-	FinalCost     int                     `json:"final_cost"`
-	Description   string                  `json:"description"`
-	Priority      int                     `json:"priority"`
-	UpdatedAt     time.Time               `gorm:"autoUpdateTime" json:"updated_at"`
-	CreatedAt     time.Time               `gorm:"autoCreateTime" json:"created_at"`
+	ID                   int                   `json:"id" gorm:"primaryKey;autoIncrement"`
+	DepartmentID         string                `json:"department_id"`
+	UserID               string                `json:"user_id"`
+	User                 User                  `json:"user" gorm:"-"`
+	Status               PurchaseRequestStatus `json:"status"`
+	Approvals            []Approval            `json:"approvals" gorm:"foreignKey:PrID"`
+	Items                []PurchaseRequestItem `json:"items" gorm:"foreignKey:PurchaseRequestID"`
+	Vendor               string                `json:"vendor"`
+	ShippingTaxCostCents int                   `json:"shipping_tax_cost_cents"`
+	EstimatedCostCents   int                   `json:"estimated_cost_cents"`
+	FinalCostCents       int                   `json:"final_cost_cents"`
+	Description          string                `json:"description"`
+	Priority             int                   `json:"priority"`
+	NeededByDate         time.Time             `json:"needed_by_date"`
+	RequestedPurchaser   string                `json:"requested_purchaser"`
+	ScreenshotURL        string                `json:"screenshot_url"`
+	UpdatedAt            time.Time             `gorm:"autoUpdateTime" json:"updated_at"`
+	CreatedAt            time.Time             `gorm:"autoCreateTime" json:"created_at"`
 }
 
 func (PurchaseRequest) TableName() string {
 	return "purchase_request"
 }
 
-type PurchaseRequestStatus struct {
-	ID        string    `json:"id" gorm:"primaryKey"`
-	Status    string    `json:"status"`
-	UserID    string    `json:"user_id"`
-	Note      string    `json:"note"`
-	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
-}
+type PurchaseRequestStatus string
 
-func (PurchaseRequestStatus) TableName() string {
-	return "purchase_request_status"
-}
+const (
+	PurchaseRequestPending   PurchaseRequestStatus = "Pending Approval"
+	PurchaseRequestApproved  PurchaseRequestStatus = "Request Approved"
+	PurchaseRequestRejected  PurchaseRequestStatus = "Request Rejected"
+	PurchaseRequestOrdered   PurchaseRequestStatus = "Order Placed"
+	PurchaseRequestDelivered PurchaseRequestStatus = "Order Delivered"
+	PurchaseRequestCollected PurchaseRequestStatus = "Order Collected"
+)

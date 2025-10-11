@@ -7,7 +7,7 @@ import (
 	"jiffy/utils"
 	"time"
 
-	singlestore "github.com/singlestore-labs/gorm-singlestore"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -16,8 +16,8 @@ var DB *gorm.DB
 var dbRetries = 0
 
 func InitializeDB() error {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=UTC", config.DatabaseUser, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseName)
-	db, err := gorm.Open(singlestore.Open(dsn), &gorm.Config{})
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC", config.DatabaseHost, config.DatabaseUser, config.DatabasePassword, config.DatabaseName, config.DatabasePort)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		if dbRetries < 5 {
 			dbRetries++
@@ -29,7 +29,15 @@ func InitializeDB() error {
 		}
 	} else {
 		utils.SugarLogger.Infoln("Connected to database")
-		db.AutoMigrate(&model.UserRole{}, &model.Department{}, &model.DepartmentApprover{}, &model.DepartmentBudget{})
+		db.AutoMigrate(
+			&model.UserRole{},
+			&model.Department{},
+			&model.DepartmentApprover{},
+			&model.DepartmentBudget{},
+			&model.PurchaseRequest{},
+			&model.PurchaseRequestItem{},
+			&model.Approval{},
+		)
 		utils.SugarLogger.Infoln("AutoMigration complete")
 		DB = db
 	}
