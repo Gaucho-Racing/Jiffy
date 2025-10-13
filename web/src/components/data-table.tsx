@@ -20,12 +20,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData extends { id: number | string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends { id: number | string }, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
