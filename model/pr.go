@@ -5,6 +5,7 @@ import "time"
 type PurchaseRequest struct {
 	ID                   int                   `json:"id" gorm:"primaryKey;autoIncrement"`
 	DepartmentID         string                `json:"department_id"`
+	Component            string                `json:"component"`
 	UserID               string                `json:"user_id"`
 	User                 User                  `json:"user" gorm:"-"`
 	Status               PurchaseRequestStatus `json:"status"`

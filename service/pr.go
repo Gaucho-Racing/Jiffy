@@ -5,11 +5,12 @@ import (
 	"jiffy/database"
 	"jiffy/model"
 	"jiffy/utils"
+
+	"gorm.io/gorm"
 )
 
 func GetAllPurchaseRequests() []model.PurchaseRequest {
 	var prs []model.PurchaseRequest
-
 	if err := database.DB.Preload("Items").Preload("Approvals").Order("created_at DESC").Find(&prs).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting purchase requests: %v", err)
 		return nil
@@ -22,7 +23,9 @@ func GetAllPurchaseRequests() []model.PurchaseRequest {
 
 func GetPurchaseRequestByID(id int) model.PurchaseRequest {
 	var pr model.PurchaseRequest
-	if err := database.DB.First(&pr, "id = ?", id).Error; err != nil {
+	if err := database.DB.Preload("Items").Preload("Approvals", func(db *gorm.DB) *gorm.DB {
+		return db.Order("id ASC")
+	}).First(&pr, "id = ?", id).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting purchase request with id %s: %v", id, err)
 		return model.PurchaseRequest{}
 	}

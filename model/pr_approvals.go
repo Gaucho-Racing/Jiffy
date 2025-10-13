@@ -10,6 +10,7 @@ type Approval struct {
 	Type      ApprovalType   `json:"type"`
 	Status    ApprovalStatus `json:"status"`
 	Note      string         `json:"note"`
+	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
