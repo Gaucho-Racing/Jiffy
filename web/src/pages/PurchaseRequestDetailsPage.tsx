@@ -31,7 +31,8 @@ export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();
   const currentUser = useUser();
   const id = useParams().id;
-  const [purchaseRequest, setPurchaseRequest] = useState<Partial<PurchaseRequest>>(initPurchaseRequest);
+  const [purchaseRequest, setPurchaseRequest] =
+    useState<Partial<PurchaseRequest>>(initPurchaseRequest);
   const [department, setDepartment] = useState<Department>();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,7 +52,8 @@ export default function PurchaseRequestDetailsPage() {
     }
   };
 
-  const canApprove = () => { // rly need to change to (to add) custom approvers 
+  const canApprove = () => {
+    // rly need to change to (to add) custom approvers
     return (
       currentUser.roles.includes("d_admin") ||
       currentUser.roles.includes("d_officer") ||
@@ -95,7 +97,6 @@ export default function PurchaseRequestDetailsPage() {
     }
   };
 
-
   const getApprovalStatusStyle = (approval: Approval) => {
     switch (approval.status) {
       case ApprovalStatus.ApprovalApproved:
@@ -128,7 +129,7 @@ export default function PurchaseRequestDetailsPage() {
         );
         navigate("/");
       } finally {
-        setIsLoading(false); 
+        setIsLoading(false);
       }
     };
     fetchPurchaseRequest();
@@ -255,151 +256,229 @@ export default function PurchaseRequestDetailsPage() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="Request Details">
-                  <div className="mx-4 my-10 mx-12 border-2 border-gray-800 rounded-lg p-8 pl-16 flex justify-start">
+                  <div className="mx-12 mx-4 my-10 flex justify-start rounded-lg border-2 border-gray-800 p-8 pl-16">
                     {isLoading ? (
                       <></>
                     ) : (
                       <div className="w-full space-y-8">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-10">
+                        <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2">
                           <div>
-                            <p className="text-md mb-2 font-medium text-gray-400">Requester</p>
-                            <div className="pl-8 text-md flex items-center">
+                            <p className="text-md mb-2 font-medium text-gray-400">
+                              Requester
+                            </p>
+                            <div className="text-md flex items-center pl-8">
                               <Avatar className="mr-4 h-12 w-12">
-                                <AvatarImage src={purchaseRequest.user?.avatar_url} />
+                                <AvatarImage
+                                  src={purchaseRequest.user?.avatar_url}
+                                />
                                 <AvatarFallback>CN</AvatarFallback>
                               </Avatar>
                               <div className="flex flex-col items-start justify-center">
                                 <div>
-                                  {purchaseRequest.user?.first_name} {purchaseRequest.user?.last_name}
+                                  {purchaseRequest.user?.first_name}{" "}
+                                  {purchaseRequest.user?.last_name}
                                 </div>
-                                <div className="text-gray-400">{purchaseRequest.user?.email}</div>
+                                <div className="text-gray-400">
+                                  {purchaseRequest.user?.email}
+                                </div>
                               </div>
                             </div>
                           </div>
                           <div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[auto_1fr] xl:gap-x-24 pt-2">
-                                <p className="text-md font-medium text-gray-400">ID #</p>
-                                <p className="text-md">{purchaseRequest.id}</p>
-                                <p className="text-md font-medium text-gray-400">Date Requested</p>
-                                <p className="text-md">{purchaseRequest.created_at
-                                  ? new Date(purchaseRequest.created_at).toLocaleDateString()
-                                  : ""}</p>
-                                <p className="text-md font-medium text-gray-400">Status</p>
-                                <p className="text-md">{purchaseRequest.status}</p>
-                              </div>
+                            <div className="grid grid-cols-1 pt-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[auto_1fr] xl:gap-x-24">
+                              <p className="text-md font-medium text-gray-400">
+                                ID #
+                              </p>
+                              <p className="text-md">{purchaseRequest.id}</p>
+                              <p className="text-md font-medium text-gray-400">
+                                Date Requested
+                              </p>
+                              <p className="text-md">
+                                {purchaseRequest.created_at
+                                  ? new Date(
+                                      purchaseRequest.created_at,
+                                    ).toLocaleDateString()
+                                  : ""}
+                              </p>
+                              <p className="text-md font-medium text-gray-400">
+                                Status
+                              </p>
+                              <p className="text-md">
+                                {purchaseRequest.status}
+                              </p>
+                            </div>
                           </div>
-
                         </div>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-10">
-                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[auto_1fr] lg:gap-x-24">
-                              <p className="text-md font-medium text-gray-400">Subteam </p>
-                              <p className="text-md">{department?.name}</p>
-                              <p className="text-md font-medium text-gray-400">Component </p>
-                              <p className="text-md">{purchaseRequest.component}</p>
-                              <p className="text-md font-medium text-gray-400">Vendor </p>
-                              <p className="text-md">{purchaseRequest.vendor}</p>
-                              <p className="text-md font-medium text-gray-400">Priority </p>
-                              <p className="text-md">{purchaseRequest.priority}</p>
-                              <p className="text-md font-medium text-gray-400">Needed By </p>
-                              <p className="text-md">{purchaseRequest.needed_by_date
-                                ? new Date(purchaseRequest.needed_by_date).toLocaleDateString()
-                                : ""}</p>
-                              <p className="text-md font-medium text-gray-400">Description </p>
-                              <p className="text-md">{purchaseRequest.description}</p>
-
-                            </div>
+                        <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-24 xl:grid-cols-[auto_1fr]">
+                            <p className="text-md font-medium text-gray-400">
+                              Subteam{" "}
+                            </p>
+                            <p className="text-md">{department?.name}</p>
+                            <p className="text-md font-medium text-gray-400">
+                              Component{" "}
+                            </p>
+                            <p className="text-md">
+                              {purchaseRequest.component}
+                            </p>
+                            <p className="text-md font-medium text-gray-400">
+                              Vendor{" "}
+                            </p>
+                            <p className="text-md">{purchaseRequest.vendor}</p>
+                            <p className="text-md font-medium text-gray-400">
+                              Priority{" "}
+                            </p>
+                            <p className="text-md">
+                              {purchaseRequest.priority}
+                            </p>
+                            <p className="text-md font-medium text-gray-400">
+                              Needed By{" "}
+                            </p>
+                            <p className="text-md">
+                              {purchaseRequest.needed_by_date
+                                ? new Date(
+                                    purchaseRequest.needed_by_date,
+                                  ).toLocaleDateString()
+                                : ""}
+                            </p>
+                            <p className="text-md font-medium text-gray-400">
+                              Description{" "}
+                            </p>
+                            <p className="text-md">
+                              {purchaseRequest.description}
+                            </p>
+                          </div>
                           <div>
-                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[auto_1fr] lg:gap-x-10">
-                              <p className="text-md font-medium text-gray-400">Estimated Item Total </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-10 xl:grid-cols-[auto_1fr]">
+                              <p className="text-md font-medium text-gray-400">
+                                Estimated Item Total{" "}
+                              </p>
                               <p className="text-md">
-                                ${purchaseRequest.items
-                                  ? (calculateEstimatedCostCents(purchaseRequest.items) / 100).toFixed(2)
+                                $
+                                {purchaseRequest.items
+                                  ? (
+                                      calculateEstimatedCostCents(
+                                        purchaseRequest.items,
+                                      ) / 100
+                                    ).toFixed(2)
                                   : "0.00"}
                               </p>
-                              <p className="text-md font-medium text-gray-400">Estimated Shipping/Tax </p>
+                              <p className="text-md font-medium text-gray-400">
+                                Estimated Shipping/Tax{" "}
+                              </p>
                               <p className="text-md">
-                                ${purchaseRequest.shipping_tax_cost_cents
-                                  ? (purchaseRequest.shipping_tax_cost_cents / 100).toFixed(2)
+                                $
+                                {purchaseRequest.shipping_tax_cost_cents
+                                  ? (
+                                      purchaseRequest.shipping_tax_cost_cents /
+                                      100
+                                    ).toFixed(2)
                                   : "0.00"}
                               </p>
-                              <p className="text-md font-medium text-gray-400">Estimated Cost </p>
+                              <p className="text-md font-medium text-gray-400">
+                                Estimated Cost{" "}
+                              </p>
                               <p className="text-md">
-                                ${purchaseRequest.estimated_cost_cents
-                                  ? (purchaseRequest.estimated_cost_cents / 100).toFixed(2)
+                                $
+                                {purchaseRequest.estimated_cost_cents
+                                  ? (
+                                      purchaseRequest.estimated_cost_cents / 100
+                                    ).toFixed(2)
                                   : "0.00"}
                               </p>
-                              <p className="text-md font-medium text-gray-400">Who will order?</p>
-                              <p className="text-md">{purchaseRequest.requested_purchaser}</p>
-                              <p className="text-md font-medium text-gray-400">Final Price </p>
+                              <p className="text-md font-medium text-gray-400">
+                                Who will order?
+                              </p>
                               <p className="text-md">
-                                {purchaseRequest.final_cost_cents && purchaseRequest.final_cost_cents > 0
+                                {purchaseRequest.requested_purchaser}
+                              </p>
+                              <p className="text-md font-medium text-gray-400">
+                                Final Price{" "}
+                              </p>
+                              <p className="text-md">
+                                {purchaseRequest.final_cost_cents &&
+                                purchaseRequest.final_cost_cents > 0
                                   ? `$${(purchaseRequest.final_cost_cents / 100).toFixed(2)}`
                                   : ""}
                               </p>
-                              <p className="text-md font-medium text-gray-400">Order Date</p>
+                              <p className="text-md font-medium text-gray-400">
+                                Order Date
+                              </p>
                               <p className="text-md">{}</p>
                             </div>
                           </div>
                         </div>
                         <div>
-                          <p className="mt-20 mb-2 text-md font-medium text-gray-400">
+                          <p className="text-md mb-2 mt-20 font-medium text-gray-400">
                             Items ({purchaseRequest.items?.length || 0})
                           </p>
                           <div className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-[1fr_6fr_4fr_4fr_4fr_12fr]">
-                            <p className="text-sm font-medium text-gray-400"> </p>    
-                            <p className="text-sm font-medium text-gray-400"> Item Name </p>    
-                            <p className="text-sm font-medium text-gray-400"> Unit Price </p>    
-                            <p className="text-sm font-medium text-gray-400"> Quantity </p>    
-                            <p className="text-sm font-medium text-gray-400"> Item Total </p>    
-                            <p className="text-sm font-medium text-gray-400"> URL </p>    
+                            <p className="text-sm font-medium text-gray-400">
+                              {" "}
+                            </p>
+                            <p className="text-sm font-medium text-gray-400">
+                              {" "}
+                              Item Name{" "}
+                            </p>
+                            <p className="text-sm font-medium text-gray-400">
+                              {" "}
+                              Unit Price{" "}
+                            </p>
+                            <p className="text-sm font-medium text-gray-400">
+                              {" "}
+                              Quantity{" "}
+                            </p>
+                            <p className="text-sm font-medium text-gray-400">
+                              {" "}
+                              Item Total{" "}
+                            </p>
+                            <p className="text-sm font-medium text-gray-400">
+                              {" "}
+                              URL{" "}
+                            </p>
                           </div>
                           {purchaseRequest.items &&
                           purchaseRequest.items.length > 0 ? (
                             <div className="space-y-4">
                               {purchaseRequest.items.map((item, index) => (
-                                <div
-                                  key={item.id || index}
-                                >
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_6fr_4fr_4fr_4fr_12fr]">
-                                  <p className="text-sm font-medium text-gray-400">
-                                    #{index + 1}
-                                  </p>
+                                <div key={item.id || index}>
+                                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_6fr_4fr_4fr_4fr_12fr]">
+                                    <p className="text-sm font-medium text-gray-400">
+                                      #{index + 1}
+                                    </p>
 
-                                  <p className="text-md text-white">
-                                    {item.item_name || "N/A"}
-                                  </p>
+                                    <p className="text-md text-white">
+                                      {item.item_name || "N/A"}
+                                    </p>
 
-                                  <p className="text-md text-white">
-                                    $
-                                    {(
-                                      (item.item_unit_price_cents || 0) /
-                                      100
-                                    ).toFixed(2)}
-                                  </p>
+                                    <p className="text-md text-white">
+                                      $
+                                      {(
+                                        (item.item_unit_price_cents || 0) / 100
+                                      ).toFixed(2)}
+                                    </p>
 
-                                  <p className="text-md text-white">
-                                    {item.item_quantity || 0}
-                                  </p>
+                                    <p className="text-md text-white">
+                                      {item.item_quantity || 0}
+                                    </p>
 
-                                  <p className="text-md text-white">
-                                    $
-                                    {(
-                                      calculateItemTotalCents(item) / 100
-                                    ).toFixed(2)}
-                                  </p>
-                                  <a
-                                    href={item.item_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="break-all text-sm text-blue-400 underline"
-                                  >
-                                    {item.item_url}
-                                  </a>
-                                </div>
+                                    <p className="text-md text-white">
+                                      $
+                                      {(
+                                        calculateItemTotalCents(item) / 100
+                                      ).toFixed(2)}
+                                    </p>
+                                    <a
+                                      href={item.item_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="break-all text-sm text-blue-400 underline"
+                                    >
+                                      {item.item_url}
+                                    </a>
+                                  </div>
                                 </div>
                               ))}
-
-                              
                             </div>
                           ) : (
                             <div className="py-8 text-center text-gray-500">
@@ -529,4 +608,3 @@ export default function PurchaseRequestDetailsPage() {
     </>
   );
 }
- 

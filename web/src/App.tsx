@@ -16,7 +16,9 @@ import { DataTable } from "@/components/data-table";
 function App() {
   const navigate = useNavigate();
   const currentUser = useUser();
-  const [purchaseRequests, setPurchaseRequests] = useState<PurchaseRequest[]>([]);
+  const [purchaseRequests, setPurchaseRequests] = useState<PurchaseRequest[]>(
+    [],
+  );
 
   React.useEffect(() => {
     checkAuth().then(() => {});

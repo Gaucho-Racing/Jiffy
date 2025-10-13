@@ -52,13 +52,19 @@ export default function EditPurchaseRequestPage() {
   const navigate = useNavigate();
   const currentUser = useUser();
   const { id } = useParams();
-  const [purchaseRequest, setPurchaseRequest] = useState<Partial<PurchaseRequest>>(initPurchaseRequest);
+  const [purchaseRequest, setPurchaseRequest] =
+    useState<Partial<PurchaseRequest>>(initPurchaseRequest);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [date, setDate] = React.useState<Date>();
-  const [items, setItems] = useState<PurchaseRequestItem[]>([{ ...initPurchaseRequestItem }]);
-  const [displayValues, setDisplayValues] = useState<{ [key: string]: string }>({},);
-  const [reimbursementAcknowledged, setReimbursementAcknowledged] = useState(false);
-  
+  const [items, setItems] = useState<PurchaseRequestItem[]>([
+    { ...initPurchaseRequestItem },
+  ]);
+  const [displayValues, setDisplayValues] = useState<{ [key: string]: string }>(
+    {},
+  );
+  const [reimbursementAcknowledged, setReimbursementAcknowledged] =
+    useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -80,7 +86,9 @@ export default function EditPurchaseRequestPage() {
   useEffect(() => {
     const fetchPurchaseRequest = async () => {
       try {
-        const response = await axios.get(`${JIFFY_API_URL}/purchaserequests/${id}`,{
+        const response = await axios.get(
+          `${JIFFY_API_URL}/purchaserequests/${id}`,
+          {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
             },
@@ -93,7 +101,10 @@ export default function EditPurchaseRequestPage() {
           navigate("/");
           return;
         }
-        if (purchaseRequestData.status !== "Request Rejected" && purchaseRequestData.status !== "Pending Approval") {
+        if (
+          purchaseRequestData.status !== "Request Rejected" &&
+          purchaseRequestData.status !== "Pending Approval"
+        ) {
           notify.error("Cannot edit purchase request in current status");
           navigate(`/pr/${id}`);
           return;
@@ -103,7 +114,10 @@ export default function EditPurchaseRequestPage() {
         if (purchaseRequestData.needed_by_date) {
           setDate(new Date(purchaseRequestData.needed_by_date));
         }
-        if (purchaseRequestData.requested_purchaser && purchaseRequestData.requested_purchaser !== "Gaucho Racing") {
+        if (
+          purchaseRequestData.requested_purchaser &&
+          purchaseRequestData.requested_purchaser !== "Gaucho Racing"
+        ) {
           setReimbursementAcknowledged(true);
         }
         if (purchaseRequestData.items && purchaseRequestData.items.length > 0) {
@@ -154,7 +168,11 @@ export default function EditPurchaseRequestPage() {
     }
   };
 
-  const updateItem = (index: number, field: keyof PurchaseRequestItem, value: string | number) => {
+  const updateItem = (
+    index: number,
+    field: keyof PurchaseRequestItem,
+    value: string | number,
+  ) => {
     const updatedItems = [...items];
     updatedItems[index] = { ...updatedItems[index], [field]: value };
     setItems(updatedItems);
@@ -173,7 +191,11 @@ export default function EditPurchaseRequestPage() {
     // add a new item if the last item has some content
     if (index === items.length - 1) {
       const currentItem = items[index];
-      if ( currentItem.item_name.trim() || currentItem.item_url.trim() || currentItem.item_unit_price_cents > 0) {
+      if (
+        currentItem.item_name.trim() ||
+        currentItem.item_url.trim() ||
+        currentItem.item_unit_price_cents > 0
+      ) {
         addItem();
       }
     }
@@ -205,13 +227,18 @@ export default function EditPurchaseRequestPage() {
       notify.error("Please fill in at least one item");
       return;
     }
-    if (purchaseRequest.requested_purchaser !== "Gaucho Racing" && purchaseRequest.requested_purchaser && !reimbursementAcknowledged) {
+    if (
+      purchaseRequest.requested_purchaser !== "Gaucho Racing" &&
+      purchaseRequest.requested_purchaser &&
+      !reimbursementAcknowledged
+    ) {
       notify.error("Please acknowledge the reimbursement policy");
       return;
     }
 
     const itemsCost = calculateEstimatedCostCents(nonEmptyItems);
-    const estimatedCost = itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0);
+    const estimatedCost =
+      itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0);
     const cleanItems = nonEmptyItems.map((item) => ({
       item_url: item.item_url,
       item_name: item.item_name,
@@ -364,7 +391,8 @@ export default function EditPurchaseRequestPage() {
                       </div>
                       <div className="grid grid-cols-2 items-center gap-4">
                         <Label htmlFor="description">
-                          Description & Justification <span className="text-red-500">*</span>
+                          Description & Justification{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <Textarea
                           id="description"
@@ -396,16 +424,26 @@ export default function EditPurchaseRequestPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="1">1 - Not Urgent</SelectItem>
-                            <SelectItem value="2">2 - Need this year</SelectItem>
-                            <SelectItem value="3">3 - Need this quarter</SelectItem>
-                            <SelectItem value="4">4 - Need this month</SelectItem>
-                            <SelectItem value="5">5 - NEED AS SOON AS POSSIBLE!!!</SelectItem>
+                            <SelectItem value="2">
+                              2 - Need this year
+                            </SelectItem>
+                            <SelectItem value="3">
+                              3 - Need this quarter
+                            </SelectItem>
+                            <SelectItem value="4">
+                              4 - Need this month
+                            </SelectItem>
+                            <SelectItem value="5">
+                              5 - NEED AS SOON AS POSSIBLE!!!
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="grid grid-cols-2 items-center gap-4">
-                        <Label htmlFor="needed_by_date">Needed By Date <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="needed_by_date">
+                          Needed By Date <span className="text-red-500">*</span>
+                        </Label>
                         <div className="flex items-center">
                           <Popover>
                             <PopoverTrigger asChild>
@@ -453,13 +491,20 @@ export default function EditPurchaseRequestPage() {
                           </Button>
                         </div>
 
-                        
                         <div className="space-y-2">
                           <div className="grid grid-cols-12 gap-2 border-b border-gray-600 bg-black pb-2 text-sm font-medium text-white">
-                            <div className="col-span-4">Item Name <span className="text-red-500">*</span></div>
-                            <div className="col-span-2">Unit Price <span className="text-red-500">*</span></div>
-                            <div className="col-span-1">Qty <span className="text-red-500">*</span></div>
-                            <div className="col-span-3">URL <span className="text-red-500">*</span></div>
+                            <div className="col-span-4">
+                              Item Name <span className="text-red-500">*</span>
+                            </div>
+                            <div className="col-span-2">
+                              Unit Price <span className="text-red-500">*</span>
+                            </div>
+                            <div className="col-span-1">
+                              Qty <span className="text-red-500">*</span>
+                            </div>
+                            <div className="col-span-3">
+                              URL <span className="text-red-500">*</span>
+                            </div>
                             <div className="col-span-1">Total</div>
                             <div className="col-span-1"></div>
                           </div>
@@ -500,18 +545,33 @@ export default function EditPurchaseRequestPage() {
                                       displayValues[`price_${index}`] !==
                                       undefined
                                         ? displayValues[`price_${index}`]
-                                        : item.item_unit_price_cents != null && item.item_unit_price_cents !== 0
-                                          ? (item.item_unit_price_cents / 100).toString() : ""
-                                        }
+                                        : item.item_unit_price_cents != null &&
+                                            item.item_unit_price_cents !== 0
+                                          ? (
+                                              item.item_unit_price_cents / 100
+                                            ).toString()
+                                          : ""
+                                    }
                                     onChange={(e) => {
                                       const value = e.target.value;
-                                      if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
-                                        setDisplayValues((prev) => ({...prev,[`price_${index}`]: value}));
+                                      if (
+                                        value === "" ||
+                                        /^\d*\.?\d{0,2}$/.test(value)
+                                      ) {
+                                        setDisplayValues((prev) => ({
+                                          ...prev,
+                                          [`price_${index}`]: value,
+                                        }));
                                       }
                                     }}
                                     onBlur={(e) => {
-                                      const value = parseFloat(e.target.value) || 0;
-                                      updateItem(index, "item_unit_price_cents", Math.round(value * 100));
+                                      const value =
+                                        parseFloat(e.target.value) || 0;
+                                      updateItem(
+                                        index,
+                                        "item_unit_price_cents",
+                                        Math.round(value * 100),
+                                      );
                                       setDisplayValues((prev) => {
                                         const newValues = { ...prev };
                                         delete newValues[`price_${index}`];
@@ -561,7 +621,11 @@ export default function EditPurchaseRequestPage() {
                                   required={!isItemEmpty(item)}
                                   value={item.item_url}
                                   onChange={(e) =>
-                                    updateItem(index, "item_url", e.target.value)
+                                    updateItem(
+                                      index,
+                                      "item_url",
+                                      e.target.value,
+                                    )
                                   }
                                   onBlur={() => handleItemBlur(index)}
                                   onFocus={(e) => e.target.select()}
@@ -569,7 +633,12 @@ export default function EditPurchaseRequestPage() {
                               </div>
 
                               <div className="col-span-1 text-sm font-medium text-white">
-                                $ {(((item.item_unit_price_cents || 0) * (item.item_quantity || 0)) / 100).toFixed(2)}
+                                ${" "}
+                                {(
+                                  ((item.item_unit_price_cents || 0) *
+                                    (item.item_quantity || 0)) /
+                                  100
+                                ).toFixed(2)}
                               </div>
                               <div className="col-span-1">
                                 <button
@@ -578,7 +647,7 @@ export default function EditPurchaseRequestPage() {
                                   className="text-sm text-red-500 hover:text-red-700"
                                   disabled={items.length === 1}
                                 >
-                                x 
+                                  x
                                 </button>
                               </div>
                             </div>
@@ -596,7 +665,9 @@ export default function EditPurchaseRequestPage() {
                             disabled
                             id="estimated_item_total"
                             className="pl-6"
-                            value={(calculateEstimatedCostCents(items) / 100).toFixed(2)}
+                            value={(
+                              calculateEstimatedCostCents(items) / 100
+                            ).toFixed(2)}
                           />
                         </div>
                       </div>
@@ -619,19 +690,36 @@ export default function EditPurchaseRequestPage() {
                             value={
                               displayValues["shipping"] !== undefined
                                 ? displayValues["shipping"]
-                                : purchaseRequest.shipping_tax_cost_cents != null && purchaseRequest.shipping_tax_cost_cents !== 0
-                                  ? (purchaseRequest.shipping_tax_cost_cents /100).toString(): ""
+                                : purchaseRequest.shipping_tax_cost_cents !=
+                                      null &&
+                                    purchaseRequest.shipping_tax_cost_cents !==
+                                      0
+                                  ? (
+                                      purchaseRequest.shipping_tax_cost_cents /
+                                      100
+                                    ).toString()
+                                  : ""
                             }
                             onChange={(e) => {
                               const value = e.target.value;
-                              if (value === "" || /^\d*\.?\d{0,2}$/.test(value)
+                              if (
+                                value === "" ||
+                                /^\d*\.?\d{0,2}$/.test(value)
                               ) {
-                                setDisplayValues((prev) => ({...prev, shipping: value}));
+                                setDisplayValues((prev) => ({
+                                  ...prev,
+                                  shipping: value,
+                                }));
                               }
                             }}
                             onBlur={(e) => {
                               const value = parseFloat(e.target.value) || 0;
-                              setPurchaseRequest({...purchaseRequest,shipping_tax_cost_cents: Math.round(value * 100)});
+                              setPurchaseRequest({
+                                ...purchaseRequest,
+                                shipping_tax_cost_cents: Math.round(
+                                  value * 100,
+                                ),
+                              });
                               setDisplayValues((prev) => {
                                 const newValues = { ...prev };
                                 delete newValues["shipping"];
@@ -643,7 +731,7 @@ export default function EditPurchaseRequestPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 items-center pb-8 gap-4">
+                      <div className="grid grid-cols-2 items-center gap-4 pb-8">
                         <Label>Estimated Cost</Label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
@@ -653,20 +741,36 @@ export default function EditPurchaseRequestPage() {
                             disabled
                             id="estimated_cost"
                             className="pl-6"
-                            value={((calculateEstimatedCostCents(items) + (purchaseRequest.shipping_tax_cost_cents || 0)) /100).toFixed(2)}
+                            value={(
+                              (calculateEstimatedCostCents(items) +
+                                (purchaseRequest.shipping_tax_cost_cents ||
+                                  0)) /
+                              100
+                            ).toFixed(2)}
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 items-center gap-4 pb-8">
                         <Label>
-                          Who will be making this order? <span className="text-red-500">*</span>
+                          Who will be making this order?{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <RadioGroup
-                          value={purchaseRequest.requested_purchaser === "Gaucho Racing" ? "club" : purchaseRequest.requested_purchaser ? "self" : "club"}
+                          value={
+                            purchaseRequest.requested_purchaser ===
+                            "Gaucho Racing"
+                              ? "club"
+                              : purchaseRequest.requested_purchaser
+                                ? "self"
+                                : "club"
+                          }
                           onValueChange={(value) => {
                             setPurchaseRequest({
                               ...purchaseRequest,
-                              requested_purchaser: value === "club" ? "Gaucho Racing" : `${currentUser.first_name} ${currentUser.last_name}`,
+                              requested_purchaser:
+                                value === "club"
+                                  ? "Gaucho Racing"
+                                  : `${currentUser.first_name} ${currentUser.last_name}`,
                             });
                             if (value === "club") {
                               setReimbursementAcknowledged(false);
@@ -675,37 +779,50 @@ export default function EditPurchaseRequestPage() {
                         >
                           <div className="flex items-center space-x-2 pl-8">
                             <RadioGroupItem value="club" id="club" />
-                            <Label htmlFor="club" className="font-normal cursor-pointer">
+                            <Label
+                              htmlFor="club"
+                              className="cursor-pointer font-normal"
+                            >
                               Gaucho Racing (Club Funds)
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2 pl-8">
                             <RadioGroupItem value="self" id="self" />
-                            <Label htmlFor="self" className="font-normal cursor-pointer">
+                            <Label
+                              htmlFor="self"
+                              className="cursor-pointer font-normal"
+                            >
                               Myself (Personal Funds)
                             </Label>
                           </div>
                         </RadioGroup>
                       </div>
-                      {purchaseRequest.requested_purchaser !== "Gaucho Racing" && purchaseRequest.requested_purchaser && (
-                        <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
-                          <Label 
-                            htmlFor="reimbursement-ack" 
-                            className="text-sm font-normal cursor-pointer text-red-500"
-                          >
-                            I understand that, by skipping the order approval process and ordering these items myself, I am NOT guaranteed reimbursement. <span className="text-red-500">*</span>
-                          </Label>
-                          <div className="pl-8">  
-                            <Checkbox
-                              id="reimbursement-ack"
-                              checked={reimbursementAcknowledged}
-                              onCheckedChange={(checked) => setReimbursementAcknowledged(checked as boolean)}
-                            />                            
+                      {purchaseRequest.requested_purchaser !==
+                        "Gaucho Racing" &&
+                        purchaseRequest.requested_purchaser && (
+                          <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
+                            <Label
+                              htmlFor="reimbursement-ack"
+                              className="cursor-pointer text-sm font-normal text-red-500"
+                            >
+                              I understand that, by skipping the order approval
+                              process and ordering these items myself, I am NOT
+                              guaranteed reimbursement.{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <div className="pl-8">
+                              <Checkbox
+                                id="reimbursement-ack"
+                                checked={reimbursementAcknowledged}
+                                onCheckedChange={(checked) =>
+                                  setReimbursementAcknowledged(
+                                    checked as boolean,
+                                  )
+                                }
+                              />
+                            </div>
                           </div>
-
-                        </div>
-                      )}
-
+                        )}
                     </CardContent>
 
                     <CardFooter className="flex justify-between">
