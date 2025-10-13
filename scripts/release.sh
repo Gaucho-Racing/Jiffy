@@ -37,3 +37,6 @@ git push origin v$VERSION
 gh release create v$VERSION --generate-notes
 
 echo "Package released successfully for version $VERSION"
+
+echo "Restarting service on gr-hamilton ec2 instance"
+sudo ssh ec2-user@gr-hamilton.internal "cd hamilton-infra && git pull && docker compose -f jiffy.yml down && docker compose -f jiffy.yml pull && docker compose -f jiffy.yml up -d"

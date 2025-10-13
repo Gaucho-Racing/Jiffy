@@ -16,7 +16,7 @@ func main() {
 
 	database.InitializeDB()
 	service.InitializeKeys()
-	service.ConnectDiscord()
+	//service.ConnectDiscord()
 	service.PingSentinel()
 	service.InitializeDepartments()
 

@@ -8,6 +8,9 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Toaster } from "./components/ui/sonner.tsx";
 import App from "./App.tsx";
 import LoginPage from "@/pages/auth/LoginPage.tsx";
+import NewPurchaseRequestPage from "@/pages/NewPurchaseRequestPage.tsx";
+import PurchaseRequestDetailsPage from "@/pages/PurchaseRequestDetailsPage.tsx";
+import EditPurchaseRequestPage from "@/pages/EditPurchaseRequestPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +20,20 @@ const router = createBrowserRouter([
   {
     path: "/auth/login",
     element: <LoginPage />,
+  },
+
+  {
+    path: "/pr/:id",
+    element: <PurchaseRequestDetailsPage />,
+  },
+
+  {
+    path: "/pr/new",
+    element: <NewPurchaseRequestPage />,
+  },
+  {
+    path: "/pr/:id/edit",
+    element: <EditPurchaseRequestPage />,
   },
 ]);
 
