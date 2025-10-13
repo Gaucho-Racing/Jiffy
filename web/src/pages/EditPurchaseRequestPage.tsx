@@ -1,0 +1,740 @@
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import {
+  PurchaseRequest,
+  PurchaseRequestItem,
+  initPurchaseRequest,
+  initPurchaseRequestItem,
+  calculateEstimatedCostCents,
+} from "@/models/pr";
+import { Department } from "@/models/departments";
+import { Calendar } from "@/components/ui/calendar";
+import { JIFFY_API_URL } from "@/consts/config";
+import { notify } from "@/lib/notify";
+import axios from "axios";
+import { AuthLoading } from "@/components/AuthLoading";
+import Header from "@/components/Header";
+import { OutlineButton } from "@/components/ui/outline-button";
+import Footer from "@/components/Footer";
+import { getUser, useUser } from "@/lib/store";
+import { checkCredentials } from "@/lib/auth";
+import React from "react";
+import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
+import { Calendar as CalendarIcon, ArrowLeft, Plus } from "lucide-react";
+
+export default function EditPurchaseRequestPage() {
+  const navigate = useNavigate();
+  const currentUser = useUser();
+  const { id } = useParams();
+  const [purchaseRequest, setPurchaseRequest] = useState<Partial<PurchaseRequest>>(initPurchaseRequest);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [date, setDate] = React.useState<Date>();
+  const [items, setItems] = useState<PurchaseRequestItem[]>([{ ...initPurchaseRequestItem }]);
+  const [displayValues, setDisplayValues] = useState<{ [key: string]: string }>({},);
+  const [reimbursementAcknowledged, setReimbursementAcknowledged] = useState(false);
+  
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const currentRoute = window.location.pathname + window.location.search;
+    const status = await checkCredentials();
+    if (status != 0) {
+      if (currentRoute == "/") {
+        navigate(`/auth/login`);
+      } else {
+        navigate(`/auth/login?route=${encodeURIComponent(currentRoute)}`);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const fetchPurchaseRequest = async () => {
+      try {
+        const response = await axios.get(`${JIFFY_API_URL}/purchaserequests/${id}`,{
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+            },
+          },
+        );
+        const purchaseRequestData = response.data;
+        const user = getUser();
+        if (purchaseRequestData.user_id !== user.id) {
+          notify.error("You can only edit your own purchase requests");
+          navigate("/");
+          return;
+        }
+        if (purchaseRequestData.status !== "Request Rejected" && purchaseRequestData.status !== "Pending Approval") {
+          notify.error("Cannot edit purchase request in current status");
+          navigate(`/pr/${id}`);
+          return;
+        }
+
+        setPurchaseRequest(purchaseRequestData);
+        if (purchaseRequestData.needed_by_date) {
+          setDate(new Date(purchaseRequestData.needed_by_date));
+        }
+        if (purchaseRequestData.requested_purchaser && purchaseRequestData.requested_purchaser !== "Gaucho Racing") {
+          setReimbursementAcknowledged(true);
+        }
+        if (purchaseRequestData.items && purchaseRequestData.items.length > 0) {
+          setItems(purchaseRequestData.items);
+        } else {
+          setItems([{ ...initPurchaseRequestItem }]);
+        }
+      } catch (error: any) {
+        notify.error(
+          error.response?.data?.message || "Failed to fetch purchase request",
+        );
+        navigate("/");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (id) {
+      fetchPurchaseRequest();
+    }
+  }, [id, navigate]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get(`${JIFFY_API_URL}/departments`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        });
+        setDepartments(response.data);
+      } catch (error: any) {
+        notify.error(
+          error.response?.data?.message || "Failed to fetch departments",
+        );
+      }
+    };
+    fetchDepartments();
+  }, []);
+
+  const addItem = () => {
+    setItems([...items, { ...initPurchaseRequestItem }]);
+  };
+
+  const removeItem = (index: number) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index));
+      setDisplayValues({});
+    }
+  };
+
+  const updateItem = (index: number, field: keyof PurchaseRequestItem, value: string | number) => {
+    const updatedItems = [...items];
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    setItems(updatedItems);
+  };
+
+  const isItemEmpty = (item: PurchaseRequestItem) => {
+    return (
+      item.item_name.trim() === "" &&
+      item.item_url.trim() === "" &&
+      item.item_unit_price_cents === 0 &&
+      item.item_quantity === 1
+    );
+  };
+
+  const handleItemBlur = (index: number) => {
+    // add a new item if the last item has some content
+    if (index === items.length - 1) {
+      const currentItem = items[index];
+      if ( currentItem.item_name.trim() || currentItem.item_url.trim() || currentItem.item_unit_price_cents > 0) {
+        addItem();
+      }
+    }
+  };
+
+  const updatePurchaseRequest = async () => {
+    if (!purchaseRequest.department_id) {
+      notify.error("Please select a department");
+      return;
+    }
+    if (!purchaseRequest.component) {
+      notify.error("Please enter a component");
+      return;
+    }
+    if (!purchaseRequest.vendor) {
+      notify.error("Please enter a vendor");
+      return;
+    }
+    if (!purchaseRequest.priority) {
+      notify.error("Please select a priority level");
+      return;
+    }
+    if (!purchaseRequest.needed_by_date) {
+      notify.error("Please select a needed by date");
+      return;
+    }
+    const nonEmptyItems = items.filter((item) => !isItemEmpty(item));
+    if (nonEmptyItems.length === 0) {
+      notify.error("Please fill in at least one item");
+      return;
+    }
+    if (purchaseRequest.requested_purchaser !== "Gaucho Racing" && purchaseRequest.requested_purchaser && !reimbursementAcknowledged) {
+      notify.error("Please acknowledge the reimbursement policy");
+      return;
+    }
+
+    const itemsCost = calculateEstimatedCostCents(nonEmptyItems);
+    const estimatedCost = itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0);
+    const cleanItems = nonEmptyItems.map((item) => ({
+      item_url: item.item_url,
+      item_name: item.item_name,
+      item_unit_price_cents: item.item_unit_price_cents,
+      item_quantity: item.item_quantity,
+    }));
+    const dataToSend = {
+      ...purchaseRequest,
+      items: cleanItems,
+      estimated_cost_cents: estimatedCost,
+      needed_by_date: date ? date.toISOString() : null,
+    };
+
+    try {
+      const response = await axios.post(
+        `${JIFFY_API_URL}/purchaserequests`,
+        dataToSend,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+      notify.success("Purchase request created successfully!");
+      const id = response.data.id;
+      navigate(`/pr/${id}`);
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error));
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        {currentUser.id == "" ? (
+          <AuthLoading />
+        ) : (
+          <div className="flex flex-col justify-between">
+            <Header />
+            <div className="flex flex-col justify-start p-4 lg:p-32 lg:pt-16">
+              <div className="flex h-64 items-center justify-center">
+                <div className="text-lg text-gray-400">
+                  Loading purchase request...
+                </div>
+              </div>
+            </div>
+            <Footer />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {currentUser.id == "" ? (
+        <AuthLoading />
+      ) : (
+        <div className="flex flex-col justify-between">
+          <Header />
+          <div className="flex flex-col justify-start p-4 lg:p-32 lg:pt-16">
+            <div className="mb-2">
+              <Button
+                variant={"ghost"}
+                onClick={() => navigate(`/pr/${id}`)}
+                className="flex items-center"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4 text-gray-400" />
+                Back to purchase request
+              </Button>
+              <div className="mx-20 my-10">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    updatePurchaseRequest();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>
+                        Edit Purchase Request #{purchaseRequest.id}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="ml-12 space-y-4">
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="department">
+                          Department <span className="text-red-500">*</span>
+                        </Label>
+                        <Select
+                          value={purchaseRequest.department_id}
+                          onValueChange={(value) =>
+                            setPurchaseRequest({
+                              ...purchaseRequest,
+                              department_id: value,
+                            })
+                          }
+                        >
+                          <SelectTrigger id="department">
+                            <SelectValue placeholder="Select a department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {departments.map((department) => (
+                              <SelectItem
+                                key={department.id}
+                                value={department.id}
+                              >
+                                {department.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="component">
+                          Component <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="component"
+                          placeholder="Enter component / subsystem"
+                          value={purchaseRequest.component || ""}
+                          onChange={(e) =>
+                            setPurchaseRequest({
+                              ...purchaseRequest,
+                              component: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="vendor">
+                          Vendor <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="vendor"
+                          type="text"
+                          placeholder="ex: Amazon"
+                          value={purchaseRequest.vendor || ""}
+                          onChange={(e) =>
+                            setPurchaseRequest({
+                              ...purchaseRequest,
+                              vendor: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="description">
+                          Description & Justification <span className="text-red-500">*</span>
+                        </Label>
+                        <Textarea
+                          id="description"
+                          placeholder="Why is this purchase needed for your project?"
+                          value={purchaseRequest.description}
+                          onChange={(e) =>
+                            setPurchaseRequest({
+                              ...purchaseRequest,
+                              description: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="priority">
+                          Priority <span className="text-red-500">*</span>
+                        </Label>
+                        <Select
+                          value={purchaseRequest.priority?.toString()}
+                          onValueChange={(value) =>
+                            setPurchaseRequest({
+                              ...purchaseRequest,
+                              priority: parseInt(value, 10),
+                            })
+                          }
+                        >
+                          <SelectTrigger id="priority">
+                            <SelectValue placeholder="Select a priority level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - Not Urgent</SelectItem>
+                            <SelectItem value="2">2 - Need this year</SelectItem>
+                            <SelectItem value="3">3 - Need this quarter</SelectItem>
+                            <SelectItem value="4">4 - Need this month</SelectItem>
+                            <SelectItem value="5">5 - NEED AS SOON AS POSSIBLE!!!</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="needed_by_date">Needed By Date <span className="text-red-500">*</span></Label>
+                        <div className="flex items-center">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                data-empty={!date}
+                                className="w-[280px] w-full justify-start text-left font-normal data-[empty=true]:text-muted-foreground"
+                              >
+                                <CalendarIcon className="mr-2 w-4" />
+                                {date ? format(date, "PPP") : "Select a date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={(selectedDate) => {
+                                  setDate(selectedDate);
+                                  setPurchaseRequest({
+                                    ...purchaseRequest,
+                                    needed_by_date: selectedDate
+                                      ? selectedDate.toISOString()
+                                      : "",
+                                  });
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="mb-4 flex items-center justify-between">
+                          <Label className="text-lg font-medium">
+                            Items <span className="text-red-500">*</span>
+                          </Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addItem}
+                            className="flex items-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add Item
+                          </Button>
+                        </div>
+
+                        
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-12 gap-2 border-b border-gray-600 bg-black pb-2 text-sm font-medium text-white">
+                            <div className="col-span-4">Item Name <span className="text-red-500">*</span></div>
+                            <div className="col-span-2">Unit Price <span className="text-red-500">*</span></div>
+                            <div className="col-span-1">Qty <span className="text-red-500">*</span></div>
+                            <div className="col-span-3">URL <span className="text-red-500">*</span></div>
+                            <div className="col-span-1">Total</div>
+                            <div className="col-span-1"></div>
+                          </div>
+
+                          {items.map((item, index) => (
+                            <div
+                              key={index}
+                              className={`grid grid-cols-12 items-center gap-2 bg-black transition-opacity duration-200 ${isItemEmpty(item) ? "opacity-40" : "opacity-100"}`}
+                            >
+                              <div className="col-span-4">
+                                <Input
+                                  type="text"
+                                  placeholder="Enter item name"
+                                  required={!isItemEmpty(item)}
+                                  value={item.item_name}
+                                  onChange={(e) =>
+                                    updateItem(
+                                      index,
+                                      "item_name",
+                                      e.target.value,
+                                    )
+                                  }
+                                  onBlur={() => handleItemBlur(index)}
+                                  onFocus={(e) => e.target.select()}
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <div className="relative">
+                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-gray-400">
+                                    $
+                                  </span>
+                                  <Input
+                                    type="text"
+                                    placeholder="0.00"
+                                    required={!isItemEmpty(item)}
+                                    className="pl-6"
+                                    value={
+                                      displayValues[`price_${index}`] !==
+                                      undefined
+                                        ? displayValues[`price_${index}`]
+                                        : item.item_unit_price_cents != null && item.item_unit_price_cents !== 0
+                                          ? (item.item_unit_price_cents / 100).toString() : ""
+                                        }
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                                        setDisplayValues((prev) => ({...prev,[`price_${index}`]: value}));
+                                      }
+                                    }}
+                                    onBlur={(e) => {
+                                      const value = parseFloat(e.target.value) || 0;
+                                      updateItem(index, "item_unit_price_cents", Math.round(value * 100));
+                                      setDisplayValues((prev) => {
+                                        const newValues = { ...prev };
+                                        delete newValues[`price_${index}`];
+                                        return newValues;
+                                      });
+                                    }}
+                                    onFocus={(e) => e.target.select()}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="col-span-1">
+                                <Input
+                                  type="text"
+                                  placeholder="1"
+                                  required={!isItemEmpty(item)}
+                                  value={
+                                    displayValues[`qty_${index}`] !== undefined
+                                      ? displayValues[`qty_${index}`]
+                                      : item.item_quantity || ""
+                                  }
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "" || /^\d*$/.test(value)) {
+                                      setDisplayValues((prev) => ({
+                                        ...prev,
+                                        [`qty_${index}`]: value,
+                                      }));
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    const value = parseInt(e.target.value) || 0;
+                                    updateItem(index, "item_quantity", value);
+                                    setDisplayValues((prev) => {
+                                      const newValues = { ...prev };
+                                      delete newValues[`qty_${index}`];
+                                      return newValues;
+                                    });
+                                  }}
+                                  onFocus={(e) => e.target.select()}
+                                />
+                              </div>
+                              <div className="col-span-3">
+                                <Input
+                                  type="text"
+                                  placeholder="https://... or www...."
+                                  required={!isItemEmpty(item)}
+                                  value={item.item_url}
+                                  onChange={(e) =>
+                                    updateItem(index, "item_url", e.target.value)
+                                  }
+                                  onBlur={() => handleItemBlur(index)}
+                                  onFocus={(e) => e.target.select()}
+                                />
+                              </div>
+
+                              <div className="col-span-1 text-sm font-medium text-white">
+                                $ {(((item.item_unit_price_cents || 0) * (item.item_quantity || 0)) / 100).toFixed(2)}
+                              </div>
+                              <div className="col-span-1">
+                                <button
+                                  type="button"
+                                  onClick={() => removeItem(index)}
+                                  className="text-sm text-red-500 hover:text-red-700"
+                                  disabled={items.length === 1}
+                                >
+                                x 
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label>Estimated Item Total</Label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
+                            $
+                          </span>
+                          <Input
+                            disabled
+                            id="estimated_item_total"
+                            className="pl-6"
+                            value={(calculateEstimatedCostCents(items) / 100).toFixed(2)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="shipping_tax_cost">
+                          Shipping & Tax Cost
+                        </Label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-gray-400">
+                            $
+                          </span>
+                          <Input
+                            id="shipping_tax_cost"
+                            type="text"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            className="pl-6"
+                            value={
+                              displayValues["shipping"] !== undefined
+                                ? displayValues["shipping"]
+                                : purchaseRequest.shipping_tax_cost_cents != null && purchaseRequest.shipping_tax_cost_cents !== 0
+                                  ? (purchaseRequest.shipping_tax_cost_cents /100).toString(): ""
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "" || /^\d*\.?\d{0,2}$/.test(value)
+                              ) {
+                                setDisplayValues((prev) => ({...prev, shipping: value}));
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const value = parseFloat(e.target.value) || 0;
+                              setPurchaseRequest({...purchaseRequest,shipping_tax_cost_cents: Math.round(value * 100)});
+                              setDisplayValues((prev) => {
+                                const newValues = { ...prev };
+                                delete newValues["shipping"];
+                                return newValues;
+                              });
+                            }}
+                            onFocus={(e) => e.target.select()}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 items-center pb-8 gap-4">
+                        <Label>Estimated Cost</Label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
+                            $
+                          </span>
+                          <Input
+                            disabled
+                            id="estimated_cost"
+                            className="pl-6"
+                            value={((calculateEstimatedCostCents(items) + (purchaseRequest.shipping_tax_cost_cents || 0)) /100).toFixed(2)}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 items-center gap-4 pb-8">
+                        <Label>
+                          Who will be making this order? <span className="text-red-500">*</span>
+                        </Label>
+                        <RadioGroup
+                          value={purchaseRequest.requested_purchaser === "Gaucho Racing" ? "club" : purchaseRequest.requested_purchaser ? "self" : "club"}
+                          onValueChange={(value) => {
+                            setPurchaseRequest({
+                              ...purchaseRequest,
+                              requested_purchaser: value === "club" ? "Gaucho Racing" : `${currentUser.first_name} ${currentUser.last_name}`,
+                            });
+                            if (value === "club") {
+                              setReimbursementAcknowledged(false);
+                            }
+                          }}
+                        >
+                          <div className="flex items-center space-x-2 pl-8">
+                            <RadioGroupItem value="club" id="club" />
+                            <Label htmlFor="club" className="font-normal cursor-pointer">
+                              Gaucho Racing (Club Funds)
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2 pl-8">
+                            <RadioGroupItem value="self" id="self" />
+                            <Label htmlFor="self" className="font-normal cursor-pointer">
+                              Myself (Personal Funds)
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      {purchaseRequest.requested_purchaser !== "Gaucho Racing" && purchaseRequest.requested_purchaser && (
+                        <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
+                          <Label 
+                            htmlFor="reimbursement-ack" 
+                            className="text-sm font-normal cursor-pointer text-red-500"
+                          >
+                            I understand that, by skipping the order approval process and ordering these items myself, I am NOT guaranteed reimbursement. <span className="text-red-500">*</span>
+                          </Label>
+                          <div className="pl-8">  
+                            <Checkbox
+                              id="reimbursement-ack"
+                              checked={reimbursementAcknowledged}
+                              onCheckedChange={(checked) => setReimbursementAcknowledged(checked as boolean)}
+                            />                            
+                          </div>
+
+                        </div>
+                      )}
+
+                    </CardContent>
+
+                    <CardFooter className="flex justify-between">
+                      <div className="flex w-full items-center justify-end">
+                        <div className="flex items-center justify-end">
+                          <Button
+                            variant={"outline"}
+                            onClick={() => {
+                              navigate(`/pr/${id}`);
+                            }}
+                            className="mr-2 py-5"
+                          >
+                            Cancel
+                          </Button>
+                          <OutlineButton type="submit">
+                            Update Request
+                          </OutlineButton>
+                        </div>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <Footer />
+        </div>
+      )}
+    </>
+  );
+}
