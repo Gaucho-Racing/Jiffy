@@ -13,7 +13,7 @@ require (
 	github.com/lestrrat-go/jwx v1.2.30
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
-	gorm.io/driver/postgres v1.5.7
+	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.25.11
 )
 
@@ -38,9 +38,6 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -68,5 +65,4 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/postgres v1.6.0
 )
