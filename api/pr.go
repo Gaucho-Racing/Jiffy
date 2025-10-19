@@ -21,7 +21,7 @@ func GetPurchaseRequestByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid purchase request ID"})
 		return
 	}
-	pr := service.GetPurchaseRequestByID(id)
+	pr := service.GetPurchaseRequestByID(id, GetRequestUserID(c))
 	if pr.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Purchase request not found"})
 		return
@@ -51,13 +51,15 @@ func UpdatePurchaseRequestStatus(c *gin.Context) {
 		return
 	}
 	var request struct {
-		Status model.PurchaseRequestStatus `json:"status" binding:"required"`
+		Status         model.PurchaseRequestStatus `json:"status" binding:"required"`
+		FinalCostCents int                         `json:"final_cost_cents"`
+		Note           string                      `json:"note"`
 	}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	result, err := service.UpdatePurchaseRequestStatus(id, request.Status, GetRequestUserID(c))
+	result, err := service.UpdatePurchaseRequestStatus(id, request.Status, request.FinalCostCents, request.Note, GetRequestUserID(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
@@ -72,7 +74,7 @@ func DeletePurchaseRequest(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid purchase request ID"})
 		return
 	}
-	existingPR := service.GetPurchaseRequestByID(id)
+	existingPR := service.GetPurchaseRequestByID(id, GetRequestUserID(c))
 	if existingPR.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Purchase request not found"})
 		return
