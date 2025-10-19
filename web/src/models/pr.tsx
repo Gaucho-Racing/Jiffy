@@ -1,5 +1,6 @@
 import { User } from "@/models/user";
 import { ColumnDef } from "@tanstack/react-table";
+import { ShippingAddress } from "./shipping_address";
 
 export enum PurchaseRequestStatus {
   PurchaseRequestPending = "Pending Approval",
@@ -21,6 +22,29 @@ export enum ApprovalType {
   TreasurerApproval = "Treasurer",
   PresidentApproval = "President",
 }
+
+export const statusSteps = [
+  PurchaseRequestStatus.PurchaseRequestRejected,
+  PurchaseRequestStatus.PurchaseRequestPending,
+  PurchaseRequestStatus.PurchaseRequestApproved,
+  PurchaseRequestStatus.PurchaseRequestOrdered,
+  PurchaseRequestStatus.PurchaseRequestDelivered,
+  PurchaseRequestStatus.PurchaseRequestCollected,
+];
+
+export const validStatusAdvancements: {
+  [key: string]: PurchaseRequestStatus | null;
+} = {
+  [PurchaseRequestStatus.PurchaseRequestPending]: null,
+  [PurchaseRequestStatus.PurchaseRequestApproved]:
+    PurchaseRequestStatus.PurchaseRequestOrdered,
+  [PurchaseRequestStatus.PurchaseRequestOrdered]:
+    PurchaseRequestStatus.PurchaseRequestDelivered,
+  [PurchaseRequestStatus.PurchaseRequestDelivered]:
+    PurchaseRequestStatus.PurchaseRequestCollected,
+  [PurchaseRequestStatus.PurchaseRequestCollected]: null,
+  [PurchaseRequestStatus.PurchaseRequestRejected]: null,
+};
 
 export interface Approval {
   id: number;
@@ -62,6 +86,8 @@ export interface PurchaseRequest {
   priority: number;
   needed_by_date: string; // ISO string (time.Time in Go)
   requested_purchaser: string;
+  shipping_address_id: number;
+  shipping_address: ShippingAddress;
   screenshot_url: string;
   updated_at: Date;
   created_at: Date;
@@ -153,6 +179,8 @@ export const initPurchaseRequest: PurchaseRequest = {
   priority: 1,
   needed_by_date: "",
   requested_purchaser: "",
+  shipping_address_id: 0,
+  shipping_address: {} as ShippingAddress,
   screenshot_url: "",
   updated_at: new Date(),
   created_at: new Date(),

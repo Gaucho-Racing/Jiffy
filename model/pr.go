@@ -19,6 +19,8 @@ type PurchaseRequest struct {
 	Priority             int                   `json:"priority"`
 	NeededByDate         time.Time             `json:"needed_by_date"`
 	RequestedPurchaser   string                `json:"requested_purchaser"`
+	ShippingAddressID    int                   `json:"shipping_address_id"`
+	ShippingAddress      ShippingAddress       `json:"shipping_address" gorm:"-"`
 	ScreenshotURL        string                `json:"screenshot_url"`
 	UpdatedAt            time.Time             `gorm:"autoUpdateTime" json:"updated_at"`
 	CreatedAt            time.Time             `gorm:"autoCreateTime" json:"created_at"`

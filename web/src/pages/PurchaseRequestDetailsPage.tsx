@@ -1,18 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit2, AlertTriangle } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   PurchaseRequest,
   initPurchaseRequest,
   Approval,
   ApprovalStatus,
   PurchaseRequestStatus,
-  calculateItemTotalCents,
-  calculateEstimatedCostCents,
 } from "@/models/pr";
 import { Department } from "@/models/departments";
 import { JIFFY_API_URL } from "@/consts/config";
@@ -26,6 +23,9 @@ import { useUser } from "@/lib/store";
 import { checkCredentials } from "@/lib/auth";
 import React from "react";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
+import { RequestDetailsTab } from "@/components/pr/RequestDetailsTab";
+import { ApprovalsStatusTab } from "@/components/pr/ApprovalsStatusTab";
+import { CheckoutScreenshotTab } from "@/components/pr/CheckoutScreenshotTab";
 
 export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();
@@ -59,6 +59,25 @@ export default function PurchaseRequestDetailsPage() {
       currentUser.roles.includes("d_officer") ||
       currentUser.roles.includes("d_lead")
     );
+  };
+
+  const canAdvance = () => {
+    return purchaseRequest.user_id === currentUser.id || canApprove();
+  };
+
+  const canEdit = () => {
+    return (
+      purchaseRequest.user_id === currentUser.id &&
+      (purchaseRequest.status ===
+        PurchaseRequestStatus.PurchaseRequestPending ||
+        purchaseRequest.status ===
+          PurchaseRequestStatus.PurchaseRequestRejected)
+    );
+  };
+
+  const handleAdvanceStatus = (updatedPR: PurchaseRequest) => {
+    setPurchaseRequest(updatedPR);
+    notify.success(`Status advanced to ${updatedPR.status}`);
   };
 
   const editApproval = async (approval: Approval, status: ApprovalStatus) => {
@@ -179,15 +198,6 @@ export default function PurchaseRequestDetailsPage() {
     return "bg-gray-800 text-gray-300";
   };
 
-  const statusSteps = [
-    PurchaseRequestStatus.PurchaseRequestRejected,
-    PurchaseRequestStatus.PurchaseRequestPending,
-    PurchaseRequestStatus.PurchaseRequestApproved,
-    PurchaseRequestStatus.PurchaseRequestOrdered,
-    PurchaseRequestStatus.PurchaseRequestDelivered,
-    PurchaseRequestStatus.PurchaseRequestCollected,
-  ];
-
   return (
     <>
       {currentUser.id == "" ? (
@@ -206,11 +216,24 @@ export default function PurchaseRequestDetailsPage() {
                 Back to home
               </Button>
 
-              <OutlineButton onClick={() => navigate("/pr/new")}>
-                <div className="flex items-center gap-2">
-                  New Purchase Request
-                </div>
-              </OutlineButton>
+              <div className="flex gap-2">
+                {canEdit() && (
+                  <Button
+                    className="h-10 py-5"
+                    size="default"
+                    variant="outline"
+                    onClick={() => navigate(`/pr/${id}/edit`)}
+                  >
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    Edit PR
+                  </Button>
+                )}
+                <OutlineButton onClick={() => navigate("/pr/new")}>
+                  <div className="flex items-center gap-2">
+                    New Purchase Request
+                  </div>
+                </OutlineButton>
+              </div>
             </div>
             {purchaseRequest.status ===
               PurchaseRequestStatus.PurchaseRequestRejected &&
@@ -256,349 +279,29 @@ export default function PurchaseRequestDetailsPage() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="Request Details">
-                  <div className="mx-12 mx-4 my-10 flex justify-start rounded-lg border-2 border-gray-800 p-8 pl-16">
-                    {isLoading ? (
-                      <></>
-                    ) : (
-                      <div className="w-full space-y-8">
-                        <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2">
-                          <div>
-                            <p className="text-md mb-2 font-medium text-gray-400">
-                              Requester
-                            </p>
-                            <div className="text-md flex items-center pl-8">
-                              <Avatar className="mr-4 h-12 w-12">
-                                <AvatarImage
-                                  src={purchaseRequest.user?.avatar_url}
-                                />
-                                <AvatarFallback>CN</AvatarFallback>
-                              </Avatar>
-                              <div className="flex flex-col items-start justify-center">
-                                <div>
-                                  {purchaseRequest.user?.first_name}{" "}
-                                  {purchaseRequest.user?.last_name}
-                                </div>
-                                <div className="text-gray-400">
-                                  {purchaseRequest.user?.email}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="grid grid-cols-1 pt-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[auto_1fr] xl:gap-x-24">
-                              <p className="text-md font-medium text-gray-400">
-                                ID #
-                              </p>
-                              <p className="text-md">{purchaseRequest.id}</p>
-                              <p className="text-md font-medium text-gray-400">
-                                Date Requested
-                              </p>
-                              <p className="text-md">
-                                {purchaseRequest.created_at
-                                  ? new Date(
-                                      purchaseRequest.created_at,
-                                    ).toLocaleDateString()
-                                  : ""}
-                              </p>
-                              <p className="text-md font-medium text-gray-400">
-                                Status
-                              </p>
-                              <p className="text-md">
-                                {purchaseRequest.status}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-24 xl:grid-cols-[auto_1fr]">
-                            <p className="text-md font-medium text-gray-400">
-                              Subteam{" "}
-                            </p>
-                            <p className="text-md">{department?.name}</p>
-                            <p className="text-md font-medium text-gray-400">
-                              Component{" "}
-                            </p>
-                            <p className="text-md">
-                              {purchaseRequest.component}
-                            </p>
-                            <p className="text-md font-medium text-gray-400">
-                              Vendor{" "}
-                            </p>
-                            <p className="text-md">{purchaseRequest.vendor}</p>
-                            <p className="text-md font-medium text-gray-400">
-                              Priority{" "}
-                            </p>
-                            <p className="text-md">
-                              {purchaseRequest.priority}
-                            </p>
-                            <p className="text-md font-medium text-gray-400">
-                              Needed By{" "}
-                            </p>
-                            <p className="text-md">
-                              {purchaseRequest.needed_by_date
-                                ? new Date(
-                                    purchaseRequest.needed_by_date,
-                                  ).toLocaleDateString()
-                                : ""}
-                            </p>
-                            <p className="text-md font-medium text-gray-400">
-                              Description{" "}
-                            </p>
-                            <p className="text-md">
-                              {purchaseRequest.description}
-                            </p>
-                          </div>
-                          <div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-10 xl:grid-cols-[auto_1fr]">
-                              <p className="text-md font-medium text-gray-400">
-                                Estimated Item Total{" "}
-                              </p>
-                              <p className="text-md">
-                                $
-                                {purchaseRequest.items
-                                  ? (
-                                      calculateEstimatedCostCents(
-                                        purchaseRequest.items,
-                                      ) / 100
-                                    ).toFixed(2)
-                                  : "0.00"}
-                              </p>
-                              <p className="text-md font-medium text-gray-400">
-                                Estimated Shipping/Tax{" "}
-                              </p>
-                              <p className="text-md">
-                                $
-                                {purchaseRequest.shipping_tax_cost_cents
-                                  ? (
-                                      purchaseRequest.shipping_tax_cost_cents /
-                                      100
-                                    ).toFixed(2)
-                                  : "0.00"}
-                              </p>
-                              <p className="text-md font-medium text-gray-400">
-                                Estimated Cost{" "}
-                              </p>
-                              <p className="text-md">
-                                $
-                                {purchaseRequest.estimated_cost_cents
-                                  ? (
-                                      purchaseRequest.estimated_cost_cents / 100
-                                    ).toFixed(2)
-                                  : "0.00"}
-                              </p>
-                              <p className="text-md font-medium text-gray-400">
-                                Who will order?
-                              </p>
-                              <p className="text-md">
-                                {purchaseRequest.requested_purchaser}
-                              </p>
-                              <p className="text-md font-medium text-gray-400">
-                                Final Price{" "}
-                              </p>
-                              <p className="text-md">
-                                {purchaseRequest.final_cost_cents &&
-                                purchaseRequest.final_cost_cents > 0
-                                  ? `$${(purchaseRequest.final_cost_cents / 100).toFixed(2)}`
-                                  : ""}
-                              </p>
-                              <p className="text-md font-medium text-gray-400">
-                                Order Date
-                              </p>
-                              <p className="text-md">{}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-md mb-2 mt-20 font-medium text-gray-400">
-                            Items ({purchaseRequest.items?.length || 0})
-                          </p>
-                          <div className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-[1fr_6fr_4fr_4fr_4fr_12fr]">
-                            <p className="text-sm font-medium text-gray-400">
-                              {" "}
-                            </p>
-                            <p className="text-sm font-medium text-gray-400">
-                              {" "}
-                              Item Name{" "}
-                            </p>
-                            <p className="text-sm font-medium text-gray-400">
-                              {" "}
-                              Unit Price{" "}
-                            </p>
-                            <p className="text-sm font-medium text-gray-400">
-                              {" "}
-                              Quantity{" "}
-                            </p>
-                            <p className="text-sm font-medium text-gray-400">
-                              {" "}
-                              Item Total{" "}
-                            </p>
-                            <p className="text-sm font-medium text-gray-400">
-                              {" "}
-                              URL{" "}
-                            </p>
-                          </div>
-                          {purchaseRequest.items &&
-                          purchaseRequest.items.length > 0 ? (
-                            <div className="space-y-4">
-                              {purchaseRequest.items.map((item, index) => (
-                                <div key={item.id || index}>
-                                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_6fr_4fr_4fr_4fr_12fr]">
-                                    <p className="text-sm font-medium text-gray-400">
-                                      #{index + 1}
-                                    </p>
-
-                                    <p className="text-md text-white">
-                                      {item.item_name || "N/A"}
-                                    </p>
-
-                                    <p className="text-md text-white">
-                                      $
-                                      {(
-                                        (item.item_unit_price_cents || 0) / 100
-                                      ).toFixed(2)}
-                                    </p>
-
-                                    <p className="text-md text-white">
-                                      {item.item_quantity || 0}
-                                    </p>
-
-                                    <p className="text-md text-white">
-                                      $
-                                      {(
-                                        calculateItemTotalCents(item) / 100
-                                      ).toFixed(2)}
-                                    </p>
-                                    <a
-                                      href={item.item_url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="break-all text-sm text-blue-400 underline"
-                                    >
-                                      {item.item_url}
-                                    </a>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="py-8 text-center text-gray-500">
-                              <p>No items found for this purchase request.</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <RequestDetailsTab
+                    purchaseRequest={purchaseRequest}
+                    department={department}
+                    isLoading={isLoading}
+                  />
                 </TabsContent>
                 <TabsContent value="Approvals and Status">
-                  <div className="mx-20 my-10">
-                    <div className="mb-4">
-                      <h3>Current Status</h3>
-                    </div>
-
-                    <div className="mb-4 grid grid-cols-6 gap-2">
-                      {statusSteps.map((step) => (
-                        <div
-                          key={step}
-                          className={`overflow-hidden rounded-md px-4 py-1 text-center text-sm font-medium transition-colors ${getPurchaseRequestStatusStyle(step)}`}
-                        >
-                          {step}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div>
-                      {purchaseRequest.approvals?.map((approval) => (
-                        <Card key={approval.id} className="mt-4">
-                          <CardHeader>
-                            <CardTitle>
-                              <div className="flex items-center justify-between">
-                                <p className="font-semibold">
-                                  {approval.type} Approval
-                                </p>
-                                <p
-                                  className={`rounded-md px-4 py-2 text-sm font-medium ${getApprovalStatusStyle(approval)} ${
-                                    approval.status ===
-                                    ApprovalStatus.ApprovalApproved
-                                      ? "text-green-600"
-                                      : approval.status ===
-                                          ApprovalStatus.ApprovalRejected
-                                        ? "text-red-600"
-                                        : approval.status ===
-                                            ApprovalStatus.ApprovalPending
-                                          ? "text-cyan-600"
-                                          : "text-gray-600"
-                                  }`}
-                                >
-                                  {approval.status}
-                                </p>
-                              </div>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="flex items-center justify-between">
-                            <div>
-                              <div className="mt-2 text-sm text-gray-100">
-                                <p>
-                                  Approved by:{" "}
-                                  <span className="font-medium text-gray-100">
-                                    {approval.user?.first_name
-                                      ? `${approval.user.first_name} ${approval.user.last_name}`
-                                      : "Pending approval"}
-                                  </span>
-                                </p>
-                                <p>
-                                  Date:{" "}
-                                  <span className="font-medium text-gray-100">
-                                    {approval.status !==
-                                    ApprovalStatus.ApprovalPending
-                                      ? new Date(
-                                          approval.updated_at,
-                                        ).toLocaleString()
-                                      : "N/A"}
-                                  </span>
-                                </p>
-                              </div>
-                            </div>
-                            <div>
-                              {canApprove() && (
-                                <div className="flex space-x-2">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() =>
-                                      editApproval(
-                                        approval,
-                                        ApprovalStatus.ApprovalApproved,
-                                      )
-                                    }
-                                    className="flex items-center py-5"
-                                  >
-                                    <Edit2 className="mr-2 h-4 w-4" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() =>
-                                      editApproval(
-                                        approval,
-                                        ApprovalStatus.ApprovalRejected,
-                                      )
-                                    }
-                                    className="flex items-center py-5"
-                                  >
-                                    <Edit2 className="mr-2 h-4 w-4" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
+                  <ApprovalsStatusTab
+                    purchaseRequest={purchaseRequest}
+                    canApprove={canApprove()}
+                    canAdvance={canAdvance()}
+                    onEditApproval={editApproval}
+                    onAdvanceStatus={handleAdvanceStatus}
+                    getApprovalStatusStyle={getApprovalStatusStyle}
+                    getPurchaseRequestStatusStyle={
+                      getPurchaseRequestStatusStyle
+                    }
+                  />
                 </TabsContent>
 
-                <TabsContent value="Checkout Screenshot"></TabsContent>
+                <TabsContent value="Checkout Screenshot">
+                  <CheckoutScreenshotTab />
+                </TabsContent>
               </Tabs>
             </div>
           </div>

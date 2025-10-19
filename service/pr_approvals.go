@@ -36,7 +36,7 @@ func EditApproval(approvalID int, status model.ApprovalStatus, note string, user
 
 	approval.Status = status
 	if note != "" {
-		approval.Note = note // uhhhhh
+		approval.Note = note // uhhhhh to do
 	}
 
 	if database.DB.Where("id = ?", approval.ID).Select("*").Updates(&approval).RowsAffected == 0 {
@@ -47,7 +47,7 @@ func EditApproval(approvalID int, status model.ApprovalStatus, note string, user
 
 	//approval.User, _ = GetUser(approval.UserID)
 
-	pr := GetPurchaseRequestByID(approval.PrID)
+	pr := GetPurchaseRequestByID(approval.PrID, userID)
 
 	newStatus := model.PurchaseRequestApproved
 	for _, appr := range pr.Approvals {

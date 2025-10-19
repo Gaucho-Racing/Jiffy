@@ -25,6 +25,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { format } from "date-fns";
 import {
   PurchaseRequest,
@@ -34,6 +42,10 @@ import {
   calculateEstimatedCostCents,
 } from "@/models/pr";
 import { Department } from "@/models/departments";
+import {
+  ShippingAddress,
+  initShippingAddress,
+} from "@/models/shipping_address";
 import { Calendar } from "@/components/ui/calendar";
 import { JIFFY_API_URL } from "@/consts/config";
 import { notify } from "@/lib/notify";
@@ -64,6 +76,12 @@ export default function EditPurchaseRequestPage() {
   );
   const [reimbursementAcknowledged, setReimbursementAcknowledged] =
     useState(false);
+  const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(
+    [],
+  );
+  const [showCreateAddressDialog, setShowCreateAddressDialog] = useState(false);
+  const [newAddress, setNewAddress] =
+    useState<Partial<ShippingAddress>>(initShippingAddress);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -82,6 +100,24 @@ export default function EditPurchaseRequestPage() {
       }
     }
   };
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get(`${JIFFY_API_URL}/departments`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        });
+        setDepartments(response.data);
+      } catch (error: any) {
+        notify.error(
+          error.response?.data?.message || "Failed to fetch departments",
+        );
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   useEffect(() => {
     const fetchPurchaseRequest = async () => {
@@ -139,23 +175,52 @@ export default function EditPurchaseRequestPage() {
     }
   }, [id, navigate]);
 
+  const fetchShippingAddresses = async () => {
+    try {
+      const response = await axios.get(`${JIFFY_API_URL}/shippingaddresses`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+        },
+      });
+      setShippingAddresses(response.data || []);
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error));
+    }
+  };
+
   useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const response = await axios.get(`${JIFFY_API_URL}/departments`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-          },
-        });
-        setDepartments(response.data);
-      } catch (error: any) {
-        notify.error(
-          error.response?.data?.message || "Failed to fetch departments",
-        );
-      }
-    };
-    fetchDepartments();
-  }, []);
+    if (purchaseRequest.requested_purchaser === "Gaucho Racing") {
+      fetchShippingAddresses();
+    }
+  }, [purchaseRequest.requested_purchaser]);
+
+  const createShippingAddress = async () => {
+    if (
+      !newAddress.name ||
+      !newAddress.street_address ||
+      !newAddress.city ||
+      !newAddress.state ||
+      !newAddress.zip_code ||
+      !newAddress.country
+    ) {
+      notify.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      await axios.post(`${JIFFY_API_URL}/shippingaddresses`, newAddress, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+        },
+      });
+      notify.success("Address created successfully!");
+      setShowCreateAddressDialog(false);
+      setNewAddress(initShippingAddress);
+      fetchShippingAddresses();
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error));
+    }
+  };
 
   const addItem = () => {
     setItems([...items, { ...initPurchaseRequestItem }]);
@@ -222,6 +287,11 @@ export default function EditPurchaseRequestPage() {
       notify.error("Please select a needed by date");
       return;
     }
+    if (!purchaseRequest.requested_purchaser) {
+      notify.error("Please select who will be making this order");
+      return;
+    }
+
     const nonEmptyItems = items.filter((item) => !isItemEmpty(item));
     if (nonEmptyItems.length === 0) {
       notify.error("Please fill in at least one item");
@@ -245,8 +315,10 @@ export default function EditPurchaseRequestPage() {
       item_unit_price_cents: item.item_unit_price_cents,
       item_quantity: item.item_quantity,
     }));
+    const { shipping_address, ...prData } = purchaseRequest;
     const dataToSend = {
-      ...purchaseRequest,
+      ...prData,
+      user_id: purchaseRequest.user_id,
       items: cleanItems,
       estimated_cost_cents: estimatedCost,
       needed_by_date: date ? date.toISOString() : null,
@@ -262,7 +334,7 @@ export default function EditPurchaseRequestPage() {
           },
         },
       );
-      notify.success("Purchase request created successfully!");
+      notify.success("Purchase request updated successfully!");
       const id = response.data.id;
       navigate(`/pr/${id}`);
     } catch (error: any) {
@@ -752,7 +824,7 @@ export default function EditPurchaseRequestPage() {
                       </div>
                       <div className="grid grid-cols-2 items-center gap-4 pb-8">
                         <Label>
-                          Who will be making this order?{" "}
+                          Who will be placing this order when it is approved?{" "}
                           <span className="text-red-500">*</span>
                         </Label>
                         <RadioGroup
@@ -762,7 +834,7 @@ export default function EditPurchaseRequestPage() {
                               ? "club"
                               : purchaseRequest.requested_purchaser
                                 ? "self"
-                                : "club"
+                                : undefined
                           }
                           onValueChange={(value) => {
                             setPurchaseRequest({
@@ -797,6 +869,80 @@ export default function EditPurchaseRequestPage() {
                           </div>
                         </RadioGroup>
                       </div>
+                      {purchaseRequest.requested_purchaser ===
+                        "Gaucho Racing" && (
+                        <div className="pb-8">
+                          <div className="space-y-4">
+                            <div className="flex flex-row items-center justify-between">
+                              <h3 className="text-lg font-semibold">
+                                Shipping Address
+                              </h3>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowCreateAddressDialog(true)}
+                                className="flex items-center gap-2"
+                              >
+                                <Plus className="h-4 w-4" />
+                                New Address
+                              </Button>
+                            </div>
+                            <div className="grid gap-3">
+                              <Label htmlFor="shipping-address">
+                                Select Shipping Address{" "}
+                                <span className="text-red-500">*</span>
+                              </Label>
+                              <Select
+                                value={
+                                  purchaseRequest.shipping_address_id?.toString() ||
+                                  "0"
+                                }
+                                onValueChange={(value) => {
+                                  const addressId = parseInt(value);
+                                  if (addressId === 0) {
+                                    setPurchaseRequest({
+                                      ...purchaseRequest,
+                                      shipping_address_id: 0,
+                                      shipping_address: initShippingAddress,
+                                    });
+                                  } else {
+                                    setPurchaseRequest({
+                                      ...purchaseRequest,
+                                      shipping_address_id: addressId,
+                                    });
+                                  }
+                                }}
+                              >
+                                <SelectTrigger id="shipping-address">
+                                  <SelectValue placeholder="Select an address" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="0">
+                                    No shipping needed
+                                  </SelectItem>
+                                  {shippingAddresses.length === 0 ? (
+                                    <SelectItem value="none" disabled>
+                                      No addresses found. Create one above.
+                                    </SelectItem>
+                                  ) : (
+                                    shippingAddresses.map((address) => (
+                                      <SelectItem
+                                        key={address.id}
+                                        value={address.id.toString()}
+                                      >
+                                        {address.name} -{" "}
+                                        {address.street_address}, {address.city}
+                                        , {address.state} {address.zip_code}
+                                      </SelectItem>
+                                    ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {purchaseRequest.requested_purchaser !==
                         "Gaucho Racing" &&
                         purchaseRequest.requested_purchaser && (
@@ -852,6 +998,115 @@ export default function EditPurchaseRequestPage() {
           <Footer />
         </div>
       )}
+      <Dialog
+        open={showCreateAddressDialog}
+        onOpenChange={setShowCreateAddressDialog}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Shipping Address</DialogTitle>
+            <DialogDescription>
+              Add a new shipping address for Gaucho Racing orders.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="address-name">
+                Address Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="address-name"
+                placeholder="ex: My House, Machine Shop, etc."
+                value={newAddress.name || ""}
+                onChange={(e) =>
+                  setNewAddress({ ...newAddress, name: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="street-address">
+                Street Address <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="street-address"
+                placeholder="6969 Segovia Rd"
+                value={newAddress.street_address || ""}
+                onChange={(e) =>
+                  setNewAddress({
+                    ...newAddress,
+                    street_address: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="city">
+                  City <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="city"
+                  placeholder="Goleta"
+                  value={newAddress.city || ""}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, city: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="state">
+                  State <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="state"
+                  placeholder="CA"
+                  value={newAddress.state || ""}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, state: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="zip-code">
+                  ZIP Code <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="zip-code"
+                  placeholder="93117"
+                  value={newAddress.zip_code || ""}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, zip_code: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="country">
+                  Country <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="country"
+                  placeholder="USA"
+                  value={newAddress.country || ""}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, country: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateAddressDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={createShippingAddress}>Create Address</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

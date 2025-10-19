@@ -48,6 +48,9 @@ func InitializeRoutes(router *gin.Engine) {
 	router.DELETE("/departments/:departmentID/approvers/:approverID", RemoveApproverFromDepartment)
 	router.POST("/departments/:departmentID/budgets", AddBudgetToDepartment)
 	router.DELETE("/departments/:departmentID/budgets/:budgetID", RemoveBudgetFromDepartment)
+	router.GET("/shippingaddresses", GetShippingAddresses)
+	router.POST("/shippingaddresses", CreateShippingAddress)
+	router.DELETE("/shippingaddresses/:addressID", DeleteShippingAddress)
 }
 
 func AuthChecker() gin.HandlerFunc {

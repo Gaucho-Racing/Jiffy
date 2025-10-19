@@ -37,6 +37,7 @@ func InitializeDB() error {
 			&model.PurchaseRequest{},
 			&model.PurchaseRequestItem{},
 			&model.Approval{},
+			&model.ShippingAddress{},
 		)
 		utils.SugarLogger.Infoln("AutoMigration complete")
 		DB = db

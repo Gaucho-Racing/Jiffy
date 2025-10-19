@@ -21,7 +21,7 @@ func GetAllPurchaseRequests() []model.PurchaseRequest {
 	return prs
 }
 
-func GetPurchaseRequestByID(id int) model.PurchaseRequest {
+func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 	var pr model.PurchaseRequest
 	if err := database.DB.Preload("Items").Preload("Approvals", func(db *gorm.DB) *gorm.DB {
 		return db.Order("id ASC")
@@ -35,16 +35,28 @@ func GetPurchaseRequestByID(id int) model.PurchaseRequest {
 			pr.Approvals[i].User, _ = GetUser(pr.Approvals[i].UserID)
 		}
 	}
+	currentUser, _ := GetUser(userID)
+	if pr.UserID != userID && !currentUser.IsInnerCircle() {
+		pr.ShippingAddressID = 0
+		pr.ShippingAddress = model.ShippingAddress{} // hide address
+		return pr
+	}
+	if pr.ShippingAddressID != 0 {
+		if address, err := GetShippingAddressByID(pr.ShippingAddressID); err == nil {
+			pr.ShippingAddress = address
+		}
+	}
 	return pr
 }
 
 func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.PurchaseRequest, error) {
 	isNew := pr.ID == 0
 
+	var existingPR model.PurchaseRequest
 	if isNew {
 		pr.UserID = userID
 	} else {
-		existingPR := GetPurchaseRequestByID(pr.ID)
+		existingPR = GetPurchaseRequestByID(pr.ID, userID)
 		if existingPR.ID == 0 {
 			return model.PurchaseRequest{}, errors.New("purchase request not found")
 		}
@@ -72,6 +84,20 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 			}
 		} else {
 			utils.SugarLogger.Infof("Updating existing PR %d", pr.ID)
+			// update fields that can be edited to 0, which would be otherwise skipped
+			if pr.ShippingAddressID == 0 && existingPR.ShippingAddressID != 0 {
+				if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Update("shipping_address_id", 0).Error; err != nil {
+					utils.SugarLogger.Errorf("Error updating shipping address for PR %d: %v", pr.ID, err)
+					return model.PurchaseRequest{}, err
+				}
+			}
+			if pr.ShippingTaxCostCents == 0 && existingPR.ShippingTaxCostCents != 0 {
+				if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Update("shipping_tax_cost_cents", 0).Error; err != nil {
+					utils.SugarLogger.Errorf("Error updating shipping/tax cost for PR %d: %v", pr.ID, err)
+					return model.PurchaseRequest{}, err
+				}
+			}
+
 			if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Updates(pr).Error; err != nil {
 				utils.SugarLogger.Errorf("Error updating PR %d: %v", pr.ID, err)
 				return model.PurchaseRequest{}, err
@@ -100,13 +126,13 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 		utils.SugarLogger.Errorf("Error creating initial approvals for PR %s: %v", pr.ID, err)
 		return model.PurchaseRequest{}, err
 	}
-	pr = GetPurchaseRequestByID(pr.ID)
+	pr = GetPurchaseRequestByID(pr.ID, userID)
 	utils.SugarLogger.Infof("Successfully created PR %d", pr.ID)
 	return pr, nil
 }
 
-func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus, userID string) (model.PurchaseRequest, error) {
-	existingPR := GetPurchaseRequestByID(prID)
+func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus, finalCostCents int, note string, userID string) (model.PurchaseRequest, error) {
+	existingPR := GetPurchaseRequestByID(prID, userID)
 	if existingPR.ID == 0 {
 		return model.PurchaseRequest{}, errors.New("purchase request not found")
 	}
@@ -119,19 +145,14 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 		return model.PurchaseRequest{}, errors.New("only inner circle members can edit status")
 	}
 
-	// Validate status transition
+	// Validate manual status changes
 	switch existingPR.Status {
-	case model.PurchaseRequestPending:
-		if newStatus != model.PurchaseRequestApproved && newStatus != model.PurchaseRequestRejected {
-			return model.PurchaseRequest{}, errors.New("invalid status change")
-		}
 	case model.PurchaseRequestApproved:
 		if newStatus != model.PurchaseRequestOrdered {
 			return model.PurchaseRequest{}, errors.New("invalid status change")
 		}
-	case model.PurchaseRequestRejected:
-		if newStatus != model.PurchaseRequestPending {
-			return model.PurchaseRequest{}, errors.New("invalid status change")
+		if finalCostCents <= 0 {
+			return model.PurchaseRequest{}, errors.New("final cost is required when advancing to Ordered")
 		}
 	case model.PurchaseRequestOrdered:
 		if newStatus != model.PurchaseRequestDelivered {
@@ -144,10 +165,21 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 	default:
 		return model.PurchaseRequest{}, errors.New("invalid status change")
 	}
+	if finalCostCents > 0 && newStatus == model.PurchaseRequestOrdered {
+		if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", prID).Update("final_cost_cents", finalCostCents).Error; err != nil {
+			return model.PurchaseRequest{}, err
+		}
+	}
 	if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", prID).Update("status", newStatus).Error; err != nil {
 		return model.PurchaseRequest{}, err
 	}
-	return GetPurchaseRequestByID(prID), nil
+
+	if note != "" {
+		utils.SugarLogger.Infof("Advancement note for PR %d: %s", prID, note)
+		// to do
+	}
+
+	return GetPurchaseRequestByID(prID, userID), nil
 }
 
 func DeletePurchaseRequest(prID int) error {
