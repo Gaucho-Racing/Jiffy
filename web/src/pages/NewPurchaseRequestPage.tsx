@@ -42,7 +42,10 @@ import {
   calculateEstimatedCostCents,
 } from "@/models/pr";
 import { Department } from "@/models/departments";
-import { ShippingAddress, initShippingAddress } from "@/models/shipping_address";
+import {
+  ShippingAddress,
+  initShippingAddress,
+} from "@/models/shipping_address";
 import { Calendar } from "@/components/ui/calendar";
 import { JIFFY_API_URL } from "@/consts/config";
 import { notify } from "@/lib/notify";
@@ -72,9 +75,12 @@ export default function NewPurchaseRequestPage() {
   );
   const [reimbursementAcknowledged, setReimbursementAcknowledged] =
     useState(false);
-  const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>([]);
+  const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(
+    [],
+  );
   const [showCreateAddressDialog, setShowCreateAddressDialog] = useState(false);
-  const [newAddress, setNewAddress] = useState<Partial<ShippingAddress>>(initShippingAddress);
+  const [newAddress, setNewAddress] =
+    useState<Partial<ShippingAddress>>(initShippingAddress);
 
   useEffect(() => {
     checkAuth();
@@ -130,7 +136,14 @@ export default function NewPurchaseRequestPage() {
   }, [purchaseRequest.requested_purchaser]);
 
   const createShippingAddress = async () => {
-    if (!newAddress.name || !newAddress.street_address || !newAddress.city || !newAddress.state || !newAddress.zip_code || !newAddress.country) {
+    if (
+      !newAddress.name ||
+      !newAddress.street_address ||
+      !newAddress.city ||
+      !newAddress.state ||
+      !newAddress.zip_code ||
+      !newAddress.country
+    ) {
       notify.error("Please fill in all required fields");
       return;
     }
@@ -773,11 +786,14 @@ export default function NewPurchaseRequestPage() {
                           </div>
                         </RadioGroup>
                       </div>
-                      {purchaseRequest.requested_purchaser === "Gaucho Racing" && (
+                      {purchaseRequest.requested_purchaser ===
+                        "Gaucho Racing" && (
                         <div className="pb-8">
                           <div className="space-y-4">
                             <div className="flex flex-row items-center justify-between">
-                              <h3 className="text-lg font-semibold">Shipping Address</h3>
+                              <h3 className="text-lg font-semibold">
+                                Shipping Address
+                              </h3>
                               <Button
                                 type="button"
                                 variant="outline"
@@ -791,20 +807,27 @@ export default function NewPurchaseRequestPage() {
                             </div>
                             <div className="grid gap-3">
                               <Label htmlFor="shipping-address">
-                                Select Shipping Address <span className="text-red-500">*</span>
+                                Select Shipping Address{" "}
+                                <span className="text-red-500">*</span>
                               </Label>
                               <Select
-                                value={purchaseRequest.shipping_address_id?.toString() || "0"}
+                                value={
+                                  purchaseRequest.shipping_address_id?.toString() ||
+                                  "0"
+                                }
                                 onValueChange={(value) => {
                                   const addressId = parseInt(value);
                                   if (addressId === 0) {
-                                    setPurchaseRequest({ 
-                                      ...purchaseRequest, 
+                                    setPurchaseRequest({
+                                      ...purchaseRequest,
                                       shipping_address_id: 0,
-                                      shipping_address: initShippingAddress 
+                                      shipping_address: initShippingAddress,
                                     });
                                   } else {
-                                    setPurchaseRequest({ ...purchaseRequest, shipping_address_id: addressId });
+                                    setPurchaseRequest({
+                                      ...purchaseRequest,
+                                      shipping_address_id: addressId,
+                                    });
                                   }
                                 }}
                               >
@@ -812,15 +835,22 @@ export default function NewPurchaseRequestPage() {
                                   <SelectValue placeholder="Select an address" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="0">No shipping needed</SelectItem>
+                                  <SelectItem value="0">
+                                    No shipping needed
+                                  </SelectItem>
                                   {shippingAddresses.length === 0 ? (
                                     <SelectItem value="none" disabled>
                                       No addresses found. Create one above.
                                     </SelectItem>
                                   ) : (
                                     shippingAddresses.map((address) => (
-                                      <SelectItem key={address.id} value={address.id.toString()}>
-                                        {address.name} - {address.street_address}, {address.city}, {address.state} {address.zip_code}
+                                      <SelectItem
+                                        key={address.id}
+                                        value={address.id.toString()}
+                                      >
+                                        {address.name} -{" "}
+                                        {address.street_address}, {address.city}
+                                        , {address.state} {address.zip_code}
                                       </SelectItem>
                                     ))
                                   )}
@@ -885,7 +915,10 @@ export default function NewPurchaseRequestPage() {
           <Footer />
         </div>
       )}
-      <Dialog open={showCreateAddressDialog} onOpenChange={setShowCreateAddressDialog}>
+      <Dialog
+        open={showCreateAddressDialog}
+        onOpenChange={setShowCreateAddressDialog}
+      >
         <DialogContent className="max-w-2xl bg-black">
           <DialogHeader>
             <DialogTitle>Create New Shipping Address</DialogTitle>
@@ -902,7 +935,9 @@ export default function NewPurchaseRequestPage() {
                 id="address-name"
                 placeholder="ex: My House, Machine Shop, etc."
                 value={newAddress.name || ""}
-                onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
+                onChange={(e) =>
+                  setNewAddress({ ...newAddress, name: e.target.value })
+                }
               />
             </div>
             <div className="grid gap-2">
@@ -913,7 +948,12 @@ export default function NewPurchaseRequestPage() {
                 id="street-address"
                 placeholder="6969 Segovia Rd"
                 value={newAddress.street_address || ""}
-                onChange={(e) => setNewAddress({ ...newAddress, street_address: e.target.value })}
+                onChange={(e) =>
+                  setNewAddress({
+                    ...newAddress,
+                    street_address: e.target.value,
+                  })
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -925,7 +965,9 @@ export default function NewPurchaseRequestPage() {
                   id="city"
                   placeholder="Goleta"
                   value={newAddress.city || ""}
-                  onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, city: e.target.value })
+                  }
                 />
               </div>
               <div className="grid gap-2">
@@ -936,7 +978,9 @@ export default function NewPurchaseRequestPage() {
                   id="state"
                   placeholder="CA"
                   value={newAddress.state || ""}
-                  onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, state: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -949,7 +993,9 @@ export default function NewPurchaseRequestPage() {
                   id="zip-code"
                   placeholder="93117"
                   value={newAddress.zip_code || ""}
-                  onChange={(e) => setNewAddress({ ...newAddress, zip_code: e.target.value })}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, zip_code: e.target.value })
+                  }
                 />
               </div>
               <div className="grid gap-2">
@@ -960,13 +1006,18 @@ export default function NewPurchaseRequestPage() {
                   id="country"
                   placeholder="USA"
                   value={newAddress.country || ""}
-                  onChange={(e) => setNewAddress({ ...newAddress, country: e.target.value })}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, country: e.target.value })
+                  }
                 />
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateAddressDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateAddressDialog(false)}
+            >
               Cancel
             </Button>
             <Button onClick={createShippingAddress}>Create Address</Button>
