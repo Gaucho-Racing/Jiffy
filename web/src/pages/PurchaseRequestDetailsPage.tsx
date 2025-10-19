@@ -80,7 +80,10 @@ export default function PurchaseRequestDetailsPage() {
     notify.success(`Status advanced to ${updatedPR.status}`);
   };
 
-  const editApproval = async (approval: PurchaseRequestApproval, status: ApprovalStatus) => {
+  const editApproval = async (
+    approval: PurchaseRequestApproval,
+    status: ApprovalStatus,
+  ) => {
     if (!canApprove()) {
       notify.error("You are not authorized to approve/reject this request");
       return;
@@ -215,7 +218,7 @@ export default function PurchaseRequestDetailsPage() {
                 <ArrowLeft className="mr-2 h-4 w-4 text-gray-400" />
                 Back to home
               </Button>
-            
+
               <div className="flex gap-2">
                 {canEdit() && (
                   <Button

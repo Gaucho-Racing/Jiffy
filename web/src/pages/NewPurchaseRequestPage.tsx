@@ -510,11 +510,7 @@ export default function NewPurchaseRequestPage() {
                                   required={!isItemEmpty(item)}
                                   value={item.name}
                                   onChange={(e) =>
-                                    updateItem(
-                                      index,
-                                      "name",
-                                      e.target.value,
-                                    )
+                                    updateItem(index, "name", e.target.value)
                                   }
                                   onBlur={() => handleItemBlur(index)}
                                   onFocus={(e) => e.target.select()}
@@ -610,11 +606,7 @@ export default function NewPurchaseRequestPage() {
                                   required={!isItemEmpty(item)}
                                   value={item.url}
                                   onChange={(e) =>
-                                    updateItem(
-                                      index,
-                                      "url",
-                                      e.target.value,
-                                    )
+                                    updateItem(index, "url", e.target.value)
                                   }
                                   onBlur={() => handleItemBlur(index)}
                                   onFocus={(e) => e.target.select()}

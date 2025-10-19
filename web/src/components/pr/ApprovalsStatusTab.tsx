@@ -32,7 +32,10 @@ interface ApprovalsStatusTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
   canApprove: boolean;
   canAdvance: boolean;
-  onEditApproval: (approval: PurchaseRequestApproval, status: ApprovalStatus) => void;
+  onEditApproval: (
+    approval: PurchaseRequestApproval,
+    status: ApprovalStatus,
+  ) => void;
   onAdvanceStatus: (updatedPR: PurchaseRequest) => void;
   getApprovalStatusStyle: (approval: PurchaseRequestApproval) => string;
   getPurchaseRequestStatusStyle: (step: PurchaseRequestStatus) => string;

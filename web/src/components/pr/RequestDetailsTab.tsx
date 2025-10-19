@@ -162,17 +162,13 @@ export function RequestDetailsTab({
                         #{index + 1}
                       </p>
 
-                      <p className="text-md text-white">
-                        {item.name || "N/A"}
-                      </p>
+                      <p className="text-md text-white">{item.name || "N/A"}</p>
 
                       <p className="text-md text-white">
                         ${((item.unit_price_cents || 0) / 100).toFixed(2)}
                       </p>
 
-                      <p className="text-md text-white">
-                        {item.quantity || 0}
-                      </p>
+                      <p className="text-md text-white">{item.quantity || 0}</p>
 
                       <p className="text-md text-white">
                         ${(calculateItemTotalCents(item) / 100).toFixed(2)}
