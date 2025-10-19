@@ -106,13 +106,13 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 		pr.Items = itemsToCreate
 		for i, item := range pr.Items {
 			newItem := model.PurchaseRequestItem{
-				PurchaseRequestID:  pr.ID,
-				ItemURL:            item.ItemURL,
-				ItemName:           item.ItemName,
-				ItemUnitPriceCents: item.ItemUnitPriceCents,
-				ItemQuantity:       item.ItemQuantity,
+				PurchaseRequestID: pr.ID,
+				URL:               item.URL,
+				Name:              item.Name,
+				UnitPriceCents:    item.UnitPriceCents,
+				Quantity:          item.Quantity,
 			}
-			utils.SugarLogger.Infof("Creating item %d: Name=%s, Price=%d, Qty=%d", i, newItem.ItemName, newItem.ItemUnitPriceCents, newItem.ItemQuantity)
+			utils.SugarLogger.Infof("Creating item %d: Name=%s, Price=%d, Qty=%d", i, newItem.Name, newItem.UnitPriceCents, newItem.Quantity)
 			if err := CreatePurchaseRequestItem(newItem); err != nil {
 				utils.SugarLogger.Errorf("Error creating item %d: %v", i, err)
 				return model.PurchaseRequest{}, err

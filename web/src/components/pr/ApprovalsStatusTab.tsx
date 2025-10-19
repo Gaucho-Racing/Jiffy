@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   PurchaseRequest,
-  Approval,
+  PurchaseRequestApproval,
   ApprovalStatus,
   PurchaseRequestStatus,
   statusSteps,
@@ -32,9 +32,9 @@ interface ApprovalsStatusTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
   canApprove: boolean;
   canAdvance: boolean;
-  onEditApproval: (approval: Approval, status: ApprovalStatus) => void;
+  onEditApproval: (approval: PurchaseRequestApproval, status: ApprovalStatus) => void;
   onAdvanceStatus: (updatedPR: PurchaseRequest) => void;
-  getApprovalStatusStyle: (approval: Approval) => string;
+  getApprovalStatusStyle: (approval: PurchaseRequestApproval) => string;
   getPurchaseRequestStatusStyle: (step: PurchaseRequestStatus) => string;
 }
 
@@ -84,7 +84,7 @@ export function ApprovalsStatusTab({
 
     try {
       await axios.patch(
-        `${JIFFY_API_URL}/purchaserequests/${purchaseRequest.id}/status`,
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/status`,
         {
           status: nextStatus,
           note: advanceNote,
@@ -98,7 +98,7 @@ export function ApprovalsStatusTab({
       );
 
       const prResponse = await axios.get(
-        `${JIFFY_API_URL}/purchaserequests/${purchaseRequest.id}`,
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,

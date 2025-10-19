@@ -123,7 +123,7 @@ export default function EditPurchaseRequestPage() {
     const fetchPurchaseRequest = async () => {
       try {
         const response = await axios.get(
-          `${JIFFY_API_URL}/purchaserequests/${id}`,
+          `${JIFFY_API_URL}/purchase-requests/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
@@ -177,7 +177,7 @@ export default function EditPurchaseRequestPage() {
 
   const fetchShippingAddresses = async () => {
     try {
-      const response = await axios.get(`${JIFFY_API_URL}/shippingaddresses`, {
+      const response = await axios.get(`${JIFFY_API_URL}/shipping-addresses`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
         },
@@ -208,7 +208,7 @@ export default function EditPurchaseRequestPage() {
     }
 
     try {
-      await axios.post(`${JIFFY_API_URL}/shippingaddresses`, newAddress, {
+      await axios.post(`${JIFFY_API_URL}/shipping-addresses`, newAddress, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
         },
@@ -245,10 +245,10 @@ export default function EditPurchaseRequestPage() {
 
   const isItemEmpty = (item: PurchaseRequestItem) => {
     return (
-      item.item_name.trim() === "" &&
-      item.item_url.trim() === "" &&
-      item.item_unit_price_cents === 0 &&
-      item.item_quantity === 1
+      item.name.trim() === "" &&
+      item.url.trim() === "" &&
+      item.unit_price_cents === 0 &&
+      item.quantity === 1
     );
   };
 
@@ -257,9 +257,9 @@ export default function EditPurchaseRequestPage() {
     if (index === items.length - 1) {
       const currentItem = items[index];
       if (
-        currentItem.item_name.trim() ||
-        currentItem.item_url.trim() ||
-        currentItem.item_unit_price_cents > 0
+        currentItem.name.trim() ||
+        currentItem.url.trim() ||
+        currentItem.unit_price_cents > 0
       ) {
         addItem();
       }
@@ -310,10 +310,10 @@ export default function EditPurchaseRequestPage() {
     const estimatedCost =
       itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0);
     const cleanItems = nonEmptyItems.map((item) => ({
-      item_url: item.item_url,
-      item_name: item.item_name,
-      item_unit_price_cents: item.item_unit_price_cents,
-      item_quantity: item.item_quantity,
+      url: item.url,
+      name: item.name,
+      unit_price_cents: item.unit_price_cents,
+      quantity: item.quantity,
     }));
     const { shipping_address, ...prData } = purchaseRequest;
     const dataToSend = {
@@ -326,7 +326,7 @@ export default function EditPurchaseRequestPage() {
 
     try {
       const response = await axios.post(
-        `${JIFFY_API_URL}/purchaserequests`,
+        `${JIFFY_API_URL}/purchase-requests`,
         dataToSend,
         {
           headers: {
@@ -591,11 +591,11 @@ export default function EditPurchaseRequestPage() {
                                   type="text"
                                   placeholder="Enter item name"
                                   required={!isItemEmpty(item)}
-                                  value={item.item_name}
+                                  value={item.name}
                                   onChange={(e) =>
                                     updateItem(
                                       index,
-                                      "item_name",
+                                      "name",
                                       e.target.value,
                                     )
                                   }
@@ -617,10 +617,10 @@ export default function EditPurchaseRequestPage() {
                                       displayValues[`price_${index}`] !==
                                       undefined
                                         ? displayValues[`price_${index}`]
-                                        : item.item_unit_price_cents != null &&
-                                            item.item_unit_price_cents !== 0
+                                        : item.unit_price_cents != null &&
+                                            item.unit_price_cents !== 0
                                           ? (
-                                              item.item_unit_price_cents / 100
+                                              item.unit_price_cents / 100
                                             ).toString()
                                           : ""
                                     }
@@ -641,7 +641,7 @@ export default function EditPurchaseRequestPage() {
                                         parseFloat(e.target.value) || 0;
                                       updateItem(
                                         index,
-                                        "item_unit_price_cents",
+                                        "unit_price_cents",
                                         Math.round(value * 100),
                                       );
                                       setDisplayValues((prev) => {
@@ -663,7 +663,7 @@ export default function EditPurchaseRequestPage() {
                                   value={
                                     displayValues[`qty_${index}`] !== undefined
                                       ? displayValues[`qty_${index}`]
-                                      : item.item_quantity || ""
+                                      : item.quantity || ""
                                   }
                                   onChange={(e) => {
                                     const value = e.target.value;
@@ -676,7 +676,7 @@ export default function EditPurchaseRequestPage() {
                                   }}
                                   onBlur={(e) => {
                                     const value = parseInt(e.target.value) || 0;
-                                    updateItem(index, "item_quantity", value);
+                                    updateItem(index, "quantity", value);
                                     setDisplayValues((prev) => {
                                       const newValues = { ...prev };
                                       delete newValues[`qty_${index}`];
@@ -691,11 +691,11 @@ export default function EditPurchaseRequestPage() {
                                   type="text"
                                   placeholder="https://... or www...."
                                   required={!isItemEmpty(item)}
-                                  value={item.item_url}
+                                  value={item.url}
                                   onChange={(e) =>
                                     updateItem(
                                       index,
-                                      "item_url",
+                                      "url",
                                       e.target.value,
                                     )
                                   }
@@ -707,8 +707,8 @@ export default function EditPurchaseRequestPage() {
                               <div className="col-span-1 text-sm font-medium text-white">
                                 ${" "}
                                 {(
-                                  ((item.item_unit_price_cents || 0) *
-                                    (item.item_quantity || 0)) /
+                                  ((item.unit_price_cents || 0) *
+                                    (item.quantity || 0)) /
                                   100
                                 ).toFixed(2)}
                               </div>
@@ -1002,7 +1002,7 @@ export default function EditPurchaseRequestPage() {
         open={showCreateAddressDialog}
         onOpenChange={setShowCreateAddressDialog}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-black">
           <DialogHeader>
             <DialogTitle>Create New Shipping Address</DialogTitle>
             <DialogDescription>

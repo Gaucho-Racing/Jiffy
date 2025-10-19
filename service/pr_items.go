@@ -9,7 +9,7 @@ import (
 func calculateEstimatedCost(items []model.PurchaseRequestItem) int {
 	total := 0
 	for _, item := range items {
-		total += item.ItemUnitPriceCents * item.ItemQuantity
+		total += item.UnitPriceCents * item.Quantity
 	}
 	return total
 }
@@ -19,7 +19,7 @@ func CreatePurchaseRequestItem(item model.PurchaseRequestItem) error {
 		utils.SugarLogger.Errorf("Error creating purchase request item: %v", result.Error)
 		return result.Error
 	}
-	utils.SugarLogger.Infoln("Purchase request item created with id: %d", item.ID)
+	utils.SugarLogger.Infof("Purchase request item created with id: %d", item.ID)
 	return nil
 }
 

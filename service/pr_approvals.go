@@ -7,9 +7,9 @@ import (
 	"jiffy/utils"
 )
 
-func GetPurchaseRequestApprovals(prID int) []model.Approval {
-	var approvals []model.Approval
-	if err := database.DB.Where("pr_id = ?", prID).Find(&approvals).Error; err != nil {
+func GetPurchaseRequestApprovals(prID int) []model.PurchaseRequestApproval {
+	var approvals []model.PurchaseRequestApproval
+	if err := database.DB.Where("purchase_request_id = ?", prID).Find(&approvals).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting approvals for purchase request with id: %s, error: %v", prID, err)
 		return nil
 	}
@@ -19,19 +19,19 @@ func GetPurchaseRequestApprovals(prID int) []model.Approval {
 	return approvals
 }
 
-func EditApproval(approvalID int, status model.ApprovalStatus, note string, userID string) (model.Approval, error) {
-	var approval model.Approval
+func EditApproval(approvalID int, status model.ApprovalStatus, note string, userID string) (model.PurchaseRequestApproval, error) {
+	var approval model.PurchaseRequestApproval
 	if err := database.DB.First(&approval, approvalID).Error; err != nil {
 		utils.SugarLogger.Errorf("Approval not found: %d", approvalID)
-		return model.Approval{}, errors.New("approval not found")
+		return model.PurchaseRequestApproval{}, errors.New("approval not found")
 	}
 	if approval.Status != model.ApprovalPending {
-		return model.Approval{}, errors.New("you can only edit pending approvals")
+		return model.PurchaseRequestApproval{}, errors.New("you can only edit pending approvals")
 	}
 	approval.UserID = userID
 	approval.User, _ = GetUser(userID)
 	if !approval.User.IsInnerCircle() {
-		return model.Approval{}, errors.New("only inner circle members can edit approvals")
+		return model.PurchaseRequestApproval{}, errors.New("only inner circle members can edit approvals")
 	}
 
 	approval.Status = status
@@ -47,7 +47,7 @@ func EditApproval(approvalID int, status model.ApprovalStatus, note string, user
 
 	//approval.User, _ = GetUser(approval.UserID)
 
-	pr := GetPurchaseRequestByID(approval.PrID, userID)
+	pr := GetPurchaseRequestByID(approval.PurchaseRequestID, userID)
 
 	newStatus := model.PurchaseRequestApproved
 	for _, appr := range pr.Approvals {
@@ -59,7 +59,7 @@ func EditApproval(approvalID int, status model.ApprovalStatus, note string, user
 		}
 	}
 	if newStatus != pr.Status {
-		if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", approval.PrID).Update("status", newStatus).Error; err != nil {
+		if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", approval.PurchaseRequestID).Update("status", newStatus).Error; err != nil {
 			utils.SugarLogger.Errorf("Error updating PR status after approval: %v", err)
 		}
 	}
@@ -68,7 +68,7 @@ func EditApproval(approvalID int, status model.ApprovalStatus, note string, user
 }
 
 func DeleteAllApprovals(prID int) error {
-	if err := database.DB.Where("pr_id = ?", prID).Delete(&model.Approval{}).Error; err != nil {
+	if err := database.DB.Where("purchase_request_id = ?", prID).Delete(&model.PurchaseRequestApproval{}).Error; err != nil {
 		utils.SugarLogger.Errorf("Error deleting approvals for PR %d: %v", prID, err)
 		return err
 	}
@@ -87,13 +87,13 @@ func CreateInitialApprovals(prID int) error {
 		return err
 	}
 
-	initialApprovals := []model.Approval{
-		{PrID: prID, Type: model.LeadApproval, Status: model.ApprovalPending, Note: ""},
-		{PrID: prID, Type: model.TreasurerApproval, Status: model.ApprovalPending, Note: ""},
+	initialApprovals := []model.PurchaseRequestApproval{
+		{PurchaseRequestID: prID, Type: model.LeadApproval, Status: model.ApprovalPending, Note: ""},
+		{PurchaseRequestID: prID, Type: model.TreasurerApproval, Status: model.ApprovalPending, Note: ""},
 	}
 
 	if pr.EstimatedCostCents >= 50000 {
-		presidentApproval := model.Approval{PrID: prID, Type: model.PresidentApproval, Status: model.ApprovalPending, Note: ""}
+		presidentApproval := model.PurchaseRequestApproval{PurchaseRequestID: prID, Type: model.PresidentApproval, Status: model.ApprovalPending, Note: ""}
 		initialApprovals = append(initialApprovals, presidentApproval)
 	}
 

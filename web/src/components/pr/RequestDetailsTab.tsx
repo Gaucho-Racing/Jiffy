@@ -163,27 +163,27 @@ export function RequestDetailsTab({
                       </p>
 
                       <p className="text-md text-white">
-                        {item.item_name || "N/A"}
+                        {item.name || "N/A"}
                       </p>
 
                       <p className="text-md text-white">
-                        ${((item.item_unit_price_cents || 0) / 100).toFixed(2)}
+                        ${((item.unit_price_cents || 0) / 100).toFixed(2)}
                       </p>
 
                       <p className="text-md text-white">
-                        {item.item_quantity || 0}
+                        {item.quantity || 0}
                       </p>
 
                       <p className="text-md text-white">
                         ${(calculateItemTotalCents(item) / 100).toFixed(2)}
                       </p>
                       <a
-                        href={item.item_url}
+                        href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="break-all text-sm text-blue-400 underline"
                       >
-                        {item.item_url}
+                        {item.url}
                       </a>
                     </div>
                   </div>

@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   PurchaseRequest,
   initPurchaseRequest,
-  Approval,
+  PurchaseRequestApproval,
   ApprovalStatus,
   PurchaseRequestStatus,
 } from "@/models/pr";
@@ -80,14 +80,14 @@ export default function PurchaseRequestDetailsPage() {
     notify.success(`Status advanced to ${updatedPR.status}`);
   };
 
-  const editApproval = async (approval: Approval, status: ApprovalStatus) => {
+  const editApproval = async (approval: PurchaseRequestApproval, status: ApprovalStatus) => {
     if (!canApprove()) {
       notify.error("You are not authorized to approve/reject this request");
       return;
     }
     try {
       await axios.patch(
-        `${JIFFY_API_URL}/approvals/${approval.id}`,
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest?.id}/approvals/${approval.id}`,
         {
           status: status,
           note: "", // need to do this
@@ -99,7 +99,7 @@ export default function PurchaseRequestDetailsPage() {
         },
       );
       const prResponse = await axios.get(
-        `${JIFFY_API_URL}/purchaserequests/${id}`,
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
@@ -116,7 +116,7 @@ export default function PurchaseRequestDetailsPage() {
     }
   };
 
-  const getApprovalStatusStyle = (approval: Approval) => {
+  const getApprovalStatusStyle = (approval: PurchaseRequestApproval) => {
     switch (approval.status) {
       case ApprovalStatus.ApprovalApproved:
         return "bg-green-600 text-white";
@@ -133,7 +133,7 @@ export default function PurchaseRequestDetailsPage() {
     const fetchPurchaseRequest = async () => {
       try {
         const response = await axios.get(
-          `${JIFFY_API_URL}/purchaserequests/${id}`,
+          `${JIFFY_API_URL}/purchase-requests/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
@@ -215,7 +215,7 @@ export default function PurchaseRequestDetailsPage() {
                 <ArrowLeft className="mr-2 h-4 w-4 text-gray-400" />
                 Back to home
               </Button>
-
+            
               <div className="flex gap-2">
                 {canEdit() && (
                   <Button

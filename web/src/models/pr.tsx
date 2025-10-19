@@ -46,9 +46,9 @@ export const validStatusAdvancements: {
   [PurchaseRequestStatus.PurchaseRequestRejected]: null,
 };
 
-export interface Approval {
+export interface PurchaseRequestApproval {
   id: number;
-  pr_id: number;
+  purchase_request_id: number;
   user_id: string;
   user: User;
   type: ApprovalType;
@@ -61,10 +61,10 @@ export interface Approval {
 export interface PurchaseRequestItem {
   id: number;
   purchase_request_id: number;
-  item_url: string;
-  item_name: string;
-  item_unit_price_cents: number;
-  item_quantity: number;
+  url: string;
+  name: string;
+  unit_price_cents: number;
+  quantity: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -76,7 +76,7 @@ export interface PurchaseRequest {
   user_id: string;
   user: User;
   status: PurchaseRequestStatus;
-  approvals: Approval[];
+  approvals: PurchaseRequestApproval[];
   items: PurchaseRequestItem[];
   vendor: string;
   shipping_tax_cost_cents: number;
@@ -122,7 +122,7 @@ export const columns: ColumnDef<PurchaseRequest>[] = [
         return "No items";
       }
       if (purchaseRequest.items.length === 1) {
-        return purchaseRequest.items[0].item_name;
+        return purchaseRequest.items[0].name;
       }
       return `${purchaseRequest.items.length} items`;
     },
@@ -139,9 +139,9 @@ export const columns: ColumnDef<PurchaseRequest>[] = [
   },
 ];
 
-export const initApproval: Approval = {
+export const initPurchaseRequestApproval: PurchaseRequestApproval = {
   id: 0,
-  pr_id: 0,
+  purchase_request_id: 0,
   user_id: "",
   user: {} as User,
   status: ApprovalStatus.ApprovalPending,
@@ -154,10 +154,10 @@ export const initApproval: Approval = {
 export const initPurchaseRequestItem: PurchaseRequestItem = {
   id: 0,
   purchase_request_id: 0,
-  item_url: "",
-  item_name: "",
-  item_unit_price_cents: 0,
-  item_quantity: 1,
+  url: "",
+  name: "",
+  unit_price_cents: 0,
+  quantity: 1,
   created_at: new Date(),
   updated_at: new Date(),
 };
@@ -188,7 +188,7 @@ export const initPurchaseRequest: PurchaseRequest = {
 
 // Helper functions for working with items
 export const calculateItemTotalCents = (item: PurchaseRequestItem): number => {
-  return item.item_unit_price_cents * item.item_quantity;
+  return item.unit_price_cents * item.quantity;
 };
 
 export const calculateEstimatedCostCents = (

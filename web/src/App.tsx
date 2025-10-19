@@ -39,7 +39,7 @@ function App() {
   useEffect(() => {
     const fetchPurchaseRequests = async () => {
       try {
-        const response = await axios.get(`${JIFFY_API_URL}/purchaserequests`, {
+        const response = await axios.get(`${JIFFY_API_URL}/purchase-requests`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
           },
