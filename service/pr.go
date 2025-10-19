@@ -155,11 +155,11 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 			return model.PurchaseRequest{}, errors.New("final cost is required when advancing to Ordered")
 		}
 	case model.PurchaseRequestOrdered:
-		if newStatus != model.PurchaseRequestDelivered {
+		if newStatus != model.PurchaseRequestCollected {
 			return model.PurchaseRequest{}, errors.New("invalid status change")
 		}
-	case model.PurchaseRequestDelivered:
-		if newStatus != model.PurchaseRequestCollected {
+	case model.PurchaseRequestCollected:
+		if newStatus != model.PurchaseRequestReimbursed {
 			return model.PurchaseRequest{}, errors.New("invalid status change")
 		}
 	default:

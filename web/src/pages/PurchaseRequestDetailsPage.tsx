@@ -190,9 +190,9 @@ export default function PurchaseRequestDetailsPage() {
           return "bg-cyan-600 text-white";
         case PurchaseRequestStatus.PurchaseRequestOrdered:
           return "bg-blue-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestDelivered:
-          return "bg-purple-600 text-white";
         case PurchaseRequestStatus.PurchaseRequestCollected:
+          return "bg-purple-600 text-white";
+        case PurchaseRequestStatus.PurchaseRequestReimbursed:
           return "bg-yellow-500 text-white";
         default:
           return "bg-gray-400 text-white";

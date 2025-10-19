@@ -21,6 +21,7 @@ type PurchaseRequest struct {
 	RequestedPurchaser   string                    `json:"requested_purchaser"`
 	ShippingAddressID    int                       `json:"shipping_address_id"`
 	ShippingAddress      ShippingAddress           `json:"shipping_address" gorm:"-"`
+	Receipts             []PurchaseRequestReceipt  `json:"receipts" gorm:"foreignKey:PurchaseRequestID"`
 	UpdatedAt            time.Time                 `gorm:"autoUpdateTime" json:"updated_at"`
 	CreatedAt            time.Time                 `gorm:"autoCreateTime" json:"created_at"`
 }
@@ -32,10 +33,10 @@ func (PurchaseRequest) TableName() string {
 type PurchaseRequestStatus string
 
 const (
-	PurchaseRequestPending   PurchaseRequestStatus = "Pending Approval"
-	PurchaseRequestApproved  PurchaseRequestStatus = "Request Approved"
-	PurchaseRequestRejected  PurchaseRequestStatus = "Request Rejected"
-	PurchaseRequestOrdered   PurchaseRequestStatus = "Order Placed"
-	PurchaseRequestDelivered PurchaseRequestStatus = "Order Delivered"
-	PurchaseRequestCollected PurchaseRequestStatus = "Order Collected"
+	PurchaseRequestPending    PurchaseRequestStatus = "Pending Approval"
+	PurchaseRequestApproved   PurchaseRequestStatus = "Request Approved"
+	PurchaseRequestRejected   PurchaseRequestStatus = "Request Rejected"
+	PurchaseRequestOrdered    PurchaseRequestStatus = "Order Placed"
+	PurchaseRequestCollected  PurchaseRequestStatus = "Order Collected"
+	PurchaseRequestReimbursed PurchaseRequestStatus = "Reimbursed"
 )

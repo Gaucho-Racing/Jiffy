@@ -7,8 +7,8 @@ export enum PurchaseRequestStatus {
   PurchaseRequestApproved = "Request Approved",
   PurchaseRequestRejected = "Request Rejected",
   PurchaseRequestOrdered = "Order Placed",
-  PurchaseRequestDelivered = "Order Delivered",
   PurchaseRequestCollected = "Order Collected",
+  PurchaseRequestReimbursed = "Reimbursed",
 }
 
 export enum ApprovalStatus {
@@ -28,8 +28,8 @@ export const statusSteps = [
   PurchaseRequestStatus.PurchaseRequestPending,
   PurchaseRequestStatus.PurchaseRequestApproved,
   PurchaseRequestStatus.PurchaseRequestOrdered,
-  PurchaseRequestStatus.PurchaseRequestDelivered,
   PurchaseRequestStatus.PurchaseRequestCollected,
+  PurchaseRequestStatus.PurchaseRequestReimbursed,
 ];
 
 export const validStatusAdvancements: {
@@ -39,10 +39,10 @@ export const validStatusAdvancements: {
   [PurchaseRequestStatus.PurchaseRequestApproved]:
     PurchaseRequestStatus.PurchaseRequestOrdered,
   [PurchaseRequestStatus.PurchaseRequestOrdered]:
-    PurchaseRequestStatus.PurchaseRequestDelivered,
-  [PurchaseRequestStatus.PurchaseRequestDelivered]:
     PurchaseRequestStatus.PurchaseRequestCollected,
-  [PurchaseRequestStatus.PurchaseRequestCollected]: null,
+  [PurchaseRequestStatus.PurchaseRequestCollected]:
+    PurchaseRequestStatus.PurchaseRequestReimbursed,
+  [PurchaseRequestStatus.PurchaseRequestReimbursed]: null,
   [PurchaseRequestStatus.PurchaseRequestRejected]: null,
 };
 
