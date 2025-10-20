@@ -58,13 +58,13 @@ export function ApprovalsStatusTab({
   const getApprovalStatusStyle = (approval: PurchaseRequestApproval) => {
     switch (approval.status) {
       case ApprovalStatus.ApprovalApproved:
-        return "bg-green-600 text-white";
+        return "bg-green-600/70 border-green-600 text-green-100";
       case ApprovalStatus.ApprovalRejected:
-        return "bg-red-600 text-white";
+        return "bg-red-600/50 border-red-600 text-red-100";
       case ApprovalStatus.ApprovalPending:
-        return "bg-gray-900 text-white";
+        return "bg-cyan-600/70 border-cyan-500/50 text-cyan-100";
       default:
-        return "bg-gray-400 text-white";
+        return "bg-gray-700/30 border-gray-800/50 text-gray-600";
     }
   };
 
@@ -72,22 +72,22 @@ export function ApprovalsStatusTab({
     if (step === purchaseRequest.status) {
       switch (step) {
         case PurchaseRequestStatus.PurchaseRequestApproved:
-          return "bg-green-600 text-white";
+          return "bg-green-600/70 border-green-600 text-green-100";
         case PurchaseRequestStatus.PurchaseRequestRejected:
-          return "bg-red-600 text-white";
+          return "bg-red-600/50 border-red-600 text-red-100";
         case PurchaseRequestStatus.PurchaseRequestPending:
-          return "bg-cyan-600 text-white";
+          return "bg-cyan-600/70 border-cyan-500/50 text-cyan-100";
         case PurchaseRequestStatus.PurchaseRequestOrdered:
-          return "bg-blue-600 text-white";
+          return "bg-blue-600/60 border-blue-600 text-white";
         case PurchaseRequestStatus.PurchaseRequestCollected:
-          return "bg-purple-600 text-white";
+          return "bg-gr-purple/60 border-gr-purple text-white";
         case PurchaseRequestStatus.PurchaseRequestReimbursed:
-          return "bg-yellow-500 text-white";
+          return "bg-gr-pink/50 border-gr-pink text-white";
         default:
           return "bg-gray-400 text-white";
       }
     }
-    return "bg-gray-800 text-gray-300";
+    return "bg-gray-700/30 border-gray-800/50 text-gray-600";
   };
 
   const handleAdvanceButton = () => {
@@ -175,7 +175,7 @@ export function ApprovalsStatusTab({
           {statusSteps.map((step) => (
             <div
               key={step}
-              className={`overflow-hidden rounded-md px-4 py-1 text-center text-sm font-medium transition-colors ${getPurchaseRequestStatusStyle(step)}`}
+              className={`overflow-hidden rounded-md py-1 text-center text-sm font-medium transition-colors border-2 ${getPurchaseRequestStatusStyle(step)}`}
             >
               {step}
             </div>
@@ -190,7 +190,7 @@ export function ApprovalsStatusTab({
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{approval.type} Approval</p>
                     <p
-                      className={`rounded-md px-4 py-2 text-sm font-medium ${getApprovalStatusStyle(approval)} ${
+                      className={`rounded-md px-4 py-2 text-sm font-medium border-2 ${getApprovalStatusStyle(approval)} ${
                         approval.status === ApprovalStatus.ApprovalApproved
                           ? "text-green-600"
                           : approval.status === ApprovalStatus.ApprovalRejected
@@ -268,11 +268,11 @@ export function ApprovalsStatusTab({
       <AlertDialog open={showAdvanceDialog} onOpenChange={setShowAdvanceDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Advance Purchase Request Status</AlertDialogTitle>
+            <AlertDialogTitle>Confirm Status Advancement</AlertDialogTitle>
             <AlertDialogDescription>
               <div>
                 <p className="text-white">
-                  Are you sure you want to advance the status from{" "}
+                  You are advancing the status from{" "}
                   <span className="font-semibold">
                     {purchaseRequest.status}
                   </span>{" "}
