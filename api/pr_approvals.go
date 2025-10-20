@@ -18,7 +18,7 @@ func EditApproval(c *gin.Context) {
 	}
 	var request struct {
 		Status string `json:"status" binding:"required"`
-		Note   string `json:"note"`
+		Note   string `json:"note"   binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -26,7 +26,7 @@ func EditApproval(c *gin.Context) {
 	}
 	result, err := service.EditApproval(approvalID, model.ApprovalStatus(request.Status), request.Note, GetRequestUserID(c))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, result)

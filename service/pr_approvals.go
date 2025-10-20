@@ -35,14 +35,16 @@ func EditApproval(approvalID int, status model.ApprovalStatus, note string, user
 	}
 
 	approval.Status = status
-	if note != "" {
-		approval.Note = note // uhhhhh to do
-	}
 
 	if database.DB.Where("id = ?", approval.ID).Select("*").Updates(&approval).RowsAffected == 0 {
 		utils.SugarLogger.Infof("Approval not updated")
 	} else {
 		utils.SugarLogger.Infof("Approval Status updated to %s", approval.Status)
+		if status == model.ApprovalApproved {
+			_, _ = CreateNote(approval.PurchaseRequestID, model.NoteApproved, userID, "Approval approved: '"+note+"'")
+		} else if status == model.ApprovalRejected {
+			_, _ = CreateNote(approval.PurchaseRequestID, model.NoteRejected, userID, "Approval rejected: '"+note+"'")
+		}
 	}
 
 	//approval.User, _ = GetUser(approval.UserID)
@@ -88,8 +90,8 @@ func CreateInitialApprovals(prID int) error {
 	}
 
 	initialApprovals := []model.PurchaseRequestApproval{
-		{PurchaseRequestID: prID, Type: model.LeadApproval, Status: model.ApprovalPending, Note: ""},
-		{PurchaseRequestID: prID, Type: model.TreasurerApproval, Status: model.ApprovalPending, Note: ""},
+		{PurchaseRequestID: prID, Type: model.LeadApproval, Status: model.ApprovalPending},
+		{PurchaseRequestID: prID, Type: model.TreasurerApproval, Status: model.ApprovalPending},
 	}
 
 	if pr.EstimatedCostCents >= 50000 {

@@ -52,6 +52,7 @@ func InitializeRoutes(router *gin.Engine) {
 	router.GET("/shipping-addresses", GetShippingAddresses)
 	router.POST("/shipping-addresses", CreateShippingAddress)
 	router.DELETE("/shipping-addresses/:id", DeleteShippingAddress)
+	router.POST("/purchase-requests/:id/notes", CreateNote)
 }
 
 func AuthChecker() gin.HandlerFunc {
