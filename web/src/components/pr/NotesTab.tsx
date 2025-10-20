@@ -11,11 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  PurchaseRequest,
-  PurchaseRequestNote,
-  NoteType,
-} from "@/models/pr";
+import { PurchaseRequest, PurchaseRequestNote, NoteType } from "@/models/pr";
 import { notify } from "@/lib/notify";
 import { MessageSquare } from "lucide-react";
 import { OutlineButton } from "../ui/outline-button";
@@ -86,92 +82,87 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
 
   return (
     <>
-    <div className="mx-20 my-10">
-      <div className="flex justify-between items-center mb-12">
-        <div>
-          <h3 className="text-2xl font-semibold">Activity & Note History</h3>
+      <div className="mx-20 my-10">
+        <div className="mb-12 flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-semibold">Activity & Note History</h3>
+          </div>
+          <OutlineButton onClick={handleAddNoteButton}>Add Note</OutlineButton>
         </div>
-        <OutlineButton onClick={handleAddNoteButton}>
-          Add Note
-        </OutlineButton>
-      </div>
 
-      <div className="space-y-2">
-        {purchaseRequest.notes && purchaseRequest.notes.length > 0 ? (
-          purchaseRequest.notes.map((note: PurchaseRequestNote) => (
-            <Card key={note.id} className="relative">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="grid grid-cols-12 gap-4 items-center">
-                      <p className="col-span-7 font-semibold text-white">
-                        {note.user?.first_name
-                          ? `${note.user.first_name} ${note.user.last_name}`
-                          : "Unknown User"}
-                      </p>
-                      <p className="col-span-3 text-sm text-gray-400 whitespace-nowrap">
-                        {formatDate(note.created_at)}
-                      </p>
-                      <div className="col-span-2 flex justify-end">  
-                      <span
-                        className={`px-2 py-1 rounded-md text-xs font-medium border ${getNoteTypeStyle(note.type)}`}
-                      >
-                        {note.type}
-                      </span>
+        <div className="space-y-2">
+          {purchaseRequest.notes && purchaseRequest.notes.length > 0 ? (
+            purchaseRequest.notes.map((note: PurchaseRequestNote) => (
+              <Card key={note.id} className="relative">
+                <CardContent className="pt-4">
+                  <div className="flex items-start gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="grid grid-cols-12 items-center gap-4">
+                        <p className="col-span-7 font-semibold text-white">
+                          {note.user?.first_name
+                            ? `${note.user.first_name} ${note.user.last_name}`
+                            : "Unknown User"}
+                        </p>
+                        <p className="col-span-3 whitespace-nowrap text-sm text-gray-400">
+                          {formatDate(note.created_at)}
+                        </p>
+                        <div className="col-span-2 flex justify-end">
+                          <span
+                            className={`rounded-md border px-2 py-1 text-xs font-medium ${getNoteTypeStyle(note.type)}`}
+                          >
+                            {note.type}
+                          </span>
+                        </div>
                       </div>
-
+                      <p className="whitespace-pre-wrap pt-4 text-gray-300">
+                        {note.note}
+                      </p>
                     </div>
-                    <p className="text-gray-300 pt-4 whitespace-pre-wrap">
-                      {note.note}
-                    </p>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <MessageSquare className="mx-auto mb-4 h-12 w-12 text-gray-600" />
+                <p className="text-gray-400">No notes yet.</p>
               </CardContent>
             </Card>
-          ))
-        ) : (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <MessageSquare className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">
-                No notes yet.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
-
-    <AlertDialog open={showAddNoteDialog} onOpenChange={setShowAddNoteDialog}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Add Note</AlertDialogTitle>
-
-        </AlertDialogHeader>
-        <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="note-message" className="text-white">
-              Comment <span className="text-red-500">*</span>
-            </Label>
-            <Textarea
-              id="note-message"
-              placeholder="Enter your comment here..."
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-              className="mt-2"
-              rows={4}
-            />
-          </div>
+          )}
         </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-          <Button onClick={handleCreateNewNote} disabled={isSubmitting}>
-            {isSubmitting ? "Adding..." : "Add Note"}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      </div>
+
+      <AlertDialog open={showAddNoteDialog} onOpenChange={setShowAddNoteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Add Note</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="note-message" className="text-white">
+                Comment <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="note-message"
+                placeholder="Enter your comment here..."
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                className="mt-2"
+                rows={4}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>
+              Cancel
+            </AlertDialogCancel>
+            <Button onClick={handleCreateNewNote} disabled={isSubmitting}>
+              {isSubmitting ? "Adding..." : "Add Note"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
-

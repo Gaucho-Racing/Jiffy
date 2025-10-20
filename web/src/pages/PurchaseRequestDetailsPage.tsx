@@ -76,7 +76,11 @@ export default function PurchaseRequestDetailsPage() {
     );
   };
 
-  const advanceStatus = async (nextStatus: PurchaseRequestStatus, note: string, finalCostCents: number) => {
+  const advanceStatus = async (
+    nextStatus: PurchaseRequestStatus,
+    note: string,
+    finalCostCents: number,
+  ) => {
     if (!canAdvance()) {
       notify.error("You are not authorized to advance status");
       return;
@@ -124,7 +128,7 @@ export default function PurchaseRequestDetailsPage() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
           },
-        }
+        },
       );
 
       const prResponse = await axios.get(
@@ -133,7 +137,7 @@ export default function PurchaseRequestDetailsPage() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
           },
-        }
+        },
       );
       setPurchaseRequest(prResponse.data);
       notify.success("Comment added!");
@@ -308,9 +312,7 @@ export default function PurchaseRequestDetailsPage() {
                   <TabsTrigger value="Checkout Screenshot">
                     Checkout Screenshot
                   </TabsTrigger>
-                  <TabsTrigger value="Note History">
-                    Note History
-                  </TabsTrigger>
+                  <TabsTrigger value="Note History">Note History</TabsTrigger>
                 </TabsList>
                 <TabsContent value="Request Details">
                   <RequestDetailsTab

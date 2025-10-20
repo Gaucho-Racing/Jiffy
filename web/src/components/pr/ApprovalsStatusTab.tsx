@@ -25,7 +25,6 @@ import {
 } from "@/models/pr";
 import { notify } from "@/lib/notify";
 
-
 interface ApprovalsStatusTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
   canApprove: boolean;
@@ -35,7 +34,11 @@ interface ApprovalsStatusTabProps {
     status: ApprovalStatus,
     note: string,
   ) => void;
-  onAdvanceStatus: (nextStatus: PurchaseRequestStatus, note: string, finalCostCents: number) => Promise<void>;
+  onAdvanceStatus: (
+    nextStatus: PurchaseRequestStatus,
+    note: string,
+    finalCostCents: number,
+  ) => Promise<void>;
 }
 
 export function ApprovalsStatusTab({
@@ -51,8 +54,10 @@ export function ApprovalsStatusTab({
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalNote, setApprovalNote] = useState("");
-  const [selectedApproval, setSelectedApproval] = useState<PurchaseRequestApproval | null>(null);
-  const [selectedApprovalAction, setSelectedApprovalAction] = useState<ApprovalStatus | null>(null);
+  const [selectedApproval, setSelectedApproval] =
+    useState<PurchaseRequestApproval | null>(null);
+  const [selectedApprovalAction, setSelectedApprovalAction] =
+    useState<ApprovalStatus | null>(null);
   const [isApproving, setIsApproving] = useState(false);
 
   const getApprovalStatusStyle = (approval: PurchaseRequestApproval) => {
@@ -92,7 +97,7 @@ export function ApprovalsStatusTab({
 
   const handleAdvanceButton = () => {
     if (!purchaseRequest.status || !canAdvance) return;
-    
+
     const next = validStatusAdvancements[purchaseRequest.status];
     if (next !== null) {
       setAdvanceNote("");
@@ -130,7 +135,10 @@ export function ApprovalsStatusTab({
     }
   };
 
-  const handleApprovalButton = (approval: PurchaseRequestApproval, action: ApprovalStatus) => {
+  const handleApprovalButton = (
+    approval: PurchaseRequestApproval,
+    action: ApprovalStatus,
+  ) => {
     setSelectedApproval(approval);
     setSelectedApprovalAction(action);
     setApprovalNote("");
@@ -142,7 +150,7 @@ export function ApprovalsStatusTab({
       notify.error("Please add a note explaining your decision");
       return;
     }
-  
+
     if (selectedApproval && selectedApprovalAction) {
       setIsApproving(true);
       try {
@@ -160,7 +168,7 @@ export function ApprovalsStatusTab({
   return (
     <>
       <div className="mx-20 my-10">
-        <div className="flex justify-between mb-12">
+        <div className="mb-12 flex justify-between">
           <div>
             <h3>Current Status</h3>
           </div>
@@ -175,7 +183,7 @@ export function ApprovalsStatusTab({
           {statusSteps.map((step) => (
             <div
               key={step}
-              className={`overflow-hidden rounded-md py-1 text-center text-sm font-medium transition-colors border-2 ${getPurchaseRequestStatusStyle(step)}`}
+              className={`overflow-hidden rounded-md border-2 py-1 text-center text-sm font-medium transition-colors ${getPurchaseRequestStatusStyle(step)}`}
             >
               {step}
             </div>
@@ -190,7 +198,7 @@ export function ApprovalsStatusTab({
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{approval.type} Approval</p>
                     <p
-                      className={`rounded-md px-4 py-0.5 text-sm font-medium border ${getApprovalStatusStyle(approval)} ${
+                      className={`rounded-md border px-4 py-0.5 text-sm font-medium ${getApprovalStatusStyle(approval)} ${
                         approval.status === ApprovalStatus.ApprovalApproved
                           ? "text-green-600"
                           : approval.status === ApprovalStatus.ApprovalRejected
@@ -350,7 +358,10 @@ export function ApprovalsStatusTab({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
+      <AlertDialog
+        open={showApprovalDialog}
+        onOpenChange={setShowApprovalDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>

@@ -1003,20 +1003,20 @@ export default function NewPurchaseRequestPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-          <p className="text-sm self-center pl-4 text-red-500">Remember to select after creating!</p>
-          <div className="flex items-center justify-end">
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateAddressDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={createShippingAddress}>Create Address</Button>
-
-          </DialogFooter>
-          </div>
+            <p className="self-center pl-4 text-sm text-red-500">
+              Remember to select after creating!
+            </p>
+            <div className="flex items-center justify-end">
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCreateAddressDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={createShippingAddress}>Create Address</Button>
+              </DialogFooter>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
