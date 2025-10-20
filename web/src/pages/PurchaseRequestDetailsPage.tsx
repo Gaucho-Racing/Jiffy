@@ -77,6 +77,10 @@ export default function PurchaseRequestDetailsPage() {
   };
 
   const advanceStatus = async (nextStatus: PurchaseRequestStatus, note: string, finalCostCents: number) => {
+    if (!canAdvance()) {
+      notify.error("You are not authorized to advance status");
+      return;
+    }
     try {
       await axios.patch(
         `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/status`,
@@ -132,7 +136,7 @@ export default function PurchaseRequestDetailsPage() {
         }
       );
       setPurchaseRequest(prResponse.data);
-      notify.success("Note added successfully!");
+      notify.success("Comment added!");
     } catch (error: any) {
       notify.error(getAxiosErrorMessage(error) || "Failed to create note");
     }
@@ -170,7 +174,7 @@ export default function PurchaseRequestDetailsPage() {
       );
       setPurchaseRequest(prResponse.data);
 
-      notify.success("Approval status updated successfully!");
+      notify.success("Approval updated!");
     } catch (error: any) {
       notify.error(
         getAxiosErrorMessage(error) || "Failed to update approval status",

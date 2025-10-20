@@ -18,7 +18,7 @@ export function RequestDetailsTab({
   isLoading,
 }: RequestDetailsTabProps) {
   return (
-    <div className="mx-12 mx-4 my-10 flex justify-start rounded-lg border bg-background p-8 pl-16 shadow-sm">
+    <div className="mx-12 mx-4 my-10 flex justify-start rounded-lg border bg-background p-8 pl-24">
       {isLoading ? (
         <></>
       ) : (
@@ -63,7 +63,7 @@ export function RequestDetailsTab({
           </div>
           <div className="mb-20">
             <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2 lg:items-start">
-              <div className="grid grid-cols-1 pr-4 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-24 xl:grid-cols-[auto_1fr]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-24 xl:grid-cols-[auto_1fr]">
                 <p className="text-md font-medium text-gray-400">Subteam </p>
                 <p className="text-md">{department?.name}</p>
                 <p className="text-md font-medium text-gray-400">Component </p>

@@ -23,10 +23,8 @@ import {
   statusSteps,
   validStatusAdvancements,
 } from "@/models/pr";
-import { JIFFY_API_URL } from "@/consts/config";
 import { notify } from "@/lib/notify";
-import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
-import axios from "axios";
+
 
 interface ApprovalsStatusTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
@@ -35,10 +33,9 @@ interface ApprovalsStatusTabProps {
   onEditApproval: (
     approval: PurchaseRequestApproval,
     status: ApprovalStatus,
+    note: string,
   ) => void;
-  onAdvanceStatus: (updatedPR: PurchaseRequest) => void;
-  getApprovalStatusStyle: (approval: PurchaseRequestApproval) => string;
-  getPurchaseRequestStatusStyle: (step: PurchaseRequestStatus) => string;
+  onAdvanceStatus: (nextStatus: PurchaseRequestStatus, note: string, finalCostCents: number) => Promise<void>;
 }
 
 export function ApprovalsStatusTab({
@@ -47,16 +44,55 @@ export function ApprovalsStatusTab({
   canAdvance,
   onEditApproval,
   onAdvanceStatus,
-  getApprovalStatusStyle,
-  getPurchaseRequestStatusStyle,
 }: ApprovalsStatusTabProps) {
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
   const [advanceNote, setAdvanceNote] = useState("");
   const [finalCostCents, setFinalCostCents] = useState(0);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvalNote, setApprovalNote] = useState("");
+  const [selectedApproval, setSelectedApproval] = useState<PurchaseRequestApproval | null>(null);
+  const [selectedApprovalAction, setSelectedApprovalAction] = useState<ApprovalStatus | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
+
+  const getApprovalStatusStyle = (approval: PurchaseRequestApproval) => {
+    switch (approval.status) {
+      case ApprovalStatus.ApprovalApproved:
+        return "bg-green-600 text-white";
+      case ApprovalStatus.ApprovalRejected:
+        return "bg-red-600 text-white";
+      case ApprovalStatus.ApprovalPending:
+        return "bg-gray-900 text-white";
+      default:
+        return "bg-gray-400 text-white";
+    }
+  };
+
+  const getPurchaseRequestStatusStyle = (step: PurchaseRequestStatus) => {
+    if (step === purchaseRequest.status) {
+      switch (step) {
+        case PurchaseRequestStatus.PurchaseRequestApproved:
+          return "bg-green-600 text-white";
+        case PurchaseRequestStatus.PurchaseRequestRejected:
+          return "bg-red-600 text-white";
+        case PurchaseRequestStatus.PurchaseRequestPending:
+          return "bg-cyan-600 text-white";
+        case PurchaseRequestStatus.PurchaseRequestOrdered:
+          return "bg-blue-600 text-white";
+        case PurchaseRequestStatus.PurchaseRequestCollected:
+          return "bg-purple-600 text-white";
+        case PurchaseRequestStatus.PurchaseRequestReimbursed:
+          return "bg-yellow-500 text-white";
+        default:
+          return "bg-gray-400 text-white";
+      }
+    }
+    return "bg-gray-800 text-gray-300";
+  };
 
   const handleAdvanceButton = () => {
     if (!purchaseRequest.status || !canAdvance) return;
-
+    
     const next = validStatusAdvancements[purchaseRequest.status];
     if (next !== null) {
       setAdvanceNote("");
@@ -85,34 +121,39 @@ export function ApprovalsStatusTab({
       }
     }
 
+    setIsAdvancing(true);
     try {
-      await axios.patch(
-        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/status`,
-        {
-          status: nextStatus,
-          note: advanceNote,
-          final_cost_cents: finalCostCents,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-          },
-        },
-      );
-
-      const prResponse = await axios.get(
-        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-          },
-        },
-      );
-
-      onAdvanceStatus(prResponse.data);
+      await onAdvanceStatus(nextStatus, advanceNote, finalCostCents);
       setShowAdvanceDialog(false);
-    } catch (error: any) {
-      notify.error(getAxiosErrorMessage(error) || "Failed to advance status");
+    } finally {
+      setIsAdvancing(false);
+    }
+  };
+
+  const handleApprovalButton = (approval: PurchaseRequestApproval, action: ApprovalStatus) => {
+    setSelectedApproval(approval);
+    setSelectedApprovalAction(action);
+    setApprovalNote("");
+    setShowApprovalDialog(true);
+  };
+
+  const handleApprovalSubmit = async () => {
+    if (!approvalNote) {
+      notify.error("Please add a note explaining your decision");
+      return;
+    }
+  
+    if (selectedApproval && selectedApprovalAction) {
+      setIsApproving(true);
+      try {
+        onEditApproval(selectedApproval, selectedApprovalAction, approvalNote);
+        setShowApprovalDialog(false);
+        setApprovalNote("");
+        setSelectedApproval(null);
+        setSelectedApprovalAction(null);
+      } finally {
+        setIsApproving(false);
+      }
     }
   };
 
@@ -192,7 +233,7 @@ export function ApprovalsStatusTab({
                         <Button
                           variant="outline"
                           onClick={() =>
-                            onEditApproval(
+                            handleApprovalButton(
                               approval,
                               ApprovalStatus.ApprovalApproved,
                             )
@@ -205,7 +246,7 @@ export function ApprovalsStatusTab({
                         <Button
                           variant="outline"
                           onClick={() =>
-                            onEditApproval(
+                            handleApprovalButton(
                               approval,
                               ApprovalStatus.ApprovalRejected,
                             )
@@ -301,8 +342,71 @@ export function ApprovalsStatusTab({
             </div>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button onClick={handleAdvanceStatus}>Proceed</Button>
+            <AlertDialogCancel disabled={isAdvancing}>Cancel</AlertDialogCancel>
+            <Button onClick={handleAdvanceStatus} disabled={isAdvancing}>
+              {isAdvancing ? "Loading..." : "Proceed"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {selectedApprovalAction === ApprovalStatus.ApprovalApproved
+                ? "Approve Request"
+                : "Reject Request"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              <div>
+                <p className="text-white">
+                  Are you sure you want to{" "}
+                  <span className="font-semibold">
+                    {selectedApprovalAction === ApprovalStatus.ApprovalApproved
+                      ? "approve"
+                      : "reject"}
+                  </span>{" "}
+                  this {selectedApproval?.type} approval?
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="approval-note" className="text-white">
+                Note <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="approval-note"
+                placeholder={
+                  selectedApprovalAction === ApprovalStatus.ApprovalApproved
+                    ? "Add a note explaining your approval:"
+                    : "Add a note explaining your rejection:"
+                }
+                value={approvalNote}
+                onChange={(e) => setApprovalNote(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
+            <Button
+              onClick={handleApprovalSubmit}
+              disabled={isApproving}
+              variant={
+                selectedApprovalAction === ApprovalStatus.ApprovalRejected
+                  ? "destructive"
+                  : "default"
+              }
+            >
+              {isApproving
+                ? "Loading..."
+                : selectedApprovalAction === ApprovalStatus.ApprovalApproved
+                  ? "Approve"
+                  : "Reject"}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
