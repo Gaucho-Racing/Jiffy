@@ -23,6 +23,17 @@ export enum ApprovalType {
   PresidentApproval = "President",
 }
 
+export enum NoteType {
+  RequestSubmitted = "Request Submitted",
+  Approved = "Approved",
+  Rejected = "Rejected",
+  StatusChanged = "Status Changed",
+  RequestAmended = "Request Amended",
+  Comment = "Comment",
+  AttachmentUploaded = "Attachment Uploaded",
+  AttachmentDeleted = "Attachment Deleted",
+}
+
 export const statusSteps = [
   PurchaseRequestStatus.PurchaseRequestRejected,
   PurchaseRequestStatus.PurchaseRequestPending,
@@ -69,6 +80,17 @@ export interface PurchaseRequestItem {
   updated_at: Date;
 }
 
+export interface PurchaseRequestNote {
+  id: number;
+  purchase_request_id: number;
+  user_id: string;
+  user: User;
+  type: NoteType;
+  note: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface PurchaseRequest {
   id: number;
   department_id: string;
@@ -78,13 +100,14 @@ export interface PurchaseRequest {
   status: PurchaseRequestStatus;
   approvals: PurchaseRequestApproval[];
   items: PurchaseRequestItem[];
+  notes: PurchaseRequestNote[];
   vendor: string;
   shipping_tax_cost_cents: number;
   estimated_cost_cents: number;
   final_cost_cents: number;
   description: string;
   priority: number;
-  needed_by_date: string; // ISO string (time.Time in Go)
+  needed_by_date: string;
   requested_purchaser: string;
   shipping_address_id: number;
   shipping_address: ShippingAddress;
@@ -171,6 +194,7 @@ export const initPurchaseRequest: PurchaseRequest = {
   status: PurchaseRequestStatus.PurchaseRequestPending,
   approvals: [],
   items: [],
+  notes: [],
   vendor: "",
   shipping_tax_cost_cents: 0,
   estimated_cost_cents: 0,
@@ -186,7 +210,6 @@ export const initPurchaseRequest: PurchaseRequest = {
   created_at: new Date(),
 };
 
-// Helper functions for working with items
 export const calculateItemTotalCents = (item: PurchaseRequestItem): number => {
   return item.unit_price_cents * item.quantity;
 };
