@@ -26,6 +26,7 @@ import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { RequestDetailsTab } from "@/components/pr/RequestDetailsTab";
 import { ApprovalsStatusTab } from "@/components/pr/ApprovalsStatusTab";
 import { CheckoutScreenshotTab } from "@/components/pr/CheckoutScreenshotTab";
+import { NotesTab } from "@/components/pr/NotesTab";
 
 export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();
@@ -75,14 +76,72 @@ export default function PurchaseRequestDetailsPage() {
     );
   };
 
-  const handleAdvanceStatus = (updatedPR: PurchaseRequest) => {
-    setPurchaseRequest(updatedPR);
-    notify.success(`Status advanced to ${updatedPR.status}`);
+  const advanceStatus = async (nextStatus: PurchaseRequestStatus, note: string, finalCostCents: number) => {
+    try {
+      await axios.patch(
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/status`,
+        {
+          status: nextStatus,
+          note: note,
+          final_cost_cents: finalCostCents,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+
+      const prResponse = await axios.get(
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+
+      setPurchaseRequest(prResponse.data);
+      notify.success(`Status advanced to ${nextStatus}`);
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error) || "Failed to advance status");
+    }
+  };
+
+  const createNote = async (note: string) => {
+    try {
+      await axios.post(
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/notes`,
+        {
+          type: "Comment",
+          note: note,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        }
+      );
+
+      const prResponse = await axios.get(
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        }
+      );
+      setPurchaseRequest(prResponse.data);
+      notify.success("Note added successfully!");
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error) || "Failed to create note");
+    }
   };
 
   const editApproval = async (
     approval: PurchaseRequestApproval,
     status: ApprovalStatus,
+    note: string,
   ) => {
     if (!canApprove()) {
       notify.error("You are not authorized to approve/reject this request");
@@ -93,7 +152,7 @@ export default function PurchaseRequestDetailsPage() {
         `${JIFFY_API_URL}/purchase-requests/${purchaseRequest?.id}/approvals/${approval.id}`,
         {
           status: status,
-          note: "", // need to do this
+          note: note,
         },
         {
           headers: {
@@ -116,19 +175,6 @@ export default function PurchaseRequestDetailsPage() {
       notify.error(
         getAxiosErrorMessage(error) || "Failed to update approval status",
       );
-    }
-  };
-
-  const getApprovalStatusStyle = (approval: PurchaseRequestApproval) => {
-    switch (approval.status) {
-      case ApprovalStatus.ApprovalApproved:
-        return "bg-green-600 text-white";
-      case ApprovalStatus.ApprovalRejected:
-        return "bg-red-600 text-white";
-      case ApprovalStatus.ApprovalPending:
-        return "bg-gray-900 text-white";
-      default:
-        return "bg-gray-400 text-white";
     }
   };
 
@@ -178,28 +224,6 @@ export default function PurchaseRequestDetailsPage() {
     };
     fetchDepartment();
   }, [purchaseRequest.department_id]);
-
-  const getPurchaseRequestStatusStyle = (step: PurchaseRequestStatus) => {
-    if (step === purchaseRequest.status) {
-      switch (step) {
-        case PurchaseRequestStatus.PurchaseRequestApproved:
-          return "bg-green-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestRejected:
-          return "bg-red-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestPending:
-          return "bg-cyan-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestOrdered:
-          return "bg-blue-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestCollected:
-          return "bg-purple-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestReimbursed:
-          return "bg-yellow-500 text-white";
-        default:
-          return "bg-gray-400 text-white";
-      }
-    }
-    return "bg-gray-800 text-gray-300";
-  };
 
   return (
     <>
@@ -277,6 +301,9 @@ export default function PurchaseRequestDetailsPage() {
                   <TabsTrigger value="Approvals and Status">
                     Approvals and Status
                   </TabsTrigger>
+                  <TabsTrigger value="Notes">
+                    Note History
+                  </TabsTrigger>
                   <TabsTrigger value="Checkout Screenshot">
                     Checkout Screenshot
                   </TabsTrigger>
@@ -294,11 +321,13 @@ export default function PurchaseRequestDetailsPage() {
                     canApprove={canApprove()}
                     canAdvance={canAdvance()}
                     onEditApproval={editApproval}
-                    onAdvanceStatus={handleAdvanceStatus}
-                    getApprovalStatusStyle={getApprovalStatusStyle}
-                    getPurchaseRequestStatusStyle={
-                      getPurchaseRequestStatusStyle
-                    }
+                    onAdvanceStatus={advanceStatus}
+                  />
+                </TabsContent>
+                <TabsContent value="Notes">
+                  <NotesTab
+                    purchaseRequest={purchaseRequest}
+                    onCreateNote={createNote}
                   />
                 </TabsContent>
 
