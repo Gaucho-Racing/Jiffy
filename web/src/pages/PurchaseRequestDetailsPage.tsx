@@ -305,11 +305,11 @@ export default function PurchaseRequestDetailsPage() {
                   <TabsTrigger value="Approvals and Status">
                     Approvals and Status
                   </TabsTrigger>
-                  <TabsTrigger value="Notes">
-                    Note History
-                  </TabsTrigger>
                   <TabsTrigger value="Checkout Screenshot">
                     Checkout Screenshot
+                  </TabsTrigger>
+                  <TabsTrigger value="Note History">
+                    Note History
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="Request Details">
@@ -328,15 +328,14 @@ export default function PurchaseRequestDetailsPage() {
                     onAdvanceStatus={advanceStatus}
                   />
                 </TabsContent>
-                <TabsContent value="Notes">
+                <TabsContent value="Checkout Screenshot">
+                  <CheckoutScreenshotTab />
+                </TabsContent>
+                <TabsContent value="Note History">
                   <NotesTab
                     purchaseRequest={purchaseRequest}
                     onCreateNote={createNote}
                   />
-                </TabsContent>
-
-                <TabsContent value="Checkout Screenshot">
-                  <CheckoutScreenshotTab />
                 </TabsContent>
               </Tabs>
             </div>

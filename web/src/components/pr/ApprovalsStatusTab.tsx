@@ -160,8 +160,8 @@ export function ApprovalsStatusTab({
   return (
     <>
       <div className="mx-20 my-10">
-        <div className="flex justify-between">
-          <div className="mb-8">
+        <div className="flex justify-between mb-12">
+          <div>
             <h3>Current Status</h3>
           </div>
           {canAdvance && (
@@ -190,7 +190,7 @@ export function ApprovalsStatusTab({
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{approval.type} Approval</p>
                     <p
-                      className={`rounded-md px-4 py-2 text-sm font-medium border-2 ${getApprovalStatusStyle(approval)} ${
+                      className={`rounded-md px-4 py-0.5 text-sm font-medium border ${getApprovalStatusStyle(approval)} ${
                         approval.status === ApprovalStatus.ApprovalApproved
                           ? "text-green-600"
                           : approval.status === ApprovalStatus.ApprovalRejected

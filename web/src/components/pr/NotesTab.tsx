@@ -7,7 +7,6 @@ import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -57,7 +56,7 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
       case NoteType.RequestSubmitted:
         return "bg-blue-600/20 text-blue-400 border-blue-600/30";
       case NoteType.Approved:
-        return "bg-green-600/20 text-green-400 border-green-600/30";
+        return "bg-green-600/30 text-green-300 border-green-600/30";
       case NoteType.Rejected:
         return "bg-red-600/20 text-red-400 border-red-600/30";
       case NoteType.StatusChanged:
@@ -74,7 +73,6 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
         return "bg-gray-600/20 text-gray-400 border-gray-600/30";
     }
   };
-
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleString("en-US", {
       month: "short",
@@ -89,7 +87,7 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
   return (
     <>
     <div className="mx-20 my-10">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-12">
         <div>
           <h3 className="text-2xl font-semibold">Activity & Note History</h3>
         </div>
@@ -98,7 +96,6 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
         </OutlineButton>
       </div>
 
-      {/* Notes Timeline */}
       <div className="space-y-2">
         {purchaseRequest.notes && purchaseRequest.notes.length > 0 ? (
           purchaseRequest.notes.map((note: PurchaseRequestNote) => (
@@ -106,24 +103,25 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
               <CardContent className="pt-4">
                 <div className="flex items-start gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-white">
-                          {note.user?.first_name
-                            ? `${note.user.first_name} ${note.user.last_name}`
-                            : "Unknown User"}
-                        </p>
-                        <span
-                          className={`px-2 py-1 rounded-md text-xs font-medium border ${getNoteTypeStyle(note.type)}`}
-                        >
-                          {note.type}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-400 flex-shrink-0">
+                    <div className="grid grid-cols-12 gap-4 items-center">
+                      <p className="col-span-7 font-semibold text-white">
+                        {note.user?.first_name
+                          ? `${note.user.first_name} ${note.user.last_name}`
+                          : "Unknown User"}
+                      </p>
+                      <p className="col-span-3 text-sm text-gray-400 whitespace-nowrap">
                         {formatDate(note.created_at)}
                       </p>
+                      <div className="col-span-2 flex justify-end">  
+                      <span
+                        className={`px-2 py-1 rounded-md text-xs font-medium border ${getNoteTypeStyle(note.type)}`}
+                      >
+                        {note.type}
+                      </span>
+                      </div>
+
                     </div>
-                    <p className="text-gray-300 whitespace-pre-wrap">
+                    <p className="text-gray-300 pt-4 whitespace-pre-wrap">
                       {note.note}
                     </p>
                   </div>
@@ -136,7 +134,7 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
             <CardContent className="py-12 text-center">
               <MessageSquare className="h-12 w-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400">
-                No notes yet. Add one to start tracking activity.
+                No notes yet.
               </p>
             </CardContent>
           </Card>
@@ -148,11 +146,7 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Add Note</AlertDialogTitle>
-          <AlertDialogDescription>
-            <p className="text-white">
-              Add a comment or note to this purchase request.
-            </p>
-          </AlertDialogDescription>
+
         </AlertDialogHeader>
         <div className="space-y-4 py-4">
           <div>
