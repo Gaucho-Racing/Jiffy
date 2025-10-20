@@ -914,9 +914,6 @@ export default function NewPurchaseRequestPage() {
         <DialogContent className="max-w-2xl bg-black">
           <DialogHeader>
             <DialogTitle>Create New Shipping Address</DialogTitle>
-            <DialogDescription>
-              Add a new shipping address for Gaucho Racing orders.
-            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -1005,6 +1002,10 @@ export default function NewPurchaseRequestPage() {
               </div>
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+          <p className="text-sm self-center pl-4 text-red-500">Remember to select after creating!</p>
+          <div className="flex items-center justify-end">
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -1013,7 +1014,10 @@ export default function NewPurchaseRequestPage() {
               Cancel
             </Button>
             <Button onClick={createShippingAddress}>Create Address</Button>
+
           </DialogFooter>
+          </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
