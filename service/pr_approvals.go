@@ -95,7 +95,7 @@ func CreateInitialApprovals(prID int) error {
 	}
 
 	if pr.EstimatedCostCents >= 50000 {
-		presidentApproval := model.PurchaseRequestApproval{PurchaseRequestID: prID, Type: model.PresidentApproval, Status: model.ApprovalPending, Note: ""}
+		presidentApproval := model.PurchaseRequestApproval{PurchaseRequestID: prID, Type: model.PresidentApproval, Status: model.ApprovalPending}
 		initialApprovals = append(initialApprovals, presidentApproval)
 	}
 
