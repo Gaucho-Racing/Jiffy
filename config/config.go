@@ -34,3 +34,15 @@ var Sentinel = struct {
 	Token:        os.Getenv("SENTINEL_TOKEN"),
 	RedirectURI:  os.Getenv("SENTINEL_REDIRECT_URI"),
 }
+
+var S3 = struct {
+	AccessKey string
+	SecretKey string
+	Region    string
+	Bucket    string
+}{
+	AccessKey: os.Getenv("S3_ACCESS_KEY"),
+	SecretKey: os.Getenv("S3_SECRET_KEY"),
+	Region:    os.Getenv("S3_REGION"),
+	Bucket:    os.Getenv("S3_BUCKET"),
+}
