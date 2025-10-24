@@ -141,7 +141,9 @@ export function ApprovalsStatusTab({
   ) => {
     setSelectedApproval(approval);
     setSelectedApprovalAction(action);
-    setApprovalNote(action === ApprovalStatus.ApprovalApproved ? "Looks good to me!" : "");
+    setApprovalNote(
+      action === ApprovalStatus.ApprovalApproved ? "Looks good to me!" : "",
+    );
     setShowApprovalDialog(true);
   };
 

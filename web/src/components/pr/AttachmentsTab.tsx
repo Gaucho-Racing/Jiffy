@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -43,26 +49,29 @@ export function AttachmentsTab({
       const clipboardData = e.clipboardData;
       if (!clipboardData) return;
       const item = clipboardData.items[0];
-      if (item.kind === 'file') {
+      if (item.kind === "file") {
         const file = item.getAsFile();
         if (file) {
           if (file.size > 10 * 1024 * 1024) {
-            notify.error('File too large! (Max: 10MB)');
+            notify.error("File too large! (Max: 10MB)");
             return;
           }
-          if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-            notify.error('Allowed file types: .png, .jpg, .jpeg, .pdf');
+          if (
+            !file.type.startsWith("image/") &&
+            file.type !== "application/pdf"
+          ) {
+            notify.error("Allowed file types: .png, .jpg, .jpeg, .pdf");
             return;
           }
           setFile(file);
-          notify.success('File pasted from clipboard!');
+          notify.success("File pasted from clipboard!");
         }
       }
-    }
-    document.addEventListener('paste', handlePaste);
+    };
+    document.addEventListener("paste", handlePaste);
     return () => {
-      document.removeEventListener('paste', handlePaste);
-    }
+      document.removeEventListener("paste", handlePaste);
+    };
   }, [showUploadDialog]);
 
   const handleUploadButton = () => {
@@ -118,7 +127,6 @@ export function AttachmentsTab({
     }
   };
 
-
   return (
     <>
       <div className="mx-20 my-10">
@@ -126,18 +134,26 @@ export function AttachmentsTab({
           <div>
             <h3 className="text-2xl font-semibold">Attachments</h3>
           </div>
-          <OutlineButton onClick={handleUploadButton}>Upload Attachment</OutlineButton>
+          <OutlineButton onClick={handleUploadButton}>
+            Upload Attachment
+          </OutlineButton>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {purchaseRequest.attachments && purchaseRequest.attachments.length > 0 ? (
-            purchaseRequest.attachments.map((attachment: PurchaseRequestAttachment) => (
-              <Card key={attachment.id} className="relative flex flex-col h-full">
-                <CardContent className="p-4 flex-1">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {purchaseRequest.attachments &&
+          purchaseRequest.attachments.length > 0 ? (
+            purchaseRequest.attachments.map(
+              (attachment: PurchaseRequestAttachment) => (
+                <Card
+                  key={attachment.id}
+                  className="relative flex h-full flex-col"
+                >
+                  <CardContent className="flex-1 p-4">
                     <div className="justify-between">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-white">
-                          By: {attachment.user?.first_name
+                          By:{" "}
+                          {attachment.user?.first_name
                             ? `${attachment.user.first_name} ${attachment.user.last_name}`
                             : "Unknown User"}
                         </p>
@@ -147,50 +163,51 @@ export function AttachmentsTab({
                           {attachment.type}
                         </span>
                       </div>
-                      
+
                       <div>
-                        <div className="flex py-2 items-center justify-between">
-                          <p className="text-gray-300 text-sm">
-                          File: {attachment.filename}
-                        </p>
-                        <p className="text-gray-400 text-xs">
-                          {new Date(attachment.created_at).toLocaleString()}
-                        </p>
+                        <div className="flex items-center justify-between py-2">
+                          <p className="text-sm text-gray-300">
+                            File: {attachment.filename}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(attachment.created_at).toLocaleString()}
+                          </p>
                         </div>
-                        
+
                         {attachment.description && (
-                          <p className="text-gray-300 text-sm">
+                          <p className="text-sm text-gray-300">
                             Description: {attachment.description}
                           </p>
                         )}
                       </div>
-                      
-                      {attachment.content_type?.startsWith('image/') && (
+
+                      {attachment.content_type?.startsWith("image/") && (
                         <div className="mt-4">
                           <img
                             src={attachment.url}
                             alt={attachment.filename}
-                            className="w-full h-48 object-cover rounded border"
+                            className="h-48 w-full rounded border object-cover"
                             onError={(e) => {
-                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.style.display = "none";
                             }}
                           />
                         </div>
                       )}
                     </div>
-                </CardContent>
-                <CardFooter>
-                  <a
-                    href={attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 underline text-sm hover:text-blue-300"
-                  >
-                    View File in New Tab
-                  </a>
-                </CardFooter>
-              </Card>
-            ))
+                  </CardContent>
+                  <CardFooter>
+                    <a
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-400 underline hover:text-blue-300"
+                    >
+                      View File in New Tab
+                    </a>
+                  </CardFooter>
+                </Card>
+              ),
+            )
           ) : (
             <div className="col-span-full">
               <Card>
@@ -210,7 +227,7 @@ export function AttachmentsTab({
           </AlertDialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="file" className="text-white flex items-center">
+              <Label htmlFor="file" className="flex items-center text-white">
                 Selected File<span className="text-red-500">*</span>
               </Label>
               <div className="relative">
@@ -222,16 +239,16 @@ export function AttachmentsTab({
                   className="opacity-0"
                 />
                 {file ? (
-                  <div className="absolute inset-0 flex items-center px-3 text-sm text-white border rounded-md pointer-events-none">
+                  <div className="pointer-events-none absolute inset-0 flex items-center rounded-md border px-3 text-sm text-white">
                     {file.name}
                   </div>
                 ) : (
-                  <div className="absolute inset-0 flex items-center px-3 text-sm text-white border rounded-md pointer-events-none">
+                  <div className="pointer-events-none absolute inset-0 flex items-center rounded-md border px-3 text-sm text-white">
                     Click to select a file or paste from clipboard.
                   </div>
                 )}
               </div>
-          </div>
+            </div>
             <div>
               <Label htmlFor="type" className="text-white">
                 Attachment Type<span className="text-red-500">*</span>
@@ -264,10 +281,11 @@ export function AttachmentsTab({
             </div>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isUploading}>
-              Cancel
-            </AlertDialogCancel>
-            <Button onClick={handleUpload} disabled={isUploading || !file || !type}>
+            <AlertDialogCancel disabled={isUploading}>Cancel</AlertDialogCancel>
+            <Button
+              onClick={handleUpload}
+              disabled={isUploading || !file || !type}
+            >
               {isUploading ? "Uploading..." : "Upload Attachment"}
             </Button>
           </AlertDialogFooter>

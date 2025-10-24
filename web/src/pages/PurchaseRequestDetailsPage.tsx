@@ -201,16 +201,16 @@ export default function PurchaseRequestDetailsPage() {
     }
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', type);
-      formData.append('description', description);
+      formData.append("file", file);
+      formData.append("type", type);
+      formData.append("description", description);
 
       await axios.post(
         `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/attachments`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
           },
         },
@@ -227,7 +227,9 @@ export default function PurchaseRequestDetailsPage() {
       setPurchaseRequest(prResponse.data);
       notify.success("Attachment uploaded successfully!");
     } catch (error: any) {
-      notify.error(getAxiosErrorMessage(error) || "Failed to upload attachment");
+      notify.error(
+        getAxiosErrorMessage(error) || "Failed to upload attachment",
+      );
     }
   };
 
@@ -378,8 +380,8 @@ export default function PurchaseRequestDetailsPage() {
                   />
                 </TabsContent>
                 <TabsContent value="Attachments">
-                  <AttachmentsTab 
-                    purchaseRequest={purchaseRequest} 
+                  <AttachmentsTab
+                    purchaseRequest={purchaseRequest}
                     onUploadAttachment={uploadAttachment}
                   />
                 </TabsContent>
