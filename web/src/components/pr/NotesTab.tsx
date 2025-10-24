@@ -69,16 +69,6 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
         return "bg-gray-600/20 text-gray-400 border-gray-600/30";
     }
   };
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
 
   return (
     <>
@@ -104,7 +94,7 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
                             : "Unknown User"}
                         </p>
                         <p className="col-span-3 whitespace-nowrap text-sm text-gray-400">
-                          {formatDate(note.created_at)}
+                          {new Date(note.updated_at).toLocaleString()}
                         </p>
                         <div className="col-span-2 flex justify-end">
                           <span
