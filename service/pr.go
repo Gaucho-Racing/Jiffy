@@ -27,6 +27,8 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 		return db.Order("id ASC")
 	}).Preload("Notes", func(db *gorm.DB) *gorm.DB {
 		return db.Order("created_at DESC")
+	}).Preload("Attachments", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")
 	}).First(&pr, "id = ?", id).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting purchase request with id %s: %v", id, err)
 		return model.PurchaseRequest{}
@@ -39,6 +41,9 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 	}
 	for i := range pr.Notes {
 		pr.Notes[i].User, _ = GetUser(pr.Notes[i].UserID)
+	}
+	for i := range pr.Attachments {
+		pr.Attachments[i].User, _ = GetUser(pr.Attachments[i].UserID)
 	}
 	currentUser, _ := GetUser(userID)
 	if pr.UserID != userID && !currentUser.IsInnerCircle() {

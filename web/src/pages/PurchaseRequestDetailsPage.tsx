@@ -25,7 +25,7 @@ import React from "react";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { RequestDetailsTab } from "@/components/pr/RequestDetailsTab";
 import { ApprovalsStatusTab } from "@/components/pr/ApprovalsStatusTab";
-import { CheckoutScreenshotTab } from "@/components/pr/CheckoutScreenshotTab";
+import { AttachmentsTab } from "@/components/pr/AttachmentsTab";
 import { NotesTab } from "@/components/pr/NotesTab";
 
 export default function PurchaseRequestDetailsPage() {
@@ -63,6 +63,10 @@ export default function PurchaseRequestDetailsPage() {
   };
 
   const canAdvance = () => {
+    return purchaseRequest.user_id === currentUser.id || canApprove();
+  };
+
+  const canUpload = () => {
     return purchaseRequest.user_id === currentUser.id || canApprove();
   };
 
@@ -183,6 +187,47 @@ export default function PurchaseRequestDetailsPage() {
       notify.error(
         getAxiosErrorMessage(error) || "Failed to update approval status",
       );
+    }
+  };
+
+  const uploadAttachment = async (
+    file: File,
+    type: string,
+    description: string,
+  ) => {
+    if (!canUpload()) {
+      notify.error("You are not authorized to upload attachments");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+      formData.append('description', description);
+
+      await axios.post(
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/attachments`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+
+      const prResponse = await axios.get(
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+      setPurchaseRequest(prResponse.data);
+      notify.success("Attachment uploaded successfully!");
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error) || "Failed to upload attachment");
     }
   };
 
@@ -307,12 +352,14 @@ export default function PurchaseRequestDetailsPage() {
                     Request Details
                   </TabsTrigger>
                   <TabsTrigger value="Approvals and Status">
-                    Approvals and Status
+                    Approvals & Status
                   </TabsTrigger>
-                  <TabsTrigger value="Checkout Screenshot">
-                    Checkout Screenshot
+                  <TabsTrigger value="Attachments">
+                    Receipts & Attachments
                   </TabsTrigger>
-                  <TabsTrigger value="Note History">Note History</TabsTrigger>
+                  <TabsTrigger value="Note History">
+                    Activity & Note Log
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="Request Details">
                   <RequestDetailsTab
@@ -330,8 +377,11 @@ export default function PurchaseRequestDetailsPage() {
                     onAdvanceStatus={advanceStatus}
                   />
                 </TabsContent>
-                <TabsContent value="Checkout Screenshot">
-                  <CheckoutScreenshotTab />
+                <TabsContent value="Attachments">
+                  <AttachmentsTab 
+                    purchaseRequest={purchaseRequest} 
+                    onUploadAttachment={uploadAttachment}
+                  />
                 </TabsContent>
                 <TabsContent value="Note History">
                   <NotesTab

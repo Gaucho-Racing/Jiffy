@@ -57,6 +57,30 @@ export const validStatusAdvancements: {
   [PurchaseRequestStatus.PurchaseRequestRejected]: null,
 };
 
+export enum AttachmentType {
+  AttachmentReceipt = "Receipt",
+  AttachmentCheckoutPage = "Checkout Page",
+  AttachmentInvoice = "Invoice",
+  AttachmentQuote = "Quote",
+  AttachmentOther = "Other",
+}
+
+export interface PurchaseRequestAttachment {
+  id: string;
+  purchase_request_id: number;
+  user_id: string;
+  user: User;
+  url: string;
+  filename: string;
+  file_size: number;
+  content_type: string;
+  type: AttachmentType;
+  description: string;
+  note: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface PurchaseRequestApproval {
   id: number;
   purchase_request_id: number;
@@ -99,6 +123,7 @@ export interface PurchaseRequest {
   user: User;
   status: PurchaseRequestStatus;
   approvals: PurchaseRequestApproval[];
+  attachments: PurchaseRequestAttachment[];
   items: PurchaseRequestItem[];
   notes: PurchaseRequestNote[];
   vendor: string;
@@ -193,6 +218,7 @@ export const initPurchaseRequest: PurchaseRequest = {
   user: {} as User,
   status: PurchaseRequestStatus.PurchaseRequestPending,
   approvals: [],
+  attachments: [],
   items: [],
   notes: [],
   vendor: "",

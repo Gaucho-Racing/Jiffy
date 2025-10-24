@@ -28,6 +28,7 @@ func CreateAttachment(prID int, userID string, file *multipart.FileHeader, attac
 		utils.SugarLogger.Errorf("Failed to create attachment: %v", err)
 		return model.PurchaseRequestAttachment{}, err
 	}
+	_, _ = CreateNote(prID, model.NoteAttachmentUploaded, userID, "Attachment uploaded: "+attachment.Filename)
 
 	return attachment, nil
 }
