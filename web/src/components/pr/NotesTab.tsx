@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PurchaseRequest, PurchaseRequestNote, NoteType } from "@/models/pr";
 import { notify } from "@/lib/notify";
-import { MessageSquare } from "lucide-react";
 import { OutlineButton } from "../ui/outline-button";
 
 interface NotesTabProps {
