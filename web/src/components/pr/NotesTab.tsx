@@ -88,12 +88,12 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
                   <div className="flex items-start gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="grid grid-cols-12 items-center gap-4">
-                        <p className="col-span-7 font-semibold text-white">
+                        <p className="col-span-8 font-semibold text-white">
                           {note.user?.first_name
                             ? `${note.user.first_name} ${note.user.last_name}`
                             : "Unknown User"}
                         </p>
-                        <p className="col-span-3 whitespace-nowrap text-sm text-gray-400">
+                        <p className="col-span-2 whitespace-nowrap text-sm text-gray-400">
                           {new Date(note.updated_at).toLocaleString()}
                         </p>
                         <div className="col-span-2 flex justify-end">
@@ -115,8 +115,7 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
           ) : (
             <Card>
               <CardContent className="py-12 text-center">
-                <MessageSquare className="mx-auto mb-4 h-12 w-12 text-gray-600" />
-                <p className="text-gray-400">No notes yet.</p>
+                <p>No notes yet.</p>
               </CardContent>
             </Card>
           )}

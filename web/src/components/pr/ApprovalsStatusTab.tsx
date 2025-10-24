@@ -141,7 +141,7 @@ export function ApprovalsStatusTab({
   ) => {
     setSelectedApproval(approval);
     setSelectedApprovalAction(action);
-    setApprovalNote("");
+    setApprovalNote(action === ApprovalStatus.ApprovalApproved ? "Looks good to me!" : "");
     setShowApprovalDialog(true);
   };
 
@@ -198,15 +198,7 @@ export function ApprovalsStatusTab({
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{approval.type} Approval</p>
                     <p
-                      className={`rounded-md border px-4 py-0.5 text-sm font-medium ${getApprovalStatusStyle(approval)} ${
-                        approval.status === ApprovalStatus.ApprovalApproved
-                          ? "text-green-600"
-                          : approval.status === ApprovalStatus.ApprovalRejected
-                            ? "text-red-600"
-                            : approval.status === ApprovalStatus.ApprovalPending
-                              ? "text-cyan-600"
-                              : "text-gray-600"
-                      }`}
+                      className={`rounded-md border-2 px-4 py-0.5 text-sm font-medium ${getApprovalStatusStyle(approval)}`}
                     >
                       {approval.status}
                     </p>
@@ -341,7 +333,7 @@ export function ApprovalsStatusTab({
               </Label>
               <Textarea
                 id="advance-note"
-                placeholder="Add a note explaining this status change..."
+                placeholder="Add a note explaining this status change"
                 value={advanceNote}
                 onChange={(e) => setAdvanceNote(e.target.value)}
                 className="mt-2"
@@ -392,8 +384,8 @@ export function ApprovalsStatusTab({
                 id="approval-note"
                 placeholder={
                   selectedApprovalAction === ApprovalStatus.ApprovalApproved
-                    ? "Add a note explaining your approval:"
-                    : "Add a note explaining your rejection:"
+                    ? "Add a note explaining your approval"
+                    : "Add a note explaining your rejection"
                 }
                 value={approvalNote}
                 onChange={(e) => setApprovalNote(e.target.value)}
