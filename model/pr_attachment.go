@@ -21,8 +21,8 @@ type PurchaseRequestAttachment struct {
 	Filename          string         `json:"filename"`
 	FileSize          int64          `json:"file_size"`
 	ContentType       string         `json:"content_type"`
-	Type              AttachmentType `json:"type"`
-	Description       string         `json:"description"`
+	Type              AttachmentType `json:"type" form:"type"`
+	Description       string         `json:"description" form:"description"`
 	CreatedAt         time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt         time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 }
