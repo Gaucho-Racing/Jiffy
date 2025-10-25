@@ -25,10 +25,8 @@ export function RequestDetailsTab({
         <div className="w-full space-y-8">
           <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2">
             <div>
-              <p className="text-md mb-2 font-medium text-gray-400">
-                Requester
-              </p>
-              <div className="text-md flex items-center pl-8">
+              <p className="mb-2 font-medium text-gray-400">Requester</p>
+              <div className="flex items-center pl-8">
                 <Avatar className="mr-4 h-12 w-12">
                   <AvatarImage src={purchaseRequest.user?.avatar_url} />
                   <AvatarFallback>CN</AvatarFallback>
@@ -46,52 +44,48 @@ export function RequestDetailsTab({
             </div>
             <div>
               <div className="grid grid-cols-1 pt-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[auto_1fr] xl:gap-x-24">
-                <p className="text-md font-medium text-gray-400">ID #</p>
-                <p className="text-md">{purchaseRequest.id}</p>
-                <p className="text-md font-medium text-gray-400">
-                  Date Requested
-                </p>
-                <p className="text-md">
+                <p className="font-medium text-gray-400">ID #</p>
+                <p>{purchaseRequest.id}</p>
+                <p className="font-medium text-gray-400">Date Requested</p>
+                <p>
                   {purchaseRequest.created_at
                     ? new Date(purchaseRequest.created_at).toLocaleDateString()
                     : ""}
                 </p>
-                <p className="text-md font-medium text-gray-400">Status</p>
-                <p className="text-md">{purchaseRequest.status}</p>
+                <p className="font-medium text-gray-400">Status</p>
+                <p>{purchaseRequest.status}</p>
               </div>
             </div>
           </div>
           <div className="mb-20">
             <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2 lg:items-start">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-24 xl:grid-cols-[auto_1fr]">
-                <p className="text-md font-medium text-gray-400">Subteam </p>
-                <p className="text-md">{department?.name}</p>
-                <p className="text-md font-medium text-gray-400">Component </p>
-                <p className="text-md">{purchaseRequest.component}</p>
-                <p className="text-md font-medium text-gray-400">Vendor </p>
-                <p className="text-md">{purchaseRequest.vendor}</p>
-                <p className="text-md font-medium text-gray-400">Priority </p>
-                <p className="text-md">{purchaseRequest.priority}</p>
-                <p className="text-md font-medium text-gray-400">Needed By </p>
-                <p className="text-md">
+                <p className="font-medium text-gray-400">Subteam </p>
+                <p>{department?.name}</p>
+                <p className="font-medium text-gray-400">Component </p>
+                <p>{purchaseRequest.component}</p>
+                <p className="font-medium text-gray-400">Vendor </p>
+                <p>{purchaseRequest.vendor}</p>
+                <p className="font-medium text-gray-400">Priority </p>
+                <p>{purchaseRequest.priority}</p>
+                <p className="font-medium text-gray-400">Needed By </p>
+                <p>
                   {purchaseRequest.needed_by_date
                     ? new Date(
                         purchaseRequest.needed_by_date,
                       ).toLocaleDateString()
                     : ""}
                 </p>
-                <p className="text-md font-medium text-gray-400">
-                  Description{" "}
-                </p>
-                <p className="text-md max-h-32 overflow-y-auto">
+                <p className="font-medium text-gray-400">Description </p>
+                <p className="max-h-32 overflow-y-auto">
                   {purchaseRequest.description}
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-10 xl:grid-cols-[auto_1fr]">
-                <p className="text-md font-medium text-gray-400">
+                <p className="font-medium text-gray-400">
                   Estimated Item Total{" "}
                 </p>
-                <p className="text-md">
+                <p>
                   $
                   {purchaseRequest.items
                     ? (
@@ -99,41 +93,33 @@ export function RequestDetailsTab({
                       ).toFixed(2)
                     : "0.00"}
                 </p>
-                <p className="text-md font-medium text-gray-400">
+                <p className="font-medium text-gray-400">
                   Estimated Shipping/Tax{" "}
                 </p>
-                <p className="text-md">
+                <p>
                   $
                   {purchaseRequest.shipping_tax_cost_cents
                     ? (purchaseRequest.shipping_tax_cost_cents / 100).toFixed(2)
                     : "0.00"}
                 </p>
-                <p className="text-md font-medium text-gray-400">
-                  Estimated Cost{" "}
-                </p>
-                <p className="text-md">
+                <p className="font-medium text-gray-400">Estimated Cost </p>
+                <p>
                   $
                   {purchaseRequest.estimated_cost_cents
                     ? (purchaseRequest.estimated_cost_cents / 100).toFixed(2)
                     : "0.00"}
                 </p>
-                <p className="text-md font-medium text-gray-400">
-                  Who will order?
-                </p>
-                <p className="text-md">{purchaseRequest.requested_purchaser}</p>
-                <p className="text-md font-medium text-gray-400">
-                  Final Price{" "}
-                </p>
-                <p className="text-md">
+                <p className="font-medium text-gray-400">Who will order?</p>
+                <p>{purchaseRequest.requested_purchaser}</p>
+                <p className="font-medium text-gray-400">Final Price </p>
+                <p>
                   {purchaseRequest.final_cost_cents &&
                   purchaseRequest.final_cost_cents > 0
                     ? `$${(purchaseRequest.final_cost_cents / 100).toFixed(2)}`
                     : ""}
                 </p>
-                <p className="text-md font-medium text-gray-400">
-                  Requested Address
-                </p>
-                <p className="text-md max-h-32 overflow-y-auto">
+                <p className="font-medium text-gray-400">Requested Address</p>
+                <p className="max-h-32 overflow-y-auto">
                   {purchaseRequest.shipping_address?.name
                     ? `${purchaseRequest.shipping_address.name} - ${purchaseRequest.shipping_address.street_address}, ${purchaseRequest.shipping_address.city}, ${purchaseRequest.shipping_address.state} ${purchaseRequest.shipping_address.zip_code}`
                     : ""}
@@ -142,7 +128,7 @@ export function RequestDetailsTab({
             </div>
           </div>
           <div>
-            <p className="text-md mb-2 mt-20 font-medium text-gray-400">
+            <p className="mb-2 mt-20 font-medium text-gray-400">
               Items ({purchaseRequest.items?.length || 0})
             </p>
             <div className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-[1fr_6fr_4fr_4fr_4fr_12fr]">
@@ -162,15 +148,15 @@ export function RequestDetailsTab({
                         #{index + 1}
                       </p>
 
-                      <p className="text-md text-white">{item.name || "N/A"}</p>
+                      <p className="text-white">{item.name || "N/A"}</p>
 
-                      <p className="text-md text-white">
+                      <p className="text-white">
                         ${((item.unit_price_cents || 0) / 100).toFixed(2)}
                       </p>
 
-                      <p className="text-md text-white">{item.quantity || 0}</p>
+                      <p className="text-white">{item.quantity || 0}</p>
 
-                      <p className="text-md text-white">
+                      <p className="text-white">
                         ${(calculateItemTotalCents(item) / 100).toFixed(2)}
                       </p>
                       <a

@@ -170,9 +170,9 @@ export function ApprovalsStatusTab({
   return (
     <>
       <div className="mx-20 my-10">
-        <div className="mb-12 flex justify-between">
+        <div className="mb-12 flex items-center justify-between">
           <div>
-            <h3>Current Status</h3>
+            <h3 className="text-2xl font-semibold">Current Status</h3>
           </div>
           {canAdvance && (
             <OutlineButton onClick={handleAdvanceButton}>
@@ -208,25 +208,23 @@ export function ApprovalsStatusTab({
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex items-center justify-between">
-                <div>
-                  <div className="mt-2 text-sm text-gray-100">
-                    <p>
-                      Approved by:{" "}
-                      <span className="font-medium text-gray-100">
-                        {approval.user?.first_name
-                          ? `${approval.user.first_name} ${approval.user.last_name}`
-                          : "Pending approval"}
-                      </span>
-                    </p>
-                    <p>
-                      Date:{" "}
-                      <span className="font-medium text-gray-100">
-                        {approval.status !== ApprovalStatus.ApprovalPending
-                          ? new Date(approval.updated_at).toLocaleString()
-                          : "N/A"}
-                      </span>
-                    </p>
-                  </div>
+                <div className="text-sm text-gray-100">
+                  <p>
+                    Approved by:{" "}
+                    <span className="font-medium text-gray-100">
+                      {approval.user?.first_name
+                        ? `${approval.user.first_name} ${approval.user.last_name}`
+                        : "Pending approval"}
+                    </span>
+                  </p>
+                  <p>
+                    Date:{" "}
+                    <span className="font-medium text-gray-100">
+                      {approval.status !== ApprovalStatus.ApprovalPending
+                        ? new Date(approval.updated_at).toLocaleString()
+                        : "N/A"}
+                    </span>
+                  </p>
                 </div>
                 <div>
                   {canApprove &&
@@ -287,9 +285,7 @@ export function ApprovalsStatusTab({
                 </p>
                 {purchaseRequest.status ===
                   PurchaseRequestStatus.PurchaseRequestApproved && (
-                  <p className="">
-                    Please enter the actual final cost of the order.
-                  </p>
+                  <p>Please enter the actual final cost of the order.</p>
                 )}
               </div>
             </AlertDialogDescription>

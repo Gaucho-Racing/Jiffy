@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -83,30 +83,26 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
           {purchaseRequest.notes && purchaseRequest.notes.length > 0 ? (
             purchaseRequest.notes.map((note: PurchaseRequestNote) => (
               <Card key={note.id} className="relative">
-                <CardContent className="pt-4">
-                  <div className="flex items-start gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="grid grid-cols-12 items-center gap-4">
-                        <p className="col-span-8 font-semibold text-white">
-                          {note.user?.first_name
-                            ? `${note.user.first_name} ${note.user.last_name}`
-                            : "Unknown User"}
-                        </p>
-                        <p className="col-span-2 whitespace-nowrap text-sm text-gray-400">
-                          {new Date(note.updated_at).toLocaleString()}
-                        </p>
-                        <div className="col-span-2 flex justify-end">
-                          <span
-                            className={`rounded-md border px-2 py-1 text-xs font-medium ${getNoteTypeStyle(note.type)}`}
-                          >
-                            {note.type}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="whitespace-pre-wrap pt-4 text-gray-300">
-                        {note.note}
-                      </p>
-                    </div>
+                <CardContent className="p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-sm font-medium text-white">
+                      By:{" "}
+                      {note.user?.first_name
+                        ? `${note.user.first_name} ${note.user.last_name}`
+                        : "Unknown User"}
+                    </p>
+                    <span
+                      className={`rounded-md border px-2 py-1 text-sm font-medium ${getNoteTypeStyle(note.type)}`}
+                    >
+                      {note.type}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-300">Note: {note.note}</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(note.created_at).toLocaleString()}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -114,7 +110,7 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
           ) : (
             <Card>
               <CardContent className="py-12 text-center">
-                <p>No notes yet.</p>
+                <p>No Notes yet.</p>
               </CardContent>
             </Card>
           )}
