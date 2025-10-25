@@ -20,8 +20,8 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
-	golang.org/x/oauth2 v0.32.0
-	google.golang.org/api v0.253.0
+	golang.org/x/oauth2 v0.31.0
+	google.golang.org/api v0.252.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.25.11
 )
