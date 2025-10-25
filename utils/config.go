@@ -12,15 +12,15 @@ func VerifyConfig() {
 		SugarLogger.Infof("DATABASE_HOST is not set, defaulting to %s", config.DatabaseHost)
 	}
 	if config.DatabasePort == "" {
-		config.DatabasePort = "3306"
+		config.DatabasePort = "5432"
 		SugarLogger.Infof("DATABASE_PORT is not set, defaulting to %s", config.DatabasePort)
 	}
 	if config.DatabaseUser == "" {
-		config.DatabaseUser = "root"
+		config.DatabaseUser = "postgres"
 		SugarLogger.Infof("DATABASE_USER is not set, defaulting to %s", config.DatabaseUser)
 	}
 	if config.DatabasePassword == "" {
-		config.DatabasePassword = "password"
+		config.DatabasePassword = "postgres"
 		SugarLogger.Infof("DATABASE_PASSWORD is not set, defaulting to %s", config.DatabasePassword)
 	}
 	if config.DiscordToken == "" {

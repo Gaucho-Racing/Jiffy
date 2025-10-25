@@ -4,6 +4,7 @@ import (
 	"jiffy/api"
 	"jiffy/config"
 	"jiffy/database"
+	"jiffy/jobs"
 	"jiffy/service"
 	"jiffy/utils"
 )
@@ -20,6 +21,10 @@ func main() {
 	service.PingSentinel()
 	service.InitializeDepartments()
 	service.InitializeS3()
+	service.InitializeDrive()
+
+	// Register cron jobs
+	jobs.RegisterSheetsCronJob()
 
 	router := api.SetupRouter()
 	api.InitializeRoutes(router)
