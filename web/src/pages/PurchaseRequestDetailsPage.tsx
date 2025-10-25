@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit2, AlertTriangle } from "lucide-react";
@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   PurchaseRequest,
   initPurchaseRequest,
-  Approval,
+  PurchaseRequestApproval,
   ApprovalStatus,
   PurchaseRequestStatus,
 } from "@/models/pr";
@@ -25,20 +25,37 @@ import React from "react";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { RequestDetailsTab } from "@/components/pr/RequestDetailsTab";
 import { ApprovalsStatusTab } from "@/components/pr/ApprovalsStatusTab";
-import { CheckoutScreenshotTab } from "@/components/pr/CheckoutScreenshotTab";
+import { AttachmentsTab } from "@/components/pr/AttachmentsTab";
+import { NotesTab } from "@/components/pr/NotesTab";
 
 export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const currentUser = useUser();
   const id = useParams().id;
   const [purchaseRequest, setPurchaseRequest] =
     useState<Partial<PurchaseRequest>>(initPurchaseRequest);
   const [department, setDepartment] = useState<Department>();
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("details");
 
   React.useEffect(() => {
     checkAuth().then(() => {});
   }, []);
+
+  useEffect(() => {
+    const hash = location.hash.replace("#", "");
+    const validTabs = ["details", "approvals", "attachments", "notes"];
+
+    if (hash && validTabs.includes(hash)) {
+      setActiveTab(hash);
+    }
+  }, [location.hash]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    navigate(`#${tab}`, { replace: true });
+  };
 
   const checkAuth = async () => {
     const currentRoute = window.location.pathname + window.location.search;
@@ -65,6 +82,10 @@ export default function PurchaseRequestDetailsPage() {
     return purchaseRequest.user_id === currentUser.id || canApprove();
   };
 
+  const canUpload = () => {
+    return purchaseRequest.user_id === currentUser.id || canApprove();
+  };
+
   const canEdit = () => {
     return (
       purchaseRequest.user_id === currentUser.id &&
@@ -75,22 +96,95 @@ export default function PurchaseRequestDetailsPage() {
     );
   };
 
-  const handleAdvanceStatus = (updatedPR: PurchaseRequest) => {
-    setPurchaseRequest(updatedPR);
-    notify.success(`Status advanced to ${updatedPR.status}`);
+  const advanceStatus = async (
+    nextStatus: PurchaseRequestStatus,
+    note: string,
+    finalCostCents: number,
+  ) => {
+    if (!canAdvance()) {
+      notify.error("You are not authorized to advance status");
+      return;
+    }
+    try {
+      await axios.patch(
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/status`,
+        {
+          status: nextStatus,
+          note: note,
+          final_cost_cents: finalCostCents,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+
+      const prResponse = await axios.get(
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+
+      setPurchaseRequest(prResponse.data);
+      notify.success(`Status advanced to ${nextStatus}`);
+
+      if (nextStatus === PurchaseRequestStatus.PurchaseRequestOrdered) {
+        handleTabChange("attachments");
+      }
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error) || "Failed to advance status");
+    }
   };
 
-  const editApproval = async (approval: Approval, status: ApprovalStatus) => {
+  const createNote = async (note: string) => {
+    try {
+      await axios.post(
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/notes`,
+        {
+          type: "Comment",
+          note: note,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+
+      const prResponse = await axios.get(
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+      setPurchaseRequest(prResponse.data);
+      notify.success("Comment added!");
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error) || "Failed to create note");
+    }
+  };
+
+  const editApproval = async (
+    approval: PurchaseRequestApproval,
+    status: ApprovalStatus,
+    note: string,
+  ) => {
     if (!canApprove()) {
       notify.error("You are not authorized to approve/reject this request");
       return;
     }
     try {
       await axios.patch(
-        `${JIFFY_API_URL}/approvals/${approval.id}`,
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest?.id}/approvals/${approval.id}`,
         {
           status: status,
-          note: "", // need to do this
+          note: note,
         },
         {
           headers: {
@@ -99,7 +193,7 @@ export default function PurchaseRequestDetailsPage() {
         },
       );
       const prResponse = await axios.get(
-        `${JIFFY_API_URL}/purchaserequests/${id}`,
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
@@ -108,7 +202,7 @@ export default function PurchaseRequestDetailsPage() {
       );
       setPurchaseRequest(prResponse.data);
 
-      notify.success("Approval status updated successfully!");
+      notify.success("Approval updated!");
     } catch (error: any) {
       notify.error(
         getAxiosErrorMessage(error) || "Failed to update approval status",
@@ -116,16 +210,46 @@ export default function PurchaseRequestDetailsPage() {
     }
   };
 
-  const getApprovalStatusStyle = (approval: Approval) => {
-    switch (approval.status) {
-      case ApprovalStatus.ApprovalApproved:
-        return "bg-green-600 text-white";
-      case ApprovalStatus.ApprovalRejected:
-        return "bg-red-600 text-white";
-      case ApprovalStatus.ApprovalPending:
-        return "bg-gray-900 text-white";
-      default:
-        return "bg-gray-400 text-white";
+  const uploadAttachment = async (
+    file: File,
+    type: string,
+    description: string,
+  ) => {
+    if (!canUpload()) {
+      notify.error("You are not authorized to upload attachments");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", type);
+      formData.append("description", description);
+
+      await axios.post(
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/attachments`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+
+      const prResponse = await axios.get(
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+      setPurchaseRequest(prResponse.data);
+      notify.success("Attachment uploaded successfully!");
+    } catch (error: any) {
+      notify.error(
+        getAxiosErrorMessage(error) || "Failed to upload attachment",
+      );
     }
   };
 
@@ -133,7 +257,7 @@ export default function PurchaseRequestDetailsPage() {
     const fetchPurchaseRequest = async () => {
       try {
         const response = await axios.get(
-          `${JIFFY_API_URL}/purchaserequests/${id}`,
+          `${JIFFY_API_URL}/purchase-requests/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
@@ -175,28 +299,6 @@ export default function PurchaseRequestDetailsPage() {
     };
     fetchDepartment();
   }, [purchaseRequest.department_id]);
-
-  const getPurchaseRequestStatusStyle = (step: PurchaseRequestStatus) => {
-    if (step === purchaseRequest.status) {
-      switch (step) {
-        case PurchaseRequestStatus.PurchaseRequestApproved:
-          return "bg-green-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestRejected:
-          return "bg-red-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestPending:
-          return "bg-cyan-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestOrdered:
-          return "bg-blue-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestDelivered:
-          return "bg-purple-600 text-white";
-        case PurchaseRequestStatus.PurchaseRequestCollected:
-          return "bg-yellow-500 text-white";
-        default:
-          return "bg-gray-400 text-white";
-      }
-    }
-    return "bg-gray-800 text-gray-300";
-  };
 
   return (
     <>
@@ -266,41 +368,44 @@ export default function PurchaseRequestDetailsPage() {
               )}
 
             <div className="mx-5">
-              <Tabs defaultValue="Request Details">
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList>
-                  <TabsTrigger value="Request Details">
-                    Request Details
+                  <TabsTrigger value="details">Request Details</TabsTrigger>
+                  <TabsTrigger value="approvals">
+                    Approvals & Status
                   </TabsTrigger>
-                  <TabsTrigger value="Approvals and Status">
-                    Approvals and Status
+                  <TabsTrigger value="attachments">
+                    Receipts & Attachments
                   </TabsTrigger>
-                  <TabsTrigger value="Checkout Screenshot">
-                    Checkout Screenshot
-                  </TabsTrigger>
+                  <TabsTrigger value="notes">Activity & Note Log</TabsTrigger>
                 </TabsList>
-                <TabsContent value="Request Details">
+                <TabsContent value="details">
                   <RequestDetailsTab
                     purchaseRequest={purchaseRequest}
                     department={department}
                     isLoading={isLoading}
                   />
                 </TabsContent>
-                <TabsContent value="Approvals and Status">
+                <TabsContent value="approvals">
                   <ApprovalsStatusTab
                     purchaseRequest={purchaseRequest}
                     canApprove={canApprove()}
                     canAdvance={canAdvance()}
                     onEditApproval={editApproval}
-                    onAdvanceStatus={handleAdvanceStatus}
-                    getApprovalStatusStyle={getApprovalStatusStyle}
-                    getPurchaseRequestStatusStyle={
-                      getPurchaseRequestStatusStyle
-                    }
+                    onAdvanceStatus={advanceStatus}
                   />
                 </TabsContent>
-
-                <TabsContent value="Checkout Screenshot">
-                  <CheckoutScreenshotTab />
+                <TabsContent value="attachments">
+                  <AttachmentsTab
+                    purchaseRequest={purchaseRequest}
+                    onUploadAttachment={uploadAttachment}
+                  />
+                </TabsContent>
+                <TabsContent value="notes">
+                  <NotesTab
+                    purchaseRequest={purchaseRequest}
+                    onCreateNote={createNote}
+                  />
                 </TabsContent>
               </Tabs>
             </div>

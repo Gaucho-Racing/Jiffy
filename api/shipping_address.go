@@ -25,7 +25,7 @@ func CreateShippingAddress(c *gin.Context) {
 }
 
 func DeleteShippingAddress(c *gin.Context) {
-	addressIDString := c.Param("addressID")
+	addressIDString := c.Param("id")
 	addressID, err := strconv.Atoi(addressIDString)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid address ID"})

@@ -2,7 +2,7 @@ package config
 
 import "os"
 
-var Version = "1.6.1"
+var Version = "1.7.0"
 var Env = os.Getenv("ENV")
 var Port = os.Getenv("PORT")
 var Prefix = os.Getenv("PREFIX")
@@ -33,4 +33,16 @@ var Sentinel = struct {
 	ClientSecret: os.Getenv("SENTINEL_CLIENT_SECRET"),
 	Token:        os.Getenv("SENTINEL_TOKEN"),
 	RedirectURI:  os.Getenv("SENTINEL_REDIRECT_URI"),
+}
+
+var S3 = struct {
+	AccessKey string
+	SecretKey string
+	Region    string
+	Bucket    string
+}{
+	AccessKey: os.Getenv("S3_ACCESS_KEY"),
+	SecretKey: os.Getenv("S3_SECRET_KEY"),
+	Region:    os.Getenv("S3_REGION"),
+	Bucket:    os.Getenv("S3_BUCKET"),
 }

@@ -7,8 +7,8 @@ export enum PurchaseRequestStatus {
   PurchaseRequestApproved = "Request Approved",
   PurchaseRequestRejected = "Request Rejected",
   PurchaseRequestOrdered = "Order Placed",
-  PurchaseRequestDelivered = "Order Delivered",
   PurchaseRequestCollected = "Order Collected",
+  PurchaseRequestReimbursed = "Reimbursed",
 }
 
 export enum ApprovalStatus {
@@ -23,13 +23,24 @@ export enum ApprovalType {
   PresidentApproval = "President",
 }
 
+export enum NoteType {
+  RequestSubmitted = "Request Submitted",
+  Approved = "Approved",
+  Rejected = "Rejected",
+  StatusChanged = "Status Changed",
+  RequestAmended = "Request Amended",
+  Comment = "Comment",
+  AttachmentUploaded = "Attachment Uploaded",
+  AttachmentDeleted = "Attachment Deleted",
+}
+
 export const statusSteps = [
   PurchaseRequestStatus.PurchaseRequestRejected,
   PurchaseRequestStatus.PurchaseRequestPending,
   PurchaseRequestStatus.PurchaseRequestApproved,
   PurchaseRequestStatus.PurchaseRequestOrdered,
-  PurchaseRequestStatus.PurchaseRequestDelivered,
   PurchaseRequestStatus.PurchaseRequestCollected,
+  PurchaseRequestStatus.PurchaseRequestReimbursed,
 ];
 
 export const validStatusAdvancements: {
@@ -39,16 +50,40 @@ export const validStatusAdvancements: {
   [PurchaseRequestStatus.PurchaseRequestApproved]:
     PurchaseRequestStatus.PurchaseRequestOrdered,
   [PurchaseRequestStatus.PurchaseRequestOrdered]:
-    PurchaseRequestStatus.PurchaseRequestDelivered,
-  [PurchaseRequestStatus.PurchaseRequestDelivered]:
     PurchaseRequestStatus.PurchaseRequestCollected,
-  [PurchaseRequestStatus.PurchaseRequestCollected]: null,
+  [PurchaseRequestStatus.PurchaseRequestCollected]:
+    PurchaseRequestStatus.PurchaseRequestReimbursed,
+  [PurchaseRequestStatus.PurchaseRequestReimbursed]: null,
   [PurchaseRequestStatus.PurchaseRequestRejected]: null,
 };
 
-export interface Approval {
+export enum AttachmentType {
+  AttachmentReceipt = "Receipt",
+  AttachmentCheckoutPage = "Checkout Page",
+  AttachmentInvoice = "Invoice",
+  AttachmentQuote = "Quote",
+  AttachmentOther = "Other",
+}
+
+export interface PurchaseRequestAttachment {
+  id: string;
+  purchase_request_id: number;
+  user_id: string;
+  user: User;
+  url: string;
+  filename: string;
+  file_size: number;
+  content_type: string;
+  type: AttachmentType;
+  description: string;
+  note: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface PurchaseRequestApproval {
   id: number;
-  pr_id: number;
+  purchase_request_id: number;
   user_id: string;
   user: User;
   type: ApprovalType;
@@ -61,10 +96,21 @@ export interface Approval {
 export interface PurchaseRequestItem {
   id: number;
   purchase_request_id: number;
-  item_url: string;
-  item_name: string;
-  item_unit_price_cents: number;
-  item_quantity: number;
+  url: string;
+  name: string;
+  unit_price_cents: number;
+  quantity: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface PurchaseRequestNote {
+  id: number;
+  purchase_request_id: number;
+  user_id: string;
+  user: User;
+  type: NoteType;
+  note: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -76,15 +122,17 @@ export interface PurchaseRequest {
   user_id: string;
   user: User;
   status: PurchaseRequestStatus;
-  approvals: Approval[];
+  approvals: PurchaseRequestApproval[];
+  attachments: PurchaseRequestAttachment[];
   items: PurchaseRequestItem[];
+  notes: PurchaseRequestNote[];
   vendor: string;
   shipping_tax_cost_cents: number;
   estimated_cost_cents: number;
   final_cost_cents: number;
   description: string;
   priority: number;
-  needed_by_date: string; // ISO string (time.Time in Go)
+  needed_by_date: string;
   requested_purchaser: string;
   shipping_address_id: number;
   shipping_address: ShippingAddress;
@@ -122,7 +170,7 @@ export const columns: ColumnDef<PurchaseRequest>[] = [
         return "No items";
       }
       if (purchaseRequest.items.length === 1) {
-        return purchaseRequest.items[0].item_name;
+        return purchaseRequest.items[0].name;
       }
       return `${purchaseRequest.items.length} items`;
     },
@@ -139,9 +187,9 @@ export const columns: ColumnDef<PurchaseRequest>[] = [
   },
 ];
 
-export const initApproval: Approval = {
+export const initPurchaseRequestApproval: PurchaseRequestApproval = {
   id: 0,
-  pr_id: 0,
+  purchase_request_id: 0,
   user_id: "",
   user: {} as User,
   status: ApprovalStatus.ApprovalPending,
@@ -154,10 +202,10 @@ export const initApproval: Approval = {
 export const initPurchaseRequestItem: PurchaseRequestItem = {
   id: 0,
   purchase_request_id: 0,
-  item_url: "",
-  item_name: "",
-  item_unit_price_cents: 0,
-  item_quantity: 1,
+  url: "",
+  name: "",
+  unit_price_cents: 0,
+  quantity: 1,
   created_at: new Date(),
   updated_at: new Date(),
 };
@@ -170,7 +218,9 @@ export const initPurchaseRequest: PurchaseRequest = {
   user: {} as User,
   status: PurchaseRequestStatus.PurchaseRequestPending,
   approvals: [],
+  attachments: [],
   items: [],
+  notes: [],
   vendor: "",
   shipping_tax_cost_cents: 0,
   estimated_cost_cents: 0,
@@ -186,9 +236,8 @@ export const initPurchaseRequest: PurchaseRequest = {
   created_at: new Date(),
 };
 
-// Helper functions for working with items
 export const calculateItemTotalCents = (item: PurchaseRequestItem): number => {
-  return item.item_unit_price_cents * item.item_quantity;
+  return item.unit_price_cents * item.quantity;
 };
 
 export const calculateEstimatedCostCents = (

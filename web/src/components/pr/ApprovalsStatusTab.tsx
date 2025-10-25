@@ -17,25 +17,28 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   PurchaseRequest,
-  Approval,
+  PurchaseRequestApproval,
   ApprovalStatus,
   PurchaseRequestStatus,
   statusSteps,
   validStatusAdvancements,
 } from "@/models/pr";
-import { JIFFY_API_URL } from "@/consts/config";
 import { notify } from "@/lib/notify";
-import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
-import axios from "axios";
 
 interface ApprovalsStatusTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
   canApprove: boolean;
   canAdvance: boolean;
-  onEditApproval: (approval: Approval, status: ApprovalStatus) => void;
-  onAdvanceStatus: (updatedPR: PurchaseRequest) => void;
-  getApprovalStatusStyle: (approval: Approval) => string;
-  getPurchaseRequestStatusStyle: (step: PurchaseRequestStatus) => string;
+  onEditApproval: (
+    approval: PurchaseRequestApproval,
+    status: ApprovalStatus,
+    note: string,
+  ) => void;
+  onAdvanceStatus: (
+    nextStatus: PurchaseRequestStatus,
+    note: string,
+    finalCostCents: number,
+  ) => Promise<void>;
 }
 
 export function ApprovalsStatusTab({
@@ -44,12 +47,53 @@ export function ApprovalsStatusTab({
   canAdvance,
   onEditApproval,
   onAdvanceStatus,
-  getApprovalStatusStyle,
-  getPurchaseRequestStatusStyle,
 }: ApprovalsStatusTabProps) {
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
   const [advanceNote, setAdvanceNote] = useState("");
   const [finalCostCents, setFinalCostCents] = useState(0);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvalNote, setApprovalNote] = useState("");
+  const [selectedApproval, setSelectedApproval] =
+    useState<PurchaseRequestApproval | null>(null);
+  const [selectedApprovalAction, setSelectedApprovalAction] =
+    useState<ApprovalStatus | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
+
+  const getApprovalStatusStyle = (approval: PurchaseRequestApproval) => {
+    switch (approval.status) {
+      case ApprovalStatus.ApprovalApproved:
+        return "bg-green-600/70 border-green-600 text-green-100";
+      case ApprovalStatus.ApprovalRejected:
+        return "bg-red-600/50 border-red-600 text-red-100";
+      case ApprovalStatus.ApprovalPending:
+        return "bg-cyan-600/70 border-cyan-500/50 text-cyan-100";
+      default:
+        return "bg-gray-700/30 border-gray-800/50 text-gray-600";
+    }
+  };
+
+  const getPurchaseRequestStatusStyle = (step: PurchaseRequestStatus) => {
+    if (step === purchaseRequest.status) {
+      switch (step) {
+        case PurchaseRequestStatus.PurchaseRequestApproved:
+          return "bg-green-600/70 border-green-600 text-green-100";
+        case PurchaseRequestStatus.PurchaseRequestRejected:
+          return "bg-red-600/50 border-red-600 text-red-100";
+        case PurchaseRequestStatus.PurchaseRequestPending:
+          return "bg-cyan-600/70 border-cyan-500/50 text-cyan-100";
+        case PurchaseRequestStatus.PurchaseRequestOrdered:
+          return "bg-blue-600/60 border-blue-600 text-white";
+        case PurchaseRequestStatus.PurchaseRequestCollected:
+          return "bg-gr-purple/60 border-gr-purple text-white";
+        case PurchaseRequestStatus.PurchaseRequestReimbursed:
+          return "bg-gr-pink/50 border-gr-pink text-white";
+        default:
+          return "bg-gray-400 text-white";
+      }
+    }
+    return "bg-gray-700/30 border-gray-800/50 text-gray-600";
+  };
 
   const handleAdvanceButton = () => {
     if (!purchaseRequest.status || !canAdvance) return;
@@ -82,43 +126,53 @@ export function ApprovalsStatusTab({
       }
     }
 
+    setIsAdvancing(true);
     try {
-      await axios.patch(
-        `${JIFFY_API_URL}/purchaserequests/${purchaseRequest.id}/status`,
-        {
-          status: nextStatus,
-          note: advanceNote,
-          final_cost_cents: finalCostCents,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-          },
-        },
-      );
-
-      const prResponse = await axios.get(
-        `${JIFFY_API_URL}/purchaserequests/${purchaseRequest.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-          },
-        },
-      );
-
-      onAdvanceStatus(prResponse.data);
+      await onAdvanceStatus(nextStatus, advanceNote, finalCostCents);
       setShowAdvanceDialog(false);
-    } catch (error: any) {
-      notify.error(getAxiosErrorMessage(error) || "Failed to advance status");
+    } finally {
+      setIsAdvancing(false);
+    }
+  };
+
+  const handleApprovalButton = (
+    approval: PurchaseRequestApproval,
+    action: ApprovalStatus,
+  ) => {
+    setSelectedApproval(approval);
+    setSelectedApprovalAction(action);
+    setApprovalNote(
+      action === ApprovalStatus.ApprovalApproved ? "Looks good to me!" : "",
+    );
+    setShowApprovalDialog(true);
+  };
+
+  const handleApprovalSubmit = async () => {
+    if (!approvalNote) {
+      notify.error("Please add a note explaining your decision");
+      return;
+    }
+
+    if (selectedApproval && selectedApprovalAction) {
+      setIsApproving(true);
+      try {
+        onEditApproval(selectedApproval, selectedApprovalAction, approvalNote);
+        setShowApprovalDialog(false);
+        setApprovalNote("");
+        setSelectedApproval(null);
+        setSelectedApprovalAction(null);
+      } finally {
+        setIsApproving(false);
+      }
     }
   };
 
   return (
     <>
       <div className="mx-20 my-10">
-        <div className="flex justify-between">
-          <div className="mb-8">
-            <h3>Current Status</h3>
+        <div className="mb-12 flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-semibold">Current Status</h3>
           </div>
           {canAdvance && (
             <OutlineButton onClick={handleAdvanceButton}>
@@ -131,7 +185,7 @@ export function ApprovalsStatusTab({
           {statusSteps.map((step) => (
             <div
               key={step}
-              className={`overflow-hidden rounded-md px-4 py-1 text-center text-sm font-medium transition-colors ${getPurchaseRequestStatusStyle(step)}`}
+              className={`overflow-hidden rounded-md border-2 py-1 text-center text-sm font-medium transition-colors ${getPurchaseRequestStatusStyle(step)}`}
             >
               {step}
             </div>
@@ -146,15 +200,7 @@ export function ApprovalsStatusTab({
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{approval.type} Approval</p>
                     <p
-                      className={`rounded-md px-4 py-2 text-sm font-medium ${getApprovalStatusStyle(approval)} ${
-                        approval.status === ApprovalStatus.ApprovalApproved
-                          ? "text-green-600"
-                          : approval.status === ApprovalStatus.ApprovalRejected
-                            ? "text-red-600"
-                            : approval.status === ApprovalStatus.ApprovalPending
-                              ? "text-cyan-600"
-                              : "text-gray-600"
-                      }`}
+                      className={`rounded-md border-2 px-4 py-0.5 text-sm font-medium ${getApprovalStatusStyle(approval)}`}
                     >
                       {approval.status}
                     </p>
@@ -162,25 +208,23 @@ export function ApprovalsStatusTab({
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex items-center justify-between">
-                <div>
-                  <div className="mt-2 text-sm text-gray-100">
-                    <p>
-                      Approved by:{" "}
-                      <span className="font-medium text-gray-100">
-                        {approval.user?.first_name
-                          ? `${approval.user.first_name} ${approval.user.last_name}`
-                          : "Pending approval"}
-                      </span>
-                    </p>
-                    <p>
-                      Date:{" "}
-                      <span className="font-medium text-gray-100">
-                        {approval.status !== ApprovalStatus.ApprovalPending
-                          ? new Date(approval.updated_at).toLocaleString()
-                          : "N/A"}
-                      </span>
-                    </p>
-                  </div>
+                <div className="text-sm text-gray-100">
+                  <p>
+                    Approved by:{" "}
+                    <span className="font-medium text-gray-100">
+                      {approval.user?.first_name
+                        ? `${approval.user.first_name} ${approval.user.last_name}`
+                        : "Pending approval"}
+                    </span>
+                  </p>
+                  <p>
+                    Date:{" "}
+                    <span className="font-medium text-gray-100">
+                      {approval.status !== ApprovalStatus.ApprovalPending
+                        ? new Date(approval.updated_at).toLocaleString()
+                        : "N/A"}
+                    </span>
+                  </p>
                 </div>
                 <div>
                   {canApprove &&
@@ -189,7 +233,7 @@ export function ApprovalsStatusTab({
                         <Button
                           variant="outline"
                           onClick={() =>
-                            onEditApproval(
+                            handleApprovalButton(
                               approval,
                               ApprovalStatus.ApprovalApproved,
                             )
@@ -202,7 +246,7 @@ export function ApprovalsStatusTab({
                         <Button
                           variant="outline"
                           onClick={() =>
-                            onEditApproval(
+                            handleApprovalButton(
                               approval,
                               ApprovalStatus.ApprovalRejected,
                             )
@@ -224,11 +268,11 @@ export function ApprovalsStatusTab({
       <AlertDialog open={showAdvanceDialog} onOpenChange={setShowAdvanceDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Advance Purchase Request Status</AlertDialogTitle>
+            <AlertDialogTitle>Confirm Status Advancement</AlertDialogTitle>
             <AlertDialogDescription>
               <div>
                 <p className="text-white">
-                  Are you sure you want to advance the status from{" "}
+                  You are advancing the status from{" "}
                   <span className="font-semibold">
                     {purchaseRequest.status}
                   </span>{" "}
@@ -239,12 +283,10 @@ export function ApprovalsStatusTab({
                   </span>
                   ?
                 </p>
-                {purchaseRequest.status ===
-                  PurchaseRequestStatus.PurchaseRequestApproved && (
-                  <p className="">
-                    Please enter the actual final cost of the order.
-                  </p>
-                )}
+
+                <p className="pt-4 text-red-500">
+                  Upload a receipt photo after, or this may NOT be reimbursed.
+                </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -289,7 +331,7 @@ export function ApprovalsStatusTab({
               </Label>
               <Textarea
                 id="advance-note"
-                placeholder="Add a note explaining this status change..."
+                placeholder="Add a note explaining this status change"
                 value={advanceNote}
                 onChange={(e) => setAdvanceNote(e.target.value)}
                 className="mt-2"
@@ -298,8 +340,71 @@ export function ApprovalsStatusTab({
             </div>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button onClick={handleAdvanceStatus}>Proceed</Button>
+            <AlertDialogCancel disabled={isAdvancing}>Cancel</AlertDialogCancel>
+            <Button onClick={handleAdvanceStatus} disabled={isAdvancing}>
+              {isAdvancing ? "Loading..." : "Proceed"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={showApprovalDialog}
+        onOpenChange={setShowApprovalDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {selectedApprovalAction === ApprovalStatus.ApprovalApproved
+                ? "Approve Request"
+                : "Reject Request"}{" "}
+              - ({selectedApproval?.type})
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              <div>
+                <p className="text-white">
+                  {selectedApprovalAction === ApprovalStatus.ApprovalApproved
+                    ? "Are you sure you want to approve this for ordering and reimbursement? You cannot undo this action."
+                    : "This will be sent back for amendment. Please explain how it can be amended for approval. You cannot undo this action."}
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="approval-note" className="text-white">
+                Note <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="approval-note"
+                placeholder={
+                  selectedApprovalAction === ApprovalStatus.ApprovalApproved
+                    ? "Add a note explaining your approval"
+                    : "Add a note explaining your rejection"
+                }
+                value={approvalNote}
+                onChange={(e) => setApprovalNote(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
+            <Button
+              onClick={handleApprovalSubmit}
+              disabled={isApproving}
+              variant={
+                selectedApprovalAction === ApprovalStatus.ApprovalRejected
+                  ? "destructive"
+                  : "default"
+              }
+            >
+              {isApproving
+                ? "Loading..."
+                : selectedApprovalAction === ApprovalStatus.ApprovalApproved
+                  ? "Approve"
+                  : "Reject"}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -15,7 +15,7 @@ func GetAllPurchaseRequests(c *gin.Context) {
 }
 
 func GetPurchaseRequestByID(c *gin.Context) {
-	idString := c.Param("purchaserequestID")
+	idString := c.Param("id")
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid purchase request ID"})
@@ -44,7 +44,7 @@ func CreatePurchaseRequest(c *gin.Context) {
 }
 
 func UpdatePurchaseRequestStatus(c *gin.Context) {
-	idString := c.Param("purchaserequestID")
+	idString := c.Param("id")
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
@@ -68,7 +68,7 @@ func UpdatePurchaseRequestStatus(c *gin.Context) {
 }
 
 func DeletePurchaseRequest(c *gin.Context) {
-	idString := c.Param("purchaserequestID")
+	idString := c.Param("id")
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid purchase request ID"})

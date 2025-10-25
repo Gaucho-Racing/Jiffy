@@ -28,7 +28,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -37,9 +36,11 @@ import { format } from "date-fns";
 import {
   PurchaseRequest,
   PurchaseRequestItem,
+  PurchaseRequestNote,
   initPurchaseRequest,
   initPurchaseRequestItem,
   calculateEstimatedCostCents,
+  NoteType,
 } from "@/models/pr";
 import { Department } from "@/models/departments";
 import {
@@ -76,6 +77,7 @@ export default function EditPurchaseRequestPage() {
   );
   const [reimbursementAcknowledged, setReimbursementAcknowledged] =
     useState(false);
+  const [attachmentAcknowledged, setAttachmentAcknowledged] = useState(false);
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(
     [],
   );
@@ -84,6 +86,11 @@ export default function EditPurchaseRequestPage() {
     useState<Partial<ShippingAddress>>(initShippingAddress);
 
   const [isLoading, setIsLoading] = useState(true);
+
+  // Filter rejected notes
+  const rejectedNotes =
+    purchaseRequest.notes?.filter((note) => note.type === NoteType.Rejected) ||
+    [];
 
   useEffect(() => {
     checkAuth();
@@ -123,7 +130,7 @@ export default function EditPurchaseRequestPage() {
     const fetchPurchaseRequest = async () => {
       try {
         const response = await axios.get(
-          `${JIFFY_API_URL}/purchaserequests/${id}`,
+          `${JIFFY_API_URL}/purchase-requests/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
@@ -177,7 +184,7 @@ export default function EditPurchaseRequestPage() {
 
   const fetchShippingAddresses = async () => {
     try {
-      const response = await axios.get(`${JIFFY_API_URL}/shippingaddresses`, {
+      const response = await axios.get(`${JIFFY_API_URL}/shipping-addresses`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
         },
@@ -208,7 +215,7 @@ export default function EditPurchaseRequestPage() {
     }
 
     try {
-      await axios.post(`${JIFFY_API_URL}/shippingaddresses`, newAddress, {
+      await axios.post(`${JIFFY_API_URL}/shipping-addresses`, newAddress, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
         },
@@ -245,10 +252,10 @@ export default function EditPurchaseRequestPage() {
 
   const isItemEmpty = (item: PurchaseRequestItem) => {
     return (
-      item.item_name.trim() === "" &&
-      item.item_url.trim() === "" &&
-      item.item_unit_price_cents === 0 &&
-      item.item_quantity === 1
+      item.name.trim() === "" &&
+      item.url.trim() === "" &&
+      item.unit_price_cents === 0 &&
+      item.quantity === 1
     );
   };
 
@@ -257,9 +264,9 @@ export default function EditPurchaseRequestPage() {
     if (index === items.length - 1) {
       const currentItem = items[index];
       if (
-        currentItem.item_name.trim() ||
-        currentItem.item_url.trim() ||
-        currentItem.item_unit_price_cents > 0
+        currentItem.name.trim() ||
+        currentItem.url.trim() ||
+        currentItem.unit_price_cents > 0
       ) {
         addItem();
       }
@@ -305,19 +312,22 @@ export default function EditPurchaseRequestPage() {
       notify.error("Please acknowledge the reimbursement policy");
       return;
     }
+    if (!attachmentAcknowledged) {
+      notify.error("Please acknowledge the attachment policy");
+      return;
+    }
 
     const itemsCost = calculateEstimatedCostCents(nonEmptyItems);
     const estimatedCost =
       itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0);
     const cleanItems = nonEmptyItems.map((item) => ({
-      item_url: item.item_url,
-      item_name: item.item_name,
-      item_unit_price_cents: item.item_unit_price_cents,
-      item_quantity: item.item_quantity,
+      url: item.url,
+      name: item.name,
+      unit_price_cents: item.unit_price_cents,
+      quantity: item.quantity,
     }));
-    const { shipping_address, ...prData } = purchaseRequest;
     const dataToSend = {
-      ...prData,
+      ...purchaseRequest,
       user_id: purchaseRequest.user_id,
       items: cleanItems,
       estimated_cost_cents: estimatedCost,
@@ -326,7 +336,7 @@ export default function EditPurchaseRequestPage() {
 
     try {
       const response = await axios.post(
-        `${JIFFY_API_URL}/purchaserequests`,
+        `${JIFFY_API_URL}/purchase-requests`,
         dataToSend,
         {
           headers: {
@@ -336,7 +346,7 @@ export default function EditPurchaseRequestPage() {
       );
       notify.success("Purchase request updated successfully!");
       const id = response.data.id;
-      navigate(`/pr/${id}`);
+      navigate(`/pr/${id}#attachments`);
     } catch (error: any) {
       notify.error(getAxiosErrorMessage(error));
     }
@@ -379,7 +389,7 @@ export default function EditPurchaseRequestPage() {
                 className="flex items-center"
               >
                 <ArrowLeft className="mr-2 h-4 w-4 text-gray-400" />
-                Back to purchase request
+                Back to home
               </Button>
               <div className="mx-20 my-10">
                 <form
@@ -393,6 +403,43 @@ export default function EditPurchaseRequestPage() {
                     }
                   }}
                 >
+                  {rejectedNotes && rejectedNotes.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="mb-4 text-xl font-semibold text-red-600">
+                        Rejection Reasons
+                      </h3>
+                      <div className="space-y-3">
+                        {rejectedNotes.map((note: PurchaseRequestNote) => (
+                          <Card
+                            key={note.id}
+                            className="border-red-600/30 bg-red-600/10"
+                          >
+                            <CardContent className="p-4">
+                              <div className="mb-2 flex items-center justify-between">
+                                <p className="text-sm font-medium text-white">
+                                  Rejection By:{" "}
+                                  {note.user?.first_name
+                                    ? `${note.user.first_name} ${note.user.last_name}`
+                                    : "Unknown User"}
+                                </p>
+                                <span className="rounded-md border border-red-600/30 bg-red-600/20 px-2 py-1 text-sm font-medium text-red-400">
+                                  {note.type}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm text-gray-300">
+                                  {note.note}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {new Date(note.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <Card>
                     <CardHeader>
                       <CardTitle>
@@ -591,13 +638,9 @@ export default function EditPurchaseRequestPage() {
                                   type="text"
                                   placeholder="Enter item name"
                                   required={!isItemEmpty(item)}
-                                  value={item.item_name}
+                                  value={item.name}
                                   onChange={(e) =>
-                                    updateItem(
-                                      index,
-                                      "item_name",
-                                      e.target.value,
-                                    )
+                                    updateItem(index, "name", e.target.value)
                                   }
                                   onBlur={() => handleItemBlur(index)}
                                   onFocus={(e) => e.target.select()}
@@ -617,10 +660,10 @@ export default function EditPurchaseRequestPage() {
                                       displayValues[`price_${index}`] !==
                                       undefined
                                         ? displayValues[`price_${index}`]
-                                        : item.item_unit_price_cents != null &&
-                                            item.item_unit_price_cents !== 0
+                                        : item.unit_price_cents != null &&
+                                            item.unit_price_cents !== 0
                                           ? (
-                                              item.item_unit_price_cents / 100
+                                              item.unit_price_cents / 100
                                             ).toString()
                                           : ""
                                     }
@@ -641,7 +684,7 @@ export default function EditPurchaseRequestPage() {
                                         parseFloat(e.target.value) || 0;
                                       updateItem(
                                         index,
-                                        "item_unit_price_cents",
+                                        "unit_price_cents",
                                         Math.round(value * 100),
                                       );
                                       setDisplayValues((prev) => {
@@ -663,7 +706,7 @@ export default function EditPurchaseRequestPage() {
                                   value={
                                     displayValues[`qty_${index}`] !== undefined
                                       ? displayValues[`qty_${index}`]
-                                      : item.item_quantity || ""
+                                      : item.quantity || ""
                                   }
                                   onChange={(e) => {
                                     const value = e.target.value;
@@ -676,7 +719,7 @@ export default function EditPurchaseRequestPage() {
                                   }}
                                   onBlur={(e) => {
                                     const value = parseInt(e.target.value) || 0;
-                                    updateItem(index, "item_quantity", value);
+                                    updateItem(index, "quantity", value);
                                     setDisplayValues((prev) => {
                                       const newValues = { ...prev };
                                       delete newValues[`qty_${index}`];
@@ -691,13 +734,9 @@ export default function EditPurchaseRequestPage() {
                                   type="text"
                                   placeholder="https://... or www...."
                                   required={!isItemEmpty(item)}
-                                  value={item.item_url}
+                                  value={item.url}
                                   onChange={(e) =>
-                                    updateItem(
-                                      index,
-                                      "item_url",
-                                      e.target.value,
-                                    )
+                                    updateItem(index, "url", e.target.value)
                                   }
                                   onBlur={() => handleItemBlur(index)}
                                   onFocus={(e) => e.target.select()}
@@ -707,8 +746,8 @@ export default function EditPurchaseRequestPage() {
                               <div className="col-span-1 text-sm font-medium text-white">
                                 ${" "}
                                 {(
-                                  ((item.item_unit_price_cents || 0) *
-                                    (item.item_quantity || 0)) /
+                                  ((item.unit_price_cents || 0) *
+                                    (item.quantity || 0)) /
                                   100
                                 ).toFixed(2)}
                               </div>
@@ -728,7 +767,9 @@ export default function EditPurchaseRequestPage() {
                       </div>
 
                       <div className="grid grid-cols-2 items-center gap-4">
-                        <Label>Estimated Item Total</Label>
+                        <Label className="opacity-30">
+                          Estimated Item Total
+                        </Label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
                             $
@@ -804,7 +845,7 @@ export default function EditPurchaseRequestPage() {
                       </div>
 
                       <div className="grid grid-cols-2 items-center gap-4 pb-8">
-                        <Label>Estimated Cost</Label>
+                        <Label className="opacity-30">Estimated Cost</Label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
                             $
@@ -855,7 +896,7 @@ export default function EditPurchaseRequestPage() {
                               htmlFor="club"
                               className="cursor-pointer font-normal"
                             >
-                              Gaucho Racing (Club Funds)
+                              Gaucho Racing (club funds)
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2 pl-8">
@@ -864,10 +905,30 @@ export default function EditPurchaseRequestPage() {
                               htmlFor="self"
                               className="cursor-pointer font-normal"
                             >
-                              Myself (Personal Funds)
+                              Myself (personal funds & await reimbursement)
                             </Label>
                           </div>
                         </RadioGroup>
+                      </div>
+                      <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
+                        <Label
+                          htmlFor="attachment-ack"
+                          className="text-md cursor-pointer font-normal text-red-500"
+                        >
+                          I agree to IMMEDIATELY upload updated photo
+                          attachments of a receipt or checkout page for this
+                          request, or I WON'T be reimbursed.
+                          <span className="text-red-500"> *</span>
+                        </Label>
+                        <div className="pl-8">
+                          <Checkbox
+                            id="attachment-ack"
+                            checked={attachmentAcknowledged}
+                            onCheckedChange={(checked) =>
+                              setAttachmentAcknowledged(checked as boolean)
+                            }
+                          />
+                        </div>
                       </div>
                       {purchaseRequest.requested_purchaser ===
                         "Gaucho Racing" && (
@@ -949,12 +1010,11 @@ export default function EditPurchaseRequestPage() {
                           <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
                             <Label
                               htmlFor="reimbursement-ack"
-                              className="cursor-pointer text-sm font-normal text-red-500"
+                              className="text-md cursor-pointer font-normal text-red-500"
                             >
-                              I understand that, by skipping the order approval
-                              process and ordering these items myself, I am NOT
-                              guaranteed reimbursement.{" "}
-                              <span className="text-red-500">*</span>
+                              I understand if I place the order before it is
+                              fully approved, it may not be fully reimbursed.
+                              <span className="text-red-500"> *</span>
                             </Label>
                             <div className="pl-8">
                               <Checkbox
@@ -1002,12 +1062,9 @@ export default function EditPurchaseRequestPage() {
         open={showCreateAddressDialog}
         onOpenChange={setShowCreateAddressDialog}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-black">
           <DialogHeader>
             <DialogTitle>Create New Shipping Address</DialogTitle>
-            <DialogDescription>
-              Add a new shipping address for Gaucho Racing orders.
-            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -1096,15 +1153,22 @@ export default function EditPurchaseRequestPage() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateAddressDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={createShippingAddress}>Create Address</Button>
-          </DialogFooter>
+          <div className="grid grid-cols-2 gap-4">
+            <p className="self-center pl-4 text-sm text-red-500">
+              Remember to select after creating!
+            </p>
+            <div className="flex items-center justify-end">
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCreateAddressDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={createShippingAddress}>Create Address</Button>
+              </DialogFooter>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

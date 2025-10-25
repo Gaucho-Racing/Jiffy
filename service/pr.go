@@ -11,7 +11,7 @@ import (
 
 func GetAllPurchaseRequests() []model.PurchaseRequest {
 	var prs []model.PurchaseRequest
-	if err := database.DB.Preload("Items").Preload("Approvals").Order("created_at DESC").Find(&prs).Error; err != nil {
+	if err := database.DB.Preload("Items").Preload("Approvals").Preload("Notes").Order("created_at DESC").Find(&prs).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting purchase requests: %v", err)
 		return nil
 	}
@@ -25,6 +25,10 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 	var pr model.PurchaseRequest
 	if err := database.DB.Preload("Items").Preload("Approvals", func(db *gorm.DB) *gorm.DB {
 		return db.Order("id ASC")
+	}).Preload("Notes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")
+	}).Preload("Attachments", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")
 	}).First(&pr, "id = ?", id).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting purchase request with id %s: %v", id, err)
 		return model.PurchaseRequest{}
@@ -34,6 +38,12 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 		if pr.Approvals[i].UserID != "" {
 			pr.Approvals[i].User, _ = GetUser(pr.Approvals[i].UserID)
 		}
+	}
+	for i := range pr.Notes {
+		pr.Notes[i].User, _ = GetUser(pr.Notes[i].UserID)
+	}
+	for i := range pr.Attachments {
+		pr.Attachments[i].User, _ = GetUser(pr.Attachments[i].UserID)
 	}
 	currentUser, _ := GetUser(userID)
 	if pr.UserID != userID && !currentUser.IsInnerCircle() {
@@ -82,6 +92,7 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 			if result := database.DB.Create(&pr); result.Error != nil {
 				return model.PurchaseRequest{}, result.Error
 			}
+			_, _ = CreateNote(pr.ID, model.NoteRequestSubmitted, userID, "Purchase request submitted - awaiting approval.")
 		} else {
 			utils.SugarLogger.Infof("Updating existing PR %d", pr.ID)
 			// update fields that can be edited to 0, which would be otherwise skipped
@@ -102,17 +113,19 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 				utils.SugarLogger.Errorf("Error updating PR %d: %v", pr.ID, err)
 				return model.PurchaseRequest{}, err
 			}
+			_, _ = CreateNote(pr.ID, model.NoteRequestAmended, userID, "Purchase request amended and approvals reset - awaiting approval.")
+
 		}
 		pr.Items = itemsToCreate
 		for i, item := range pr.Items {
 			newItem := model.PurchaseRequestItem{
-				PurchaseRequestID:  pr.ID,
-				ItemURL:            item.ItemURL,
-				ItemName:           item.ItemName,
-				ItemUnitPriceCents: item.ItemUnitPriceCents,
-				ItemQuantity:       item.ItemQuantity,
+				PurchaseRequestID: pr.ID,
+				URL:               item.URL,
+				Name:              item.Name,
+				UnitPriceCents:    item.UnitPriceCents,
+				Quantity:          item.Quantity,
 			}
-			utils.SugarLogger.Infof("Creating item %d: Name=%s, Price=%d, Qty=%d", i, newItem.ItemName, newItem.ItemUnitPriceCents, newItem.ItemQuantity)
+			utils.SugarLogger.Infof("Creating item %d: Name=%s, Price=%d, Qty=%d", i, newItem.Name, newItem.UnitPriceCents, newItem.Quantity)
 			if err := CreatePurchaseRequestItem(newItem); err != nil {
 				utils.SugarLogger.Errorf("Error creating item %d: %v", i, err)
 				return model.PurchaseRequest{}, err
@@ -155,11 +168,11 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 			return model.PurchaseRequest{}, errors.New("final cost is required when advancing to Ordered")
 		}
 	case model.PurchaseRequestOrdered:
-		if newStatus != model.PurchaseRequestDelivered {
+		if newStatus != model.PurchaseRequestCollected {
 			return model.PurchaseRequest{}, errors.New("invalid status change")
 		}
-	case model.PurchaseRequestDelivered:
-		if newStatus != model.PurchaseRequestCollected {
+	case model.PurchaseRequestCollected:
+		if newStatus != model.PurchaseRequestReimbursed {
 			return model.PurchaseRequest{}, errors.New("invalid status change")
 		}
 	default:
@@ -175,8 +188,7 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 	}
 
 	if note != "" {
-		utils.SugarLogger.Infof("Advancement note for PR %d: %s", prID, note)
-		// to do
+		_, _ = CreateNote(prID, model.NoteStatusChanged, userID, "Purchase request status changed from '"+string(existingPR.Status)+"' to '"+string(newStatus)+"': '"+note+"'")
 	}
 
 	return GetPurchaseRequestByID(prID, userID), nil

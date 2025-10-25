@@ -36,7 +36,9 @@ func InitializeDB() error {
 			&model.DepartmentBudget{},
 			&model.PurchaseRequest{},
 			&model.PurchaseRequestItem{},
-			&model.Approval{},
+			&model.PurchaseRequestApproval{},
+			&model.PurchaseRequestNote{},
+			&model.PurchaseRequestAttachment{},
 			&model.ShippingAddress{},
 		)
 		utils.SugarLogger.Infoln("AutoMigration complete")

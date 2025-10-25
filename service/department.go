@@ -31,10 +31,6 @@ func InitializeDepartments() {
 		Name: "Drivetrain",
 	})
 	CreateDepartment(model.Department{
-		ID:   "ELC",
-		Name: "Electronics",
-	})
-	CreateDepartment(model.Department{
 		ID:   "HVT",
 		Name: "High Voltage",
 	})

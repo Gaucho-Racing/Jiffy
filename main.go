@@ -19,6 +19,7 @@ func main() {
 	//service.ConnectDiscord()
 	service.PingSentinel()
 	service.InitializeDepartments()
+	service.InitializeS3()
 
 	router := api.SetupRouter()
 	api.InitializeRoutes(router)
