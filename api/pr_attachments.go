@@ -34,6 +34,10 @@ func UploadAttachment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds 10MB limit"})
 		return
 	}
+	if file.Header.Get("Content-Type") != "image/png" && file.Header.Get("Content-Type") != "image/jpeg" && file.Header.Get("Content-Type") != "image/jpg" && file.Header.Get("Content-Type") != "application/pdf" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type"})
+		return
+	}
 
 	var attachment model.PurchaseRequestAttachment
 	if err := c.ShouldBind(&attachment); err != nil {
