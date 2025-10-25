@@ -77,8 +77,7 @@ export default function EditPurchaseRequestPage() {
   );
   const [reimbursementAcknowledged, setReimbursementAcknowledged] =
     useState(false);
-  const [attachmentAcknowledged, setAttachmentAcknowledged] =
-    useState(false);
+  const [attachmentAcknowledged, setAttachmentAcknowledged] = useState(false);
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(
     [],
   );
@@ -89,7 +88,9 @@ export default function EditPurchaseRequestPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Filter rejected notes
-  const rejectedNotes = purchaseRequest.notes?.filter(note => note.type === NoteType.Rejected) || [];
+  const rejectedNotes =
+    purchaseRequest.notes?.filter((note) => note.type === NoteType.Rejected) ||
+    [];
 
   useEffect(() => {
     checkAuth();
@@ -311,9 +312,7 @@ export default function EditPurchaseRequestPage() {
       notify.error("Please acknowledge the reimbursement policy");
       return;
     }
-    if (
-      !attachmentAcknowledged
-    ) {
+    if (!attachmentAcknowledged) {
       notify.error("Please acknowledge the attachment policy");
       return;
     }
@@ -407,14 +406,20 @@ export default function EditPurchaseRequestPage() {
                 >
                   {rejectedNotes && rejectedNotes.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="mb-4 text-xl font-semibold text-red-600">Rejection Reasons</h3>
+                      <h3 className="mb-4 text-xl font-semibold text-red-600">
+                        Rejection Reasons
+                      </h3>
                       <div className="space-y-3">
                         {rejectedNotes.map((note: PurchaseRequestNote) => (
-                          <Card key={note.id} className="border-red-600/30 bg-red-600/10">
+                          <Card
+                            key={note.id}
+                            className="border-red-600/30 bg-red-600/10"
+                          >
                             <CardContent className="p-4">
                               <div className="mb-2 flex items-center justify-between">
                                 <p className="text-sm font-medium text-white">
-                                  Rejection By: {note.user?.first_name
+                                  Rejection By:{" "}
+                                  {note.user?.first_name
                                     ? `${note.user.first_name} ${note.user.last_name}`
                                     : "Unknown User"}
                                 </p>
@@ -423,7 +428,9 @@ export default function EditPurchaseRequestPage() {
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <p className="text-sm text-gray-300">{note.note}</p>
+                                <p className="text-sm text-gray-300">
+                                  {note.note}
+                                </p>
                                 <p className="text-xs text-gray-400">
                                   {new Date(note.created_at).toLocaleString()}
                                 </p>
@@ -761,7 +768,9 @@ export default function EditPurchaseRequestPage() {
                       </div>
 
                       <div className="grid grid-cols-2 items-center gap-4">
-                        <Label className="opacity-30">Estimated Item Total</Label>
+                        <Label className="opacity-30">
+                          Estimated Item Total
+                        </Label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
                             $
@@ -905,9 +914,11 @@ export default function EditPurchaseRequestPage() {
                       <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
                         <Label
                           htmlFor="attachment-ack"
-                          className="cursor-pointer text-md font-normal text-red-500"
+                          className="text-md cursor-pointer font-normal text-red-500"
                         >
-                          I agree to IMMEDIATELY upload updated photo attachments of a receipt or checkout page for this request, or I WON'T be reimbursed.
+                          I agree to IMMEDIATELY upload updated photo
+                          attachments of a receipt or checkout page for this
+                          request, or I WON'T be reimbursed.
                           <span className="text-red-500"> *</span>
                         </Label>
                         <div className="pl-8">
@@ -915,9 +926,7 @@ export default function EditPurchaseRequestPage() {
                             id="attachment-ack"
                             checked={attachmentAcknowledged}
                             onCheckedChange={(checked) =>
-                              setAttachmentAcknowledged(
-                                checked as boolean,
-                              )
+                              setAttachmentAcknowledged(checked as boolean)
                             }
                           />
                         </div>
@@ -1002,9 +1011,10 @@ export default function EditPurchaseRequestPage() {
                           <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
                             <Label
                               htmlFor="reimbursement-ack"
-                              className="cursor-pointer text-md font-normal text-red-500"
+                              className="text-md cursor-pointer font-normal text-red-500"
                             >
-                              I understand if I place the order before it is fully approved, it may not be fully reimbursed.
+                              I understand if I place the order before it is
+                              fully approved, it may not be fully reimbursed.
                               <span className="text-red-500"> *</span>
                             </Label>
                             <div className="pl-8">

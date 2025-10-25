@@ -43,11 +43,10 @@ export default function PurchaseRequestDetailsPage() {
     checkAuth().then(() => {});
   }, []);
 
-
   useEffect(() => {
-    const hash = location.hash.replace('#', '');
-    const validTabs = ['details', 'approvals', 'attachments', 'notes'];
-    
+    const hash = location.hash.replace("#", "");
+    const validTabs = ["details", "approvals", "attachments", "notes"];
+
     if (hash && validTabs.includes(hash)) {
       setActiveTab(hash);
     }
@@ -132,7 +131,7 @@ export default function PurchaseRequestDetailsPage() {
 
       setPurchaseRequest(prResponse.data);
       notify.success(`Status advanced to ${nextStatus}`);
-      
+
       if (nextStatus === PurchaseRequestStatus.PurchaseRequestOrdered) {
         handleTabChange("attachments");
       }
@@ -371,18 +370,14 @@ export default function PurchaseRequestDetailsPage() {
             <div className="mx-5">
               <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList>
-                  <TabsTrigger value="details">
-                    Request Details
-                  </TabsTrigger>
+                  <TabsTrigger value="details">Request Details</TabsTrigger>
                   <TabsTrigger value="approvals">
                     Approvals & Status
                   </TabsTrigger>
                   <TabsTrigger value="attachments">
                     Receipts & Attachments
                   </TabsTrigger>
-                  <TabsTrigger value="notes">
-                    Activity & Note Log
-                  </TabsTrigger>
+                  <TabsTrigger value="notes">Activity & Note Log</TabsTrigger>
                 </TabsList>
                 <TabsContent value="details">
                   <RequestDetailsTab

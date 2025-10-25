@@ -74,8 +74,7 @@ export default function NewPurchaseRequestPage() {
   );
   const [reimbursementAcknowledged, setReimbursementAcknowledged] =
     useState(false);
-  const [attachmentAcknowledged, setAttachmentAcknowledged] =
-    useState(false);
+  const [attachmentAcknowledged, setAttachmentAcknowledged] = useState(false);
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(
     [],
   );
@@ -248,9 +247,7 @@ export default function NewPurchaseRequestPage() {
       notify.error("Please acknowledge the reimbursement policy");
       return;
     }
-    if (
-      !attachmentAcknowledged
-    ) {
+    if (!attachmentAcknowledged) {
       notify.error("Please acknowledge the attachment policy");
       return;
     }
@@ -644,7 +641,9 @@ export default function NewPurchaseRequestPage() {
                       </div>
 
                       <div className="grid grid-cols-2 items-center gap-4">
-                        <Label className="opacity-30">Estimated Item Total</Label>
+                        <Label className="opacity-30">
+                          Estimated Item Total
+                        </Label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
                             $
@@ -865,9 +864,10 @@ export default function NewPurchaseRequestPage() {
                           <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
                             <Label
                               htmlFor="reimbursement-ack"
-                              className="cursor-pointer text-md font-normal text-red-500"
+                              className="text-md cursor-pointer font-normal text-red-500"
                             >
-                              I understand if I place the order before it is fully approved, it may not be fully reimbursed.
+                              I understand if I place the order before it is
+                              fully approved, it may not be fully reimbursed.
                               <span className="text-red-500"> *</span>
                             </Label>
                             <div className="pl-8">
@@ -883,26 +883,26 @@ export default function NewPurchaseRequestPage() {
                             </div>
                           </div>
                         )}
-                        <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
-                          <Label
-                            htmlFor="attachment-ack"
-                            className="cursor-pointer text-md font-normal text-red-500"
-                          >
-                            I agree to IMMEDIATELY upload updated photo attachments of a receipt or checkout page for this request, or I WON'T be reimbursed.
+                      <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
+                        <Label
+                          htmlFor="attachment-ack"
+                          className="text-md cursor-pointer font-normal text-red-500"
+                        >
+                          I agree to IMMEDIATELY upload updated photo
+                          attachments of a receipt or checkout page for this
+                          request, or I WON'T be reimbursed.
                           <span className="text-red-500"> *</span>
-                          </Label>
-                          <div className="pl-8">
-                            <Checkbox
-                              id="attachment-ack"
-                              checked={attachmentAcknowledged}
-                              onCheckedChange={(checked) =>
-                                setAttachmentAcknowledged(
-                                  checked as boolean,
-                                )
-                              }
-                            />
-                          </div>
+                        </Label>
+                        <div className="pl-8">
+                          <Checkbox
+                            id="attachment-ack"
+                            checked={attachmentAcknowledged}
+                            onCheckedChange={(checked) =>
+                              setAttachmentAcknowledged(checked as boolean)
+                            }
+                          />
                         </div>
+                      </div>
                     </CardContent>
 
                     <CardFooter className="flex justify-between">
