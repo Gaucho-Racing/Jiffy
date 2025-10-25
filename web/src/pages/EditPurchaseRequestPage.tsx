@@ -326,9 +326,8 @@ export default function EditPurchaseRequestPage() {
       unit_price_cents: item.unit_price_cents,
       quantity: item.quantity,
     }));
-    const { shipping_address, ...prData } = purchaseRequest;
     const dataToSend = {
-      ...prData,
+      ...purchaseRequest,
       user_id: purchaseRequest.user_id,
       items: cleanItems,
       estimated_cost_cents: estimatedCost,
