@@ -17,7 +17,7 @@ var DiscordToken = os.Getenv("DISCORD_TOKEN")
 var DiscordGuild = os.Getenv("DISCORD_GUILD")
 var DiscordLogChannel = os.Getenv("DISCORD_LOG_CHANNEL")
 
-var DepartmentNames = []string{"Aerodynamics", "Business", "Chassis", "Data", "Drivetrain", "Electronics", "High Voltage", "Low Voltage", "Suspension", "Systems"}
+var DepartmentNames = []string{"Aerodynamics", "Business", "Chassis", "Data", "Drivetrain", "Electronics", "Firmware", "High Voltage", "Low Voltage", "Suspension", "Systems"}
 
 var Sentinel = struct {
 	Url          string
@@ -46,3 +46,7 @@ var S3 = struct {
 	Region:    os.Getenv("S3_REGION"),
 	Bucket:    os.Getenv("S3_BUCKET"),
 }
+
+var DriveServiceAccount = os.Getenv("DRIVE_SERVICE_ACCOUNT")
+var GR26PurchaseRequestsSheetID = "1ZLmZxU0ZGiXS--56xRe0yNJlGU9n3NGLopQwtf0JLyw"
+var SheetsCron = os.Getenv("SHEETS_CRON")
