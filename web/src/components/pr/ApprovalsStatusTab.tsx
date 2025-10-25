@@ -283,10 +283,8 @@ export function ApprovalsStatusTab({
                   </span>
                   ?
                 </p>
-                {purchaseRequest.status ===
-                  PurchaseRequestStatus.PurchaseRequestApproved && (
-                  <p>Please enter the actual final cost of the order.</p>
-                )}
+
+                <p className="text-red-500 pt-4">Upload a receipt photo after, or this may NOT be reimbursed.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -357,18 +355,15 @@ export function ApprovalsStatusTab({
             <AlertDialogTitle>
               {selectedApprovalAction === ApprovalStatus.ApprovalApproved
                 ? "Approve Request"
-                : "Reject Request"}
+                : "Reject Request"} - ({selectedApproval?.type})
             </AlertDialogTitle>
             <AlertDialogDescription>
               <div>
                 <p className="text-white">
-                  Are you sure you want to{" "}
-                  <span className="font-semibold">
+          
                     {selectedApprovalAction === ApprovalStatus.ApprovalApproved
-                      ? "approve"
-                      : "reject"}
-                  </span>{" "}
-                  this {selectedApproval?.type} approval?
+                      ? "Are you sure you want to approve this for ordering and reimbursement? You cannot undo this action."
+                      : "This will be sent back for amendment. Please explain how it can be amended for approval. You cannot undo this action."}
                 </p>
               </div>
             </AlertDialogDescription>

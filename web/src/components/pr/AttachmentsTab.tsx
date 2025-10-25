@@ -129,13 +129,16 @@ export function AttachmentsTab({
   return (
     <>
       <div className="mx-20 my-10">
-        <div className="mb-12 flex items-center justify-between">
+        <div className=" flex items-center justify-between">
           <div>
             <h3 className="text-2xl font-semibold">Attachments</h3>
           </div>
           <OutlineButton onClick={handleUploadButton}>
             Upload Attachment
           </OutlineButton>
+        </div>
+        <div className="mb-7">
+          <p className="text-sm text-red-400">Requests without proper attachments will probably not be reimbursed!</p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

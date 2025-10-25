@@ -74,6 +74,8 @@ export default function NewPurchaseRequestPage() {
   );
   const [reimbursementAcknowledged, setReimbursementAcknowledged] =
     useState(false);
+  const [attachmentAcknowledged, setAttachmentAcknowledged] =
+    useState(false);
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(
     [],
   );
@@ -246,6 +248,12 @@ export default function NewPurchaseRequestPage() {
       notify.error("Please acknowledge the reimbursement policy");
       return;
     }
+    if (
+      !attachmentAcknowledged
+    ) {
+      notify.error("Please acknowledge the attachment policy");
+      return;
+    }
     const itemsCost = calculateEstimatedCostCents(nonEmptyItems);
     const estimatedCost =
       itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0);
@@ -276,7 +284,7 @@ export default function NewPurchaseRequestPage() {
       );
       notify.success("Purchase request created successfully!");
       const id = response.data.id;
-      navigate(`/pr/${id}`);
+      navigate(`/pr/${id}#attachments`);
     } catch (error: any) {
       notify.error(getAxiosErrorMessage(error));
     }
@@ -636,7 +644,7 @@ export default function NewPurchaseRequestPage() {
                       </div>
 
                       <div className="grid grid-cols-2 items-center gap-4">
-                        <Label>Estimated Item Total</Label>
+                        <Label className="opacity-30">Estimated Item Total</Label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
                             $
@@ -712,7 +720,7 @@ export default function NewPurchaseRequestPage() {
                       </div>
 
                       <div className="grid grid-cols-2 items-center gap-4 pb-8">
-                        <Label>Estimated Cost</Label>
+                        <Label className="opacity-30">Estimated Cost</Label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-muted-foreground">
                             $
@@ -763,7 +771,7 @@ export default function NewPurchaseRequestPage() {
                               htmlFor="club"
                               className="cursor-pointer font-normal"
                             >
-                              Gaucho Racing (Club Funds)
+                              Gaucho Racing (club funds)
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2 pl-8">
@@ -772,7 +780,7 @@ export default function NewPurchaseRequestPage() {
                               htmlFor="self"
                               className="cursor-pointer font-normal"
                             >
-                              Myself (Personal Funds)
+                              Myself (personal funds & await reimbursement)
                             </Label>
                           </div>
                         </RadioGroup>
@@ -857,12 +865,10 @@ export default function NewPurchaseRequestPage() {
                           <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
                             <Label
                               htmlFor="reimbursement-ack"
-                              className="cursor-pointer text-sm font-normal text-red-500"
+                              className="cursor-pointer text-md font-normal text-red-500"
                             >
-                              I understand that, by skipping the order approval
-                              process and ordering these items myself, I am NOT
-                              guaranteed reimbursement.{" "}
-                              <span className="text-red-500">*</span>
+                              I understand if I place the order before it is fully approved, it may not be fully reimbursed.
+                              <span className="text-red-500"> *</span>
                             </Label>
                             <div className="pl-8">
                               <Checkbox
@@ -877,6 +883,26 @@ export default function NewPurchaseRequestPage() {
                             </div>
                           </div>
                         )}
+                        <div className="grid grid-cols-2 items-center gap-4 pb-8 ">
+                          <Label
+                            htmlFor="attachment-ack"
+                            className="cursor-pointer text-md font-normal text-red-500"
+                          >
+                            I agree to IMMEDIATELY upload updated photo attachments of a receipt or checkout page for this request, or I WON'T be reimbursed.
+                          <span className="text-red-500"> *</span>
+                          </Label>
+                          <div className="pl-8">
+                            <Checkbox
+                              id="attachment-ack"
+                              checked={attachmentAcknowledged}
+                              onCheckedChange={(checked) =>
+                                setAttachmentAcknowledged(
+                                  checked as boolean,
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
                     </CardContent>
 
                     <CardFooter className="flex justify-between">

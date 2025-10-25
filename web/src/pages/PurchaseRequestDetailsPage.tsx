@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit2, AlertTriangle } from "lucide-react";
@@ -30,16 +30,33 @@ import { NotesTab } from "@/components/pr/NotesTab";
 
 export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const currentUser = useUser();
   const id = useParams().id;
   const [purchaseRequest, setPurchaseRequest] =
     useState<Partial<PurchaseRequest>>(initPurchaseRequest);
   const [department, setDepartment] = useState<Department>();
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("details");
 
   React.useEffect(() => {
     checkAuth().then(() => {});
   }, []);
+
+
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    const validTabs = ['details', 'approvals', 'attachments', 'notes'];
+    
+    if (hash && validTabs.includes(hash)) {
+      setActiveTab(hash);
+    }
+  }, [location.hash]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    navigate(`#${tab}`, { replace: true });
+  };
 
   const checkAuth = async () => {
     const currentRoute = window.location.pathname + window.location.search;
@@ -115,6 +132,10 @@ export default function PurchaseRequestDetailsPage() {
 
       setPurchaseRequest(prResponse.data);
       notify.success(`Status advanced to ${nextStatus}`);
+      
+      if (nextStatus === PurchaseRequestStatus.PurchaseRequestOrdered) {
+        handleTabChange("attachments");
+      }
     } catch (error: any) {
       notify.error(getAxiosErrorMessage(error) || "Failed to advance status");
     }
@@ -348,29 +369,29 @@ export default function PurchaseRequestDetailsPage() {
               )}
 
             <div className="mx-5">
-              <Tabs defaultValue="Request Details">
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList>
-                  <TabsTrigger value="Request Details">
+                  <TabsTrigger value="details">
                     Request Details
                   </TabsTrigger>
-                  <TabsTrigger value="Approvals and Status">
+                  <TabsTrigger value="approvals">
                     Approvals & Status
                   </TabsTrigger>
-                  <TabsTrigger value="Attachments">
+                  <TabsTrigger value="attachments">
                     Receipts & Attachments
                   </TabsTrigger>
-                  <TabsTrigger value="Note History">
+                  <TabsTrigger value="notes">
                     Activity & Note Log
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="Request Details">
+                <TabsContent value="details">
                   <RequestDetailsTab
                     purchaseRequest={purchaseRequest}
                     department={department}
                     isLoading={isLoading}
                   />
                 </TabsContent>
-                <TabsContent value="Approvals and Status">
+                <TabsContent value="approvals">
                   <ApprovalsStatusTab
                     purchaseRequest={purchaseRequest}
                     canApprove={canApprove()}
@@ -379,13 +400,13 @@ export default function PurchaseRequestDetailsPage() {
                     onAdvanceStatus={advanceStatus}
                   />
                 </TabsContent>
-                <TabsContent value="Attachments">
+                <TabsContent value="attachments">
                   <AttachmentsTab
                     purchaseRequest={purchaseRequest}
                     onUploadAttachment={uploadAttachment}
                   />
                 </TabsContent>
-                <TabsContent value="Note History">
+                <TabsContent value="notes">
                   <NotesTab
                     purchaseRequest={purchaseRequest}
                     onCreateNote={createNote}
