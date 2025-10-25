@@ -77,6 +77,8 @@ export interface PurchaseRequestAttachment {
   type: AttachmentType;
   description: string;
   note: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface PurchaseRequestApproval {
@@ -87,6 +89,8 @@ export interface PurchaseRequestApproval {
   type: ApprovalType;
   status: ApprovalStatus;
   note: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface PurchaseRequestItem {
@@ -96,6 +100,8 @@ export interface PurchaseRequestItem {
   name: string;
   unit_price_cents: number;
   quantity: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface PurchaseRequestNote {
@@ -105,6 +111,8 @@ export interface PurchaseRequestNote {
   user: User;
   type: NoteType;
   note: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface PurchaseRequest {
@@ -129,6 +137,8 @@ export interface PurchaseRequest {
   shipping_address_id: number;
   shipping_address: ShippingAddress;
   screenshot_url: string;
+  updated_at: Date;
+  created_at: Date;
 }
 
 export const columns: ColumnDef<PurchaseRequest>[] = [
@@ -185,6 +195,8 @@ export const initPurchaseRequestApproval: PurchaseRequestApproval = {
   status: ApprovalStatus.ApprovalPending,
   type: ApprovalType.LeadApproval,
   note: "",
+  created_at: new Date(),
+  updated_at: new Date(),
 };
 
 export const initPurchaseRequestItem: PurchaseRequestItem = {
@@ -194,6 +206,8 @@ export const initPurchaseRequestItem: PurchaseRequestItem = {
   name: "",
   unit_price_cents: 0,
   quantity: 1,
+  created_at: new Date(),
+  updated_at: new Date(),
 };
 
 export const initPurchaseRequest: PurchaseRequest = {
@@ -218,6 +232,8 @@ export const initPurchaseRequest: PurchaseRequest = {
   shipping_address_id: 0,
   shipping_address: {} as ShippingAddress,
   screenshot_url: "",
+  updated_at: new Date(),
+  created_at: new Date(),
 };
 
 export const calculateItemTotalCents = (item: PurchaseRequestItem): number => {
