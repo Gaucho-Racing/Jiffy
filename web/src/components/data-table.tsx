@@ -274,7 +274,7 @@ export function DataTable({ data }: DataTableProps) {
                               (item: any, index: number) => (
                                 <div
                                   key={index}
-                                  className="font-sm grid grid-cols-[1fr_2fr_2fr_7fr] gap-2 text-sm"
+                                  className="font-sm grid grid-cols-[auto_auto_auto_1fr] gap-2 text-sm"
                                 >
                                   <div className="font-medium">
                                     Item {index + 1}: {item.name}
