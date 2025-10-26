@@ -144,7 +144,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 			Values: values,
 		}
 		_, err = SheetClient.Spreadsheets.Values.Update(config.GR26PurchaseRequestsSheetID, writeRange, writeRequest).
-			ValueInputOption("RAW").
+			ValueInputOption("USER_ENTERED").
 			Do()
 		if err != nil {
 			utils.SugarLogger.Errorf("Unable to write data to sheet %s: %v", sheetName, err)
