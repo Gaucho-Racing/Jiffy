@@ -307,7 +307,7 @@ export default function PurchaseRequestDetailsPage() {
       ) : (
         <div className="flex flex-col justify-between">
           <Header />
-          <div className="flex flex-col justify-start p-4 lg:px-32 lg:pt-16">
+          <div className="flex flex-col justify-start p-4 lg:px-32 lg:pt-6">
             <div className="flex flex-row items-center justify-between">
               <Button
                 variant={"ghost"}

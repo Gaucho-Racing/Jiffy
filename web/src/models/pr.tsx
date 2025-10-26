@@ -1,5 +1,4 @@
 import { User } from "@/models/user";
-import { ColumnDef } from "@tanstack/react-table";
 import { ShippingAddress } from "./shipping_address";
 
 export enum PurchaseRequestStatus {
@@ -140,52 +139,6 @@ export interface PurchaseRequest {
   updated_at: Date;
   created_at: Date;
 }
-
-export const columns: ColumnDef<PurchaseRequest>[] = [
-  {
-    accessorKey: "id",
-    header: () => <div className="text-left">ID</div>,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-  },
-  {
-    accessorKey: "priority",
-    header: "Priority",
-  },
-  {
-    accessorKey: "department_id",
-    header: "Department",
-  },
-  {
-    accessorFn: (purchaseRequest) => {
-      return `${purchaseRequest.user?.first_name} ${purchaseRequest.user?.last_name}`;
-    },
-    header: "Requester",
-  },
-  {
-    accessorFn: (purchaseRequest) => {
-      if (!purchaseRequest.items || purchaseRequest.items.length === 0) {
-        return "No items";
-      }
-      if (purchaseRequest.items.length === 1) {
-        return purchaseRequest.items[0].name;
-      }
-      return `${purchaseRequest.items.length} items`;
-    },
-    header: "Items",
-  },
-
-  {
-    accessorKey: "created_at",
-    header: "Created At",
-    cell: ({ row }) => {
-      const value = row.original.created_at;
-      return <span>{value ? new Date(value).toLocaleDateString() : ""}</span>;
-    },
-  },
-];
 
 export const initPurchaseRequestApproval: PurchaseRequestApproval = {
   id: 0,

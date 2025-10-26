@@ -360,7 +360,7 @@ export default function EditPurchaseRequestPage() {
         ) : (
           <div className="flex flex-col justify-between">
             <Header />
-            <div className="flex flex-col justify-start p-4 lg:p-32 lg:pt-16">
+            <div className="flex flex-col justify-start p-4 lg:p-32 lg:pt-6">
               <div className="flex h-64 items-center justify-center">
                 <div className="text-lg text-gray-400">
                   Loading purchase request...
@@ -381,7 +381,7 @@ export default function EditPurchaseRequestPage() {
       ) : (
         <div className="flex flex-col justify-between">
           <Header />
-          <div className="flex flex-col justify-start p-4 lg:p-32 lg:pt-16">
+          <div className="flex flex-col justify-start pt-4 lg:p-32 lg:pt-6">
             <div className="mb-2">
               <Button
                 variant={"ghost"}
