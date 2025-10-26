@@ -11,7 +11,6 @@ import { JIFFY_API_URL } from "@/consts/config";
 import axios from "axios";
 import { notify } from "@/lib/notify";
 import { PurchaseRequest } from "@/models/pr";
-import { columns } from "@/components/columns";
 import { DataTable } from "@/components/data-table";
 function App() {
   const navigate = useNavigate();
