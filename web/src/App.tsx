@@ -10,9 +10,8 @@ import { OutlineButton } from "./components/ui/outline-button";
 import { JIFFY_API_URL } from "@/consts/config";
 import axios from "axios";
 import { notify } from "@/lib/notify";
-import { columns, PurchaseRequest } from "@/models/pr";
+import { PurchaseRequest } from "@/models/pr";
 import { DataTable } from "@/components/data-table";
-
 function App() {
   const navigate = useNavigate();
   const currentUser = useUser();
@@ -62,20 +61,21 @@ function App() {
       {currentUser.id == "" ? (
         <AuthLoading />
       ) : (
-        <div className="flex h-screen flex-col justify-between">
+        <div className="flex min-h-screen flex-col justify-between">
           <Header />
-          <div className="flex h-screen flex-col justify-start p-4 lg:p-32 lg:pt-16">
-            <div className="mb-6 flex flex-row items-center justify-between">
-              <h2>All Purchase Requests</h2>
-
+          <div className="flex min-h-screen flex-col justify-start p-4 lg:p-32 lg:pt-6">
+            <div className=" place-self-end">
               <OutlineButton onClick={() => navigate("/pr/new")}>
                 <div className="flex items-center gap-2">
                   New Purchase Request
                 </div>
               </OutlineButton>
             </div>
+            <div className="mb-6">
+              <h2>All Purchase Requests</h2>
+            </div>
 
-            <DataTable columns={columns} data={purchaseRequests} />
+            <DataTable data={purchaseRequests} />
           </div>
           <Footer />
         </div>
