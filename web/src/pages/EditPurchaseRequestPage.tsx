@@ -394,6 +394,12 @@ export default function EditPurchaseRequestPage() {
               <div className="mx-20 my-10">
                 <form
                   onSubmit={(e) => {
+                    const form = e.currentTarget as HTMLFormElement;
+                    if (!form.checkValidity()) {
+                      e.preventDefault();
+                      form.reportValidity();
+                      return;
+                    }
                     e.preventDefault();
                     updatePurchaseRequest();
                   }}
@@ -621,9 +627,7 @@ export default function EditPurchaseRequestPage() {
                             <div className="col-span-1">
                               Qty <span className="text-red-500">*</span>
                             </div>
-                            <div className="col-span-3">
-                              URL <span className="text-red-500">*</span>
-                            </div>
+                            <div className="col-span-3">URL</div>
                             <div className="col-span-1">Total</div>
                             <div className="col-span-1"></div>
                           </div>
@@ -731,8 +735,8 @@ export default function EditPurchaseRequestPage() {
                               </div>
                               <div className="col-span-3">
                                 <Input
-                                  type="text"
-                                  placeholder="https://... or www...."
+                                  type="url"
+                                  placeholder="https://example.com"
                                   required={!isItemEmpty(item)}
                                   value={item.url}
                                   onChange={(e) =>
