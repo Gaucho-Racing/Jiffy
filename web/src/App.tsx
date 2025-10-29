@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkCredentials } from "@/lib/auth";
 import Footer from "@/components/Footer";
@@ -12,6 +12,7 @@ import axios from "axios";
 import { notify } from "@/lib/notify";
 import { PurchaseRequest } from "@/models/pr";
 import { DataTable } from "@/components/data-table";
+
 function App() {
   const navigate = useNavigate();
   const currentUser = useUser();
@@ -20,7 +21,9 @@ function App() {
   );
 
   React.useEffect(() => {
-    checkAuth().then(() => {});
+    checkAuth().then(() => {
+      getPurchaseRequests();
+    });
   }, []);
 
   const checkAuth = async () => {
@@ -35,26 +38,21 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    const fetchPurchaseRequests = async () => {
-      try {
-        const response = await axios.get(`${JIFFY_API_URL}/purchase-requests`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-          },
-        });
-        const purchaseRequestData = response.data;
-        setPurchaseRequests(purchaseRequestData);
-      } catch (error: any) {
-        notify.error(
-          error.response?.data?.message || "Failed to fetch purchase requests",
-        );
-        navigate("/");
-      }
-    };
-
-    fetchPurchaseRequests();
-  }, [navigate]);
+  const getPurchaseRequests = async () => {
+    try {
+      const response = await axios.get(`${JIFFY_API_URL}/purchase-requests`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+        },
+      });
+      const purchaseRequestData = response.data;
+      setPurchaseRequests(purchaseRequestData);
+    } catch (error: any) {
+      notify.error(
+        error.response?.data?.message || "Failed to fetch purchase requests",
+      );
+    }
+  };
 
   return (
     <>
