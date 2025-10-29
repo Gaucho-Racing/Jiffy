@@ -298,7 +298,7 @@ export function DataTable({ data }: DataTableProps) {
                                         rel="noopener noreferrer"
                                         className="text-blue-600 hover:underline"
                                       >
-                                        URL: {item.url}
+                                        Link
                                       </a>
                                     )}
                                   </div>
