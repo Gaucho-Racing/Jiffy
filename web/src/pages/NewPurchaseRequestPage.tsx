@@ -816,11 +816,11 @@ export default function NewPurchaseRequestPage() {
                                   "0"
                                 }
                                 onValueChange={(value) => {
-                                  const addressId = parseInt(value);
-                                  if (addressId === 0) {
+                                  const addressId = value;
+                                  if (addressId === "") {
                                     setPurchaseRequest({
                                       ...purchaseRequest,
-                                      shipping_address_id: 0,
+                                      shipping_address_id: "",
                                       shipping_address: initShippingAddress,
                                     });
                                   } else {

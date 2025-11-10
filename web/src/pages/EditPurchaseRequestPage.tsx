@@ -737,7 +737,6 @@ export default function EditPurchaseRequestPage() {
                                 <Input
                                   type="url"
                                   placeholder="https://example.com"
-                                  required={!isItemEmpty(item)}
                                   value={item.url}
                                   onChange={(e) =>
                                     updateItem(index, "url", e.target.value)
@@ -964,11 +963,11 @@ export default function EditPurchaseRequestPage() {
                                   "0"
                                 }
                                 onValueChange={(value) => {
-                                  const addressId = parseInt(value);
-                                  if (addressId === 0) {
+                                  const addressId = value;
+                                  if (addressId === "") {
                                     setPurchaseRequest({
                                       ...purchaseRequest,
-                                      shipping_address_id: 0,
+                                      shipping_address_id: "",
                                       shipping_address: initShippingAddress,
                                     });
                                   } else {
