@@ -254,7 +254,7 @@ export function DataTable({ data }: DataTableProps) {
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="overflow-hidden border-t px-2 text-sm hover:bg-gray-700/30 hover:outline hover:outline-2 hover:outline-offset-1"
+                      className="overflow-hidden border-t px-2 text-sm hover:bg-gray-700/30"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
