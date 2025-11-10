@@ -23,6 +23,10 @@ func VerifyConfig() {
 		config.DatabasePassword = "postgres"
 		SugarLogger.Infof("DATABASE_PASSWORD is not set, defaulting to %s", config.DatabasePassword)
 	}
+	if config.DatabaseName == "" {
+		config.DatabaseName = "jiffy"
+		SugarLogger.Infof("DATABASE_NAME is not set, defaulting to %s", config.DatabaseName)
+	}
 	if config.DiscordToken == "" {
 		SugarLogger.Errorf("DISCORD_TOKEN is not set")
 	}
