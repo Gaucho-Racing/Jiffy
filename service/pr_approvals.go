@@ -17,7 +17,7 @@ func GetPurchaseRequestApprovals(prID int) []model.PurchaseRequestApproval {
 	}
 	for i := range approvals {
 		approvals[i].User, _ = GetUser(approvals[i].UserID)
-		approvals[i].ApproverGroup = GetApproverGroupNameOnly(approvals[i].ApproverGroupID)
+		approvals[i].ApproverGroup, _ = GetApproverGroupNameOnly(approvals[i].ApproverGroupID)
 	}
 	return approvals
 }
@@ -68,7 +68,7 @@ func EditApproval(approvalID string, status model.ApprovalStatus, note string, u
 		}
 	}
 
-	approval.ApproverGroup = GetApproverGroupNameOnly(approval.ApproverGroupID)
+	approval.ApproverGroup, _ = GetApproverGroupNameOnly(approval.ApproverGroupID)
 
 	return approval, nil
 }

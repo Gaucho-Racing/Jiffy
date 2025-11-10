@@ -34,11 +34,13 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 		utils.SugarLogger.Errorf("Error getting purchase request with id %s: %v", id, err)
 		return model.PurchaseRequest{}
 	}
+
 	pr.User, _ = GetUser(pr.UserID)
 	for i := range pr.Approvals {
 		if pr.Approvals[i].UserID != "" {
 			pr.Approvals[i].User, _ = GetUser(pr.Approvals[i].UserID)
 		}
+		pr.Approvals[i].ApproverGroup, _ = GetApproverGroupNameOnly(pr.Approvals[i].ApproverGroupID)
 	}
 	for i := range pr.Notes {
 		pr.Notes[i].User, _ = GetUser(pr.Notes[i].UserID)

@@ -198,7 +198,7 @@ export function ApprovalsStatusTab({
               <CardHeader>
                 <CardTitle>
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold">{approval.type} Approval</p>
+                    <p className="font-semibold">{approval.approver_group.name} Approval</p>
                     <p
                       className={`rounded-md border-2 px-4 py-0.5 text-sm font-medium ${getApprovalStatusStyle(approval)}`}
                     >
@@ -358,7 +358,7 @@ export function ApprovalsStatusTab({
               {selectedApprovalAction === ApprovalStatus.ApprovalApproved
                 ? "Approve Request"
                 : "Reject Request"}{" "}
-              - ({selectedApproval?.type})
+              - ({selectedApproval?.approver_group.name})
             </AlertDialogTitle>
             <AlertDialogDescription>
               <div>

@@ -135,20 +135,20 @@ func DeleteApproverGroup(groupID string) error {
 }
 
 // Returns an ApproverGroup with only ID and Name fields, omitting Departments and Approvers
-func GetApproverGroupNameOnly(groupID string) model.ApproverGroup {
+func GetApproverGroupNameOnly(groupID string) (model.ApproverGroup, error) {
 	if groupID == "" {
-		return model.ApproverGroup{}
+		return model.ApproverGroup{}, errors.New("group id is required")
 	}
 
 	var groupName string
-	database.DB.Model(&model.ApproverGroup{}).
-		Where("id = ?", groupID).
-		Pluck("name", &groupName)
-
+	if err := database.DB.Model(&model.ApproverGroup{}).Where("id = ?", groupID).Pluck("name", &groupName).Error; err != nil {
+		utils.SugarLogger.Errorf("Error getting approver group name only with id %s: %v", groupID, err)
+		return model.ApproverGroup{}, err
+	}
 	return model.ApproverGroup{
 		ID:   groupID,
 		Name: groupName,
-	}
+	}, nil
 }
 
 func GetDepartmentIDsForApproverGroup(groupID string) []string {
