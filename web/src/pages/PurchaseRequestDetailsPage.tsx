@@ -341,15 +341,15 @@ export default function PurchaseRequestDetailsPage() {
               PurchaseRequestStatus.PurchaseRequestRejected &&
               purchaseRequest.user_id === currentUser.id && (
                 <div className="m-6">
-                  <Card className="border-red-500 bg-black dark:bg-red-900/20">
+                  <Card className="border-red-600">
                     <CardContent className="pt-6">
-                      <div className="flex items-center space-x-3">
-                        <AlertTriangle className="h-6 w-6 text-red-500" />
+                      <div className="flex items-center space-x-6 pl-2">
+                        <AlertTriangle className="h-8 w-8 text-red-600" />
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-red-800 dark:text-red-200">
+                          <h3 className="text-lg font-semibold text-red-600">
                             Purchase Request Rejected
                           </h3>
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-300">
+                          <p className="mt-1 text-sm text-red-600">
                             This purchase request has been rejected. You can
                             edit and resubmit it for approval.
                           </p>
@@ -367,7 +367,7 @@ export default function PurchaseRequestDetailsPage() {
                 </div>
               )}
 
-            <div className="mx-5">
+            <div>
               <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList>
                   <TabsTrigger value="details">Request Details</TabsTrigger>
@@ -379,14 +379,14 @@ export default function PurchaseRequestDetailsPage() {
                   </TabsTrigger>
                   <TabsTrigger value="notes">Activity & Note Log</TabsTrigger>
                 </TabsList>
-                <TabsContent value="details">
+                <TabsContent value="details" className="min-h-[600px]">
                   <RequestDetailsTab
                     purchaseRequest={purchaseRequest}
                     department={department}
                     isLoading={isLoading}
                   />
                 </TabsContent>
-                <TabsContent value="approvals">
+                <TabsContent value="approvals" className="min-h-[600px]">
                   <ApprovalsStatusTab
                     currentUser={currentUser}
                     purchaseRequest={purchaseRequest}
@@ -396,13 +396,13 @@ export default function PurchaseRequestDetailsPage() {
                     onAdvanceStatus={advanceStatus}
                   />
                 </TabsContent>
-                <TabsContent value="attachments">
+                <TabsContent value="attachments" className="min-h-[600px]">
                   <AttachmentsTab
                     purchaseRequest={purchaseRequest}
                     onUploadAttachment={uploadAttachment}
                   />
                 </TabsContent>
-                <TabsContent value="notes">
+                <TabsContent value="notes" className="min-h-[600px]">
                   <NotesTab
                     purchaseRequest={purchaseRequest}
                     onCreateNote={createNote}

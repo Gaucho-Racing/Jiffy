@@ -212,23 +212,26 @@ export function ApprovalsStatusTab({
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-between">
-                <div className="text-sm text-gray-100">
-                    <span className="font-medium text-gray-100">
+              <CardContent>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-300">
                       {approval.user?.first_name
                         ? `Approved by: ${approval.user.first_name} ${approval.user.last_name}`
                         : null}
                     </span>
-                    <span className="font-medium text-gray-100">
+                    <span className="text-xs text-gray-400">
                       {approval.status !== ApprovalStatus.ApprovalPending
                         ? `Date: ${new Date(approval.updated_at).toLocaleString()}`
                         : null}
                     </span>
-                </div>
+                  </div>
+
+                    
                 <div>
                   {((approval.approver_group.approvers?.some((approver) => approver.id === currentUser.id)) ?? false) &&
                     approval.status === ApprovalStatus.ApprovalPending && (
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 justify-end">
                         <Button
                           variant="outline"
                           onClick={() =>
