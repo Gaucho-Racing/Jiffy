@@ -279,16 +279,12 @@ export function DataTable({ data }: DataTableProps) {
                                   <div className="text-sm">
                                     Item #{index + 1}:
                                   </div>
-                                  <div className="text-sm">
-                                    {item.name}
-                                  </div>
+                                  <div className="text-sm">{item.name}</div>
                                   <div className="">
                                     Unit Price: $
                                     {(item.unit_price_cents / 100).toFixed(2)}
                                   </div>
-                                  <div className="">
-                                    Qty: {item.quantity}
-                                  </div>
+                                  <div className="">Qty: {item.quantity}</div>
                                   <div>
                                     {item.url && (
                                       <a

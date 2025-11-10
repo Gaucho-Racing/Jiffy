@@ -148,7 +148,9 @@ export function RequestDetailsTab({
                         #{index + 1}
                       </p>
 
-                      <p className="break-all text-sm overflow-y-scroll">{item.name || "N/A"}</p>
+                      <p className="overflow-y-scroll break-all text-sm">
+                        {item.name || "N/A"}
+                      </p>
 
                       <p className="text-sm">
                         ${((item.unit_price_cents || 0) / 100).toFixed(2)}

@@ -165,7 +165,9 @@ export function ApprovalsStatusTab({
         setSelectedApproval(null);
         setSelectedApprovalAction(null);
       } catch (error: any) {
-        notify.error(getAxiosErrorMessage(error) || "Failed to update approval status");
+        notify.error(
+          getAxiosErrorMessage(error) || "Failed to update approval status",
+        );
       } finally {
         setIsApproving(false);
       }
@@ -203,7 +205,9 @@ export function ApprovalsStatusTab({
               <CardHeader>
                 <CardTitle>
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold">{approval.approver_group.name} Approval</p>
+                    <p className="font-semibold">
+                      {approval.approver_group.name} Approval
+                    </p>
                     <p
                       className={`rounded-md border-2 px-4 py-0.5 text-sm font-medium ${getApprovalStatusStyle(approval)}`}
                     >
@@ -213,25 +217,26 @@ export function ApprovalsStatusTab({
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">
+                    {approval.user?.first_name
+                      ? `Approved by: ${approval.user.first_name} ${approval.user.last_name}`
+                      : null}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {approval.status !== ApprovalStatus.ApprovalPending
+                      ? `Date: ${new Date(approval.updated_at).toLocaleString()}`
+                      : null}
+                  </span>
+                </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">
-                      {approval.user?.first_name
-                        ? `Approved by: ${approval.user.first_name} ${approval.user.last_name}`
-                        : null}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {approval.status !== ApprovalStatus.ApprovalPending
-                        ? `Date: ${new Date(approval.updated_at).toLocaleString()}`
-                        : null}
-                    </span>
-                  </div>
-
-                    
                 <div>
-                  {((approval.approver_group.approvers?.some((approver) => approver.id === currentUser.id)) ?? false) &&
+                  {(approval.approver_group.approvers?.some(
+                    (approver) => approver.id === currentUser.id,
+                  ) ??
+                    false) &&
                     approval.status === ApprovalStatus.ApprovalPending && (
-                      <div className="flex space-x-2 justify-end">
+                      <div className="flex justify-end space-x-2">
                         <Button
                           variant="outline"
                           onClick={() =>

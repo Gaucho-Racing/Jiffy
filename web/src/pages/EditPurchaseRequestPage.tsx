@@ -418,7 +418,7 @@ export default function EditPurchaseRequestPage() {
                         {rejectedNotes.map((note: PurchaseRequestNote) => (
                           <Card
                             key={note.id}
-                            className="border-red-600 border-2"
+                            className="border-2 border-red-600"
                           >
                             <CardContent className="p-4">
                               <div className="mb-2 flex items-center justify-between">
