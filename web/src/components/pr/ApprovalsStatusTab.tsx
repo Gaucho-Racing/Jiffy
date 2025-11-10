@@ -24,8 +24,11 @@ import {
   validStatusAdvancements,
 } from "@/models/pr";
 import { notify } from "@/lib/notify";
+import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
+import { User } from "@/models/user";
 
 interface ApprovalsStatusTabProps {
+  currentUser: User;
   purchaseRequest: Partial<PurchaseRequest>;
   canApprove: boolean;
   canAdvance: boolean;
@@ -42,8 +45,8 @@ interface ApprovalsStatusTabProps {
 }
 
 export function ApprovalsStatusTab({
+  currentUser,
   purchaseRequest,
-  canApprove,
   canAdvance,
   onEditApproval,
   onAdvanceStatus,
@@ -161,6 +164,8 @@ export function ApprovalsStatusTab({
         setApprovalNote("");
         setSelectedApproval(null);
         setSelectedApprovalAction(null);
+      } catch (error: any) {
+        notify.error(getAxiosErrorMessage(error) || "Failed to update approval status");
       } finally {
         setIsApproving(false);
       }
@@ -209,25 +214,19 @@ export function ApprovalsStatusTab({
               </CardHeader>
               <CardContent className="flex items-center justify-between">
                 <div className="text-sm text-gray-100">
-                  <p>
-                    Approved by:{" "}
                     <span className="font-medium text-gray-100">
                       {approval.user?.first_name
-                        ? `${approval.user.first_name} ${approval.user.last_name}`
-                        : "Pending approval"}
+                        ? `Approved by: ${approval.user.first_name} ${approval.user.last_name}`
+                        : null}
                     </span>
-                  </p>
-                  <p>
-                    Date:{" "}
                     <span className="font-medium text-gray-100">
                       {approval.status !== ApprovalStatus.ApprovalPending
-                        ? new Date(approval.updated_at).toLocaleString()
-                        : "N/A"}
+                        ? `Date: ${new Date(approval.updated_at).toLocaleString()}`
+                        : null}
                     </span>
-                  </p>
                 </div>
                 <div>
-                  {canApprove &&
+                  {((approval.approver_group.approvers?.some((approver) => approver.id === currentUser.id)) ?? false) &&
                     approval.status === ApprovalStatus.ApprovalPending && (
                       <div className="flex space-x-2">
                         <Button

@@ -388,6 +388,7 @@ export default function PurchaseRequestDetailsPage() {
                 </TabsContent>
                 <TabsContent value="approvals">
                   <ApprovalsStatusTab
+                    currentUser={currentUser}
                     purchaseRequest={purchaseRequest}
                     canApprove={canApprove()}
                     canAdvance={canAdvance()}
