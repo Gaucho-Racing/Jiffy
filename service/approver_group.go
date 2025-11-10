@@ -10,10 +10,13 @@ import (
 
 func InitializeApproverGroups() {
 	departments, _ := GetAllDepartments()
+	user, _ := GetUser("1291217367182868511") // Zach
+	users := []model.User{user}
 	CreateApproverGroup(model.ApproverGroup{
 		ID:             "86e2b2da-e65d-4e20-97e7-832a7786be51",
 		Name:           "Treasurer",
 		Departments:    departments,
+		Approvers:      users,
 		ThresholdCents: 0,
 	})
 }
@@ -39,7 +42,7 @@ func isApprover(groupID string, userID string) bool {
 
 func GetApproverGroup(groupID string) (model.ApproverGroup, error) {
 	var approverGroup model.ApproverGroup
-	if err := database.DB.First(&approverGroup, groupID).Error; err != nil {
+	if err := database.DB.First(&approverGroup, "id = ?", groupID).Error; err != nil {
 		return model.ApproverGroup{}, err
 	}
 	approverGroup.Departments = GetDepartmentsForApproverGroup(groupID)
@@ -113,7 +116,7 @@ func CreateApproverGroup(approverGroup model.ApproverGroup) (model.ApproverGroup
 // TODO: fix edge case of orphaned approvals
 func DeleteApproverGroup(groupID string) error {
 	var approverGroup model.ApproverGroup
-	if err := database.DB.First(&approverGroup, groupID).Error; err != nil {
+	if err := database.DB.First(&approverGroup, "id = ?", groupID).Error; err != nil {
 		utils.SugarLogger.Errorf("Approver group with id %s not found: %v", groupID, err)
 		return errors.New("approver group not found")
 	}

@@ -40,7 +40,7 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 		if pr.Approvals[i].UserID != "" {
 			pr.Approvals[i].User, _ = GetUser(pr.Approvals[i].UserID)
 		}
-		pr.Approvals[i].ApproverGroup, _ = GetApproverGroupNameOnly(pr.Approvals[i].ApproverGroupID)
+		pr.Approvals[i].ApproverGroup, _ = GetApproverGroup(pr.Approvals[i].ApproverGroupID)
 	}
 	for i := range pr.Notes {
 		pr.Notes[i].User, _ = GetUser(pr.Notes[i].UserID)

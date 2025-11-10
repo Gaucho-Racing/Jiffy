@@ -24,19 +24,19 @@ func GetPurchaseRequestApprovals(prID int) []model.PurchaseRequestApproval {
 
 func EditApproval(approvalID string, status model.ApprovalStatus, note string, userID string) (model.PurchaseRequestApproval, error) {
 	var approval model.PurchaseRequestApproval
-	if err := database.DB.First(&approval, approvalID).Error; err != nil {
-		utils.SugarLogger.Errorf("Approval not found: %d", approvalID)
+	if err := database.DB.First(&approval, "id = ?", approvalID).Error; err != nil {
+		utils.SugarLogger.Errorf("Approval not found: %s", approvalID)
 		return model.PurchaseRequestApproval{}, errors.New("approval not found")
 	}
 	if approval.Status != model.ApprovalPending {
 		return model.PurchaseRequestApproval{}, errors.New("you can only edit pending approvals")
 	}
-	approval.UserID = userID
-	approval.User, _ = GetUser(userID)
-
 	if !isApprover(approval.ApproverGroupID, userID) {
 		return model.PurchaseRequestApproval{}, errors.New("you are not an approver for this type of approval")
 	}
+
+	approval.UserID = userID
+	approval.User, _ = GetUser(userID)
 
 	approval.Status = status
 

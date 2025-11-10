@@ -77,3 +77,28 @@ func DeleteApproverGroup(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Approver group deleted"})
 }
+
+func UpdateApproverGroup(c *gin.Context) {
+	userID := GetRequestUserID(c)
+	user, err := service.GetUser(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if !user.IsInnerCircle() {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only inner circle members can edit approver groups"})
+		return
+	}
+
+	var approverGroup model.ApproverGroup
+	if err := c.ShouldBindJSON(&approverGroup); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	approverGroup, err = service.CreateApproverGroup(approverGroup)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, approverGroup)
+}
