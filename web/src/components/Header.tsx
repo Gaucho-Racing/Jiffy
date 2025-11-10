@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { logout } from "@/lib/auth";
 import { useUser } from "@/lib/store";
+import { Button } from "./ui/button";
 
 interface HeaderProps {
   className?: string;
@@ -18,6 +19,15 @@ interface HeaderProps {
 const Header = (props: HeaderProps) => {
   const navigate = useNavigate();
   const currentUser = useUser();
+  
+  const isInnerCircle = () => {
+    return (
+      currentUser.roles.includes("d_admin") ||
+      currentUser.roles.includes("d_officer") ||
+      currentUser.roles.includes("d_lead")
+    );
+  };
+
   return (
     <div
       className={`w-full items-center justify-start border-b border-neutral-800 transition-all duration-200 lg:pl-32 lg:pr-32 ${props.className}`}
@@ -25,9 +35,19 @@ const Header = (props: HeaderProps) => {
     >
       <div className="flex flex-row items-center justify-between">
         <div className="flex flex-row items-center p-4">
-          <h1>Jiffy</h1>
+          <h1 className="cursor-pointer" onClick={() => navigate("/")}>
+            Jiffy
+          </h1>
         </div>
-        <div className="mr-4 flex flex-row p-4">
+        <div className="mr-4 flex flex-row items-center gap-6 p-4">
+          {isInnerCircle() && (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/approver-groups")}
+            >
+              Edit Approver Groups
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar className="cursor-pointer">
