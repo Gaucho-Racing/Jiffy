@@ -3,7 +3,7 @@ package model
 import "time"
 
 type ShippingAddress struct {
-	ID            int       `json:"id" gorm:"primaryKey"`
+	ID            string    `json:"id" gorm:"primaryKey"`
 	UserID        string    `json:"user_id"`
 	Name          string    `json:"name"`
 	StreetAddress string    `json:"street_address"`

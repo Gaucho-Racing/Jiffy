@@ -1,5 +1,5 @@
 export interface ShippingAddress {
-  id: number;
+  id: string;
   user_id: string;
   name: string;
   street_address: string;
@@ -12,7 +12,7 @@ export interface ShippingAddress {
 }
 
 export const initShippingAddress: ShippingAddress = {
-  id: 0,
+  id: "",
   user_id: "",
   name: "",
   street_address: "",

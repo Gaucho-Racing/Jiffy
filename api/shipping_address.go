@@ -4,7 +4,6 @@ import (
 	"jiffy/model"
 	"jiffy/service"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,15 +24,14 @@ func CreateShippingAddress(c *gin.Context) {
 }
 
 func DeleteShippingAddress(c *gin.Context) {
-	addressIDString := c.Param("id")
-	addressID, err := strconv.Atoi(addressIDString)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid address ID"})
-		return
-	}
+	addressID := c.Param("id")
 
 	if err := service.DeleteShippingAddress(addressID, GetRequestUserID(c)); err != nil {
-		if err.Error() == "shipping address not found or access denied" {
+		if err.Error() == "you are not the owner of this shipping address" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if err.Error() == "shipping address not found" {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}

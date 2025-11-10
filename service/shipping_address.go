@@ -5,9 +5,10 @@ import (
 	"jiffy/database"
 	"jiffy/model"
 	"jiffy/utils"
+
+	"github.com/google/uuid"
 )
 
-// CreateShippingAddress creates a new shipping address for a user
 func CreateShippingAddress(address model.ShippingAddress, userID string) (model.ShippingAddress, error) {
 	address.UserID = userID
 	if address.Name == "" {
@@ -28,53 +29,53 @@ func CreateShippingAddress(address model.ShippingAddress, userID string) (model.
 	if address.Country == "" {
 		return model.ShippingAddress{}, errors.New("country cannot be empty")
 	}
-
-	if result := database.DB.Create(&address); result.Error != nil {
-		utils.SugarLogger.Errorf("Error creating shipping address: %v", result.Error)
-		return model.ShippingAddress{}, result.Error
+	if address.ID == "" {
+		address.ID = uuid.New().String()
+	} else {
+		existingAddress, _ := GetShippingAddressByID(address.ID)
+		if existingAddress.UserID != userID {
+			return model.ShippingAddress{}, errors.New("you are not the owner of this shipping address")
+		}
 	}
-
-	utils.SugarLogger.Infof("Shipping address created with ID: %d for user: %s", address.ID, address.UserID)
+	if database.DB.Where("id = ?", address.ID).Updates(&address).RowsAffected == 0 {
+		utils.SugarLogger.Infoln("New shipping address created with id: " + address.ID)
+		if result := database.DB.Create(&address); result.Error != nil {
+			return model.ShippingAddress{}, result.Error
+		}
+	} else {
+		utils.SugarLogger.Infoln("Shipping address with id: " + address.ID + " has been updated!")
+	}
 	return address, nil
 }
 
-// DeleteShippingAddress deletes a shipping address by ID
-func DeleteShippingAddress(addressID int, userID string) error {
-	if addressID <= 0 {
-		return errors.New("invalid address ID")
-	}
+func DeleteShippingAddress(addressID string, userID string) error {
 	if userID == "" {
 		return errors.New("user ID cannot be empty")
 	}
-
-	// Verify ownership before deletion
-	var address model.ShippingAddress
-	if err := database.DB.Where("id = ? AND user_id = ?", addressID, userID).First(&address).Error; err != nil {
-		utils.SugarLogger.Errorf("Error finding shipping address %d for user %s: %v", addressID, userID, err)
-		return errors.New("shipping address not found or access denied")
+	address, err := GetShippingAddressByID(addressID)
+	if err != nil {
+		return errors.New("shipping address not found")
+	}
+	if address.UserID != userID {
+		return errors.New("you are not the owner of this shipping address")
 	}
 
 	if err := database.DB.Delete(&address).Error; err != nil {
-		utils.SugarLogger.Errorf("Error deleting shipping address %d: %v", addressID, err)
+		utils.SugarLogger.Errorf("Error deleting shipping address %s: %v", addressID, err)
 		return err
 	}
 
-	utils.SugarLogger.Infof("Shipping address %d deleted for user %s", addressID, userID)
+	utils.SugarLogger.Infof("Shipping address %s deleted for user %s", addressID, userID)
 	return nil
 }
 
 // GetShippingAddressByID retrieves a shipping address by ID
-func GetShippingAddressByID(addressID int) (model.ShippingAddress, error) {
-	if addressID <= 0 {
-		return model.ShippingAddress{}, errors.New("invalid address ID")
-	}
-
+func GetShippingAddressByID(addressID string) (model.ShippingAddress, error) {
 	var address model.ShippingAddress
 	if err := database.DB.Where("id = ?", addressID).First(&address).Error; err != nil {
-		utils.SugarLogger.Errorf("Error getting shipping address %d: %v", addressID, err)
+		utils.SugarLogger.Errorf("Error getting shipping address %s: %v", addressID, err)
 		return model.ShippingAddress{}, errors.New("shipping address not found")
 	}
-
 	return address, nil
 }
 

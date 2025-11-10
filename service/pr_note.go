@@ -4,6 +4,8 @@ import (
 	"jiffy/database"
 	"jiffy/model"
 	"jiffy/utils"
+
+	"github.com/google/uuid"
 )
 
 func GetNotesForPR(prID int) ([]model.PurchaseRequestNote, error) {
@@ -23,6 +25,7 @@ func GetNotesForPR(prID int) ([]model.PurchaseRequestNote, error) {
 
 func CreateNote(prID int, noteType model.NoteType, userID string, message string) (model.PurchaseRequestNote, error) {
 	note := model.PurchaseRequestNote{
+		ID:                uuid.New().String(),
 		PurchaseRequestID: prID,
 		Type:              noteType,
 		UserID:            userID,

@@ -6,6 +6,7 @@ import (
 	"jiffy/model"
 	"jiffy/utils"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -47,11 +48,11 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 	}
 	currentUser, _ := GetUser(userID)
 	if pr.UserID != userID && !currentUser.IsInnerCircle() {
-		pr.ShippingAddressID = 0
+		pr.ShippingAddressID = ""
 		pr.ShippingAddress = model.ShippingAddress{} // hide address
 		return pr
 	}
-	if pr.ShippingAddressID != 0 {
+	if pr.ShippingAddressID != "" {
 		if address, err := GetShippingAddressByID(pr.ShippingAddressID); err == nil {
 			pr.ShippingAddress = address
 		}
@@ -96,8 +97,8 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 		} else {
 			utils.SugarLogger.Infof("Updating existing PR %d", pr.ID)
 			// update fields that can be edited to 0, which would be otherwise skipped
-			if pr.ShippingAddressID == 0 && existingPR.ShippingAddressID != 0 {
-				if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Update("shipping_address_id", 0).Error; err != nil {
+			if pr.ShippingAddressID == "" && existingPR.ShippingAddressID != "" {
+				if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Update("shipping_address_id", "").Error; err != nil {
 					utils.SugarLogger.Errorf("Error updating shipping address for PR %d: %v", pr.ID, err)
 					return model.PurchaseRequest{}, err
 				}
@@ -119,6 +120,7 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 		pr.Items = itemsToCreate
 		for i, item := range pr.Items {
 			newItem := model.PurchaseRequestItem{
+				ID:                uuid.New().String(),
 				PurchaseRequestID: pr.ID,
 				URL:               item.URL,
 				Name:              item.Name,
