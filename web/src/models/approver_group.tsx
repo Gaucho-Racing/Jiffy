@@ -19,4 +19,4 @@ export const initApproverGroup: ApproverGroup = {
   threshold_cents: 0,
   updated_at: new Date(),
   created_at: new Date(),
-}
+};

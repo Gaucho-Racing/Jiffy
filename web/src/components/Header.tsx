@@ -19,7 +19,7 @@ interface HeaderProps {
 const Header = (props: HeaderProps) => {
   const navigate = useNavigate();
   const currentUser = useUser();
-  
+
   const isInnerCircle = () => {
     return (
       currentUser.roles.includes("d_admin") ||
@@ -45,7 +45,7 @@ const Header = (props: HeaderProps) => {
               variant="outline"
               onClick={() => navigate("/approver-groups")}
             >
-              Edit Approver Groups
+              Manage Approver Rules
             </Button>
           )}
           <DropdownMenu>
