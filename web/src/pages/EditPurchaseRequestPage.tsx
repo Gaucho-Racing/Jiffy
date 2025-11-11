@@ -139,7 +139,7 @@ export default function EditPurchaseRequestPage() {
         );
         const purchaseRequestData = response.data;
         const user = getUser();
-        if (purchaseRequestData.user_id !== user.id) {
+        if (!(purchaseRequestData.user_id === user.id || user.roles.includes("d_admin"))) {
           notify.error("You can only edit your own purchase requests");
           navigate("/");
           return;
