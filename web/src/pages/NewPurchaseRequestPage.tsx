@@ -819,7 +819,9 @@ export default function NewPurchaseRequestPage() {
                                   ? "Gaucho Racing"
                                   : `${currentUser.first_name} ${currentUser.last_name}`,
                               shipping_address_id:
-                                value === "self" ? "" : purchaseRequest.shipping_address_id,
+                                value === "self"
+                                  ? ""
+                                  : purchaseRequest.shipping_address_id,
                             });
                             if (value === "club") {
                               setReimbursementAcknowledged(false);
