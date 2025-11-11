@@ -453,6 +453,48 @@ export default function EditPurchaseRequestPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="ml-12 space-y-4">
+
+                    <div className="grid grid-cols-2 items-center gap-4 pb-8">
+                        <Label>
+                          Has this already been ordered?{" "}
+                          <span className="text-red-500">*</span>
+                        </Label>
+                        <RadioGroup
+                          value={
+                            purchaseRequest.placed_order_unapproved ? "yes" : "no"
+                          }
+                          onValueChange={(value) => {
+                            const isUnapproved = value === "yes";
+                            setPurchaseRequest({
+                              ...purchaseRequest,
+                              placed_order_unapproved: isUnapproved,
+                              requested_purchaser: isUnapproved
+                                ? `${currentUser.first_name} ${currentUser.last_name}`
+                                : purchaseRequest.requested_purchaser,
+                            });
+                          }}
+                        >
+                          <div className="flex items-center space-x-2 pl-6">
+                            <RadioGroupItem value="yes" id="yes" />
+                            <Label
+                              htmlFor="yes"
+                              className="cursor-pointer font-normal"
+                            >
+                              Yes, I ordered before getting approved or I am applying for reimbursement for an old order.
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2 pl-6">
+                            <RadioGroupItem value="no" id="no" />
+                            <Label
+                              htmlFor="no"
+                              className="cursor-pointer font-normal"
+                            >
+                              No, I will wait for full approval before ordering (Recommended unless urgent).
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
                       <div className="grid grid-cols-2 items-center gap-4">
                         <Label htmlFor="department">
                           Department <span className="text-red-500">*</span>
@@ -868,8 +910,8 @@ export default function EditPurchaseRequestPage() {
                       </div>
                       <div className="grid grid-cols-2 items-center gap-4 pb-8">
                         <Label>
-                          Who will be placing this order when it is approved?{" "}
-                          <span className="text-red-500">*</span>
+                        Who will be placing this order?{" "}
+                        <span className="text-red-500">*</span>
                         </Label>
                         <RadioGroup
                           value={
@@ -881,6 +923,13 @@ export default function EditPurchaseRequestPage() {
                                 : undefined
                           }
                           onValueChange={(value) => {
+                            // Prevent selecting "club" if order was placed unapproved
+                            if (
+                              value === "club" &&
+                              purchaseRequest.placed_order_unapproved
+                            ) {
+                              return;
+                            }
                             setPurchaseRequest({
                               ...purchaseRequest,
                               requested_purchaser:
@@ -893,23 +942,31 @@ export default function EditPurchaseRequestPage() {
                             }
                           }}
                         >
-                          <div className="flex items-center space-x-2 pl-8">
-                            <RadioGroupItem value="club" id="club" />
+                          <div className="flex items-center space-x-2 pl-6">
+                            <RadioGroupItem
+                              value="club"
+                              id="club"
+                              disabled={purchaseRequest.placed_order_unapproved}
+                            />
                             <Label
                               htmlFor="club"
-                              className="cursor-pointer font-normal"
+                              className={`cursor-pointer font-normal ${
+                                purchaseRequest.placed_order_unapproved
+                                  ? "text-gray-500 cursor-not-allowed"
+                                  : ""
+                              }`}
                             >
-                              Gaucho Racing (club funds)
-                            </Label>
+                              Club - I want the club to order with Gaucho Racing funds after approval (Not recommended for technical items).
+                              </Label>
                           </div>
-                          <div className="flex items-center space-x-2 pl-8">
+                          <div className="flex items-center space-x-2 pl-6">
                             <RadioGroupItem value="self" id="self" />
                             <Label
                               htmlFor="self"
                               className="cursor-pointer font-normal"
                             >
-                              Myself (personal funds & await reimbursement)
-                            </Label>
+                              Me - I will wait for full approval, then order myself and await reimbursement. Or I have already bought this and am applying for reimbursement.
+                              </Label>
                           </div>
                         </RadioGroup>
                       </div>
@@ -923,7 +980,7 @@ export default function EditPurchaseRequestPage() {
                           request, or I WON'T be reimbursed.
                           <span className="text-red-500"> *</span>
                         </Label>
-                        <div className="pl-8">
+                        <div className="pl-6">
                           <Checkbox
                             id="attachment-ack"
                             checked={attachmentAcknowledged}
@@ -1019,7 +1076,7 @@ export default function EditPurchaseRequestPage() {
                               fully approved, it may not be fully reimbursed.
                               <span className="text-red-500"> *</span>
                             </Label>
-                            <div className="pl-8">
+                            <div className="pl-6">
                               <Checkbox
                                 id="reimbursement-ack"
                                 checked={reimbursementAcknowledged}

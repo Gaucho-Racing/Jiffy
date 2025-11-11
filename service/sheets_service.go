@@ -69,7 +69,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 							SheetId:          int64(sheetId),
 							StartRowIndex:    5,  // A6 starts at index 5
 							StartColumnIndex: 1,  // B column
-							EndColumnIndex:   19, // T column
+							EndColumnIndex:   20, // U column
 						},
 						Fields: "userEnteredValue",
 					},
@@ -111,6 +111,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 				purchaseRequest.Priority,
 				purchaseRequest.Status,
 				purchaseRequest.RequestedPurchaser,
+				purchaseRequest.PlacedOrderUnapproved,
 			}
 			for i := 1; i < numItems; i++ {
 				values[itemIndex+i] = []interface{}{
@@ -133,13 +134,14 @@ func PopulateGR26PurchaseRequestsSheet() {
 					purchaseRequest.Priority,
 					purchaseRequest.Status,
 					purchaseRequest.RequestedPurchaser,
+					purchaseRequest.PlacedOrderUnapproved,
 				}
 			}
 			itemIndex += numItems
 		}
 
 		// Write data (can still use A1 notation for updates as it's more convenient)
-		writeRange := fmt.Sprintf("'%s'!B6:T", sheetName)
+		writeRange := fmt.Sprintf("'%s'!B6:U", sheetName)
 		writeRequest := &sheets.ValueRange{
 			Values: values,
 		}
