@@ -326,15 +326,16 @@ export default function NewPurchaseRequestPage() {
                       <CardTitle>Create New Purchase Request</CardTitle>
                     </CardHeader>
                     <CardContent className="ml-12 space-y-4">
-
-                    <div className="grid grid-cols-2 items-center gap-4 pb-8">
+                      <div className="grid grid-cols-2 items-center gap-4 pb-8">
                         <Label>
                           Has this already been ordered?{" "}
                           <span className="text-red-500">*</span>
                         </Label>
                         <RadioGroup
                           value={
-                            purchaseRequest.placed_order_unapproved ? "yes" : "no"
+                            purchaseRequest.placed_order_unapproved
+                              ? "yes"
+                              : "no"
                           }
                           onValueChange={(value) => {
                             const isUnapproved = value === "yes";
@@ -353,7 +354,8 @@ export default function NewPurchaseRequestPage() {
                               htmlFor="yes"
                               className="cursor-pointer font-normal"
                             >
-                              Yes, I ordered before getting approved or I am applying for reimbursement for an old order.
+                              Yes, I ordered before getting approved or I am
+                              applying for reimbursement for an old order.
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2 pl-6">
@@ -362,7 +364,8 @@ export default function NewPurchaseRequestPage() {
                               htmlFor="no"
                               className="cursor-pointer font-normal"
                             >
-                              No, I will wait for full approval before ordering (Recommended unless urgent).
+                              No, I will wait for full approval before ordering
+                              (Recommended unless urgent).
                             </Label>
                           </div>
                         </RadioGroup>
@@ -824,11 +827,13 @@ export default function NewPurchaseRequestPage() {
                               htmlFor="club"
                               className={`cursor-pointer font-normal ${
                                 purchaseRequest.placed_order_unapproved
-                                  ? "text-gray-500 cursor-not-allowed"
+                                  ? "cursor-not-allowed text-gray-500"
                                   : ""
                               }`}
                             >
-                              Club - I want the club to order with Gaucho Racing funds after approval (Not recommended for technical items).
+                              Club - I want the club to order with Gaucho Racing
+                              funds after approval (Not recommended for
+                              technical items).
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2 pl-6">
@@ -837,7 +842,9 @@ export default function NewPurchaseRequestPage() {
                               htmlFor="self"
                               className="cursor-pointer font-normal"
                             >
-                              Me - I will wait for full approval, then order myself and await reimbursement. Or I have already bought this and am applying for reimbursement.
+                              Me - I will wait for full approval, then order
+                              myself and await reimbursement. Or I have already
+                              bought this and am applying for reimbursement.
                             </Label>
                           </div>
                         </RadioGroup>
