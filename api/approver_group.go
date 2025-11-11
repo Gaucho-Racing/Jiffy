@@ -58,7 +58,7 @@ func DeleteApproverGroup(c *gin.Context) {
 	userID := GetRequestUserID(c)
 	user, err := service.GetUser(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	if !user.IsInnerCircle() {

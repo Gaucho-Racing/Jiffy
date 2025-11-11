@@ -13,12 +13,23 @@ import { User } from "@/models/user";
 import { Department } from "@/models/departments";
 import { MultiSelect, type Option } from "@/components/ui/multi-select";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { CardHeader, CardContent, Card } from "@/components/ui/card";
 import { OutlineButton } from "@/components/ui/outline-button";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function ApproverGroupsEditPage() {
   const navigate = useNavigate();
@@ -33,7 +44,7 @@ export default function ApproverGroupsEditPage() {
   const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<string[]>(
     [],
   );
-  const [thresholdDollars, setThresholdDollars] = useState<string>("");
+  const [thresholdCents, setThresholdCents] = useState(1); // Default to 0.01 (1 cent)
   const [name, setName] = useState<string>("");
 
   const isInnerCircle = () => {
@@ -93,11 +104,11 @@ export default function ApproverGroupsEditPage() {
         setSelectedDepartmentIds(
           groupRes.data.departments?.map((d: Department) => d.id) || [],
         );
-        setThresholdDollars((groupRes.data.threshold_cents / 100).toFixed(2));
+        setThresholdCents(groupRes.data.threshold_cents);
         setName(groupRes.data.name || "");
       } catch (error: any) {
         notify.error(error.response?.data?.message || "Failed to fetch data");
-        navigate("/");
+        navigate("/approver-groups");
       } finally {
         setIsLoading(false);
       }
@@ -117,26 +128,24 @@ export default function ApproverGroupsEditPage() {
 
   const setSelectedUsers = (selectedIds: string[]) => {
     setSelectedUserIds(selectedIds);
-    const selectedUserObjects = users.filter((u) => selectedIds.includes(u.id));
-    console.log("Selected users:", selectedUserObjects);
   };
 
   const setSelectedDepartments = (selectedIds: string[]) => {
     setSelectedDepartmentIds(selectedIds);
-    const selectedDepartmentObjects = departments.filter((d) =>
-      selectedIds.includes(d.id),
-    );
-    console.log("Selected departments:", selectedDepartmentObjects);
   };
 
   const saveGroup = async () => {
+    if (!name || !thresholdCents) {
+      notify.error("Please fill in all required fields");
+      return;
+    }
+    
     const selectedUserObjects = users.filter((u) =>
       selectedUserIds.includes(u.id),
     );
     const selectedDepartmentObjects = departments.filter((d) =>
       selectedDepartmentIds.includes(d.id),
     );
-    const thresholdCents = Math.round(parseFloat(thresholdDollars) * 100);
 
     const dataToSend = {
       id: id,
@@ -152,6 +161,21 @@ export default function ApproverGroupsEditPage() {
         },
       });
       notify.success("Approver group updated successfully!");
+      navigate("/approver-groups");
+    } catch (error: any) {
+      notify.error(getAxiosErrorMessage(error));
+    }
+  };
+
+  const deleteGroup = async () => {
+    try {
+      await axios.delete(`${JIFFY_API_URL}/approver-groups/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+        },
+      });
+      notify.success("Approver group deleted successfully!");
+      navigate("/approver-groups");
     } catch (error: any) {
       notify.error(getAxiosErrorMessage(error));
     }
@@ -199,31 +223,86 @@ export default function ApproverGroupsEditPage() {
               <h2 className="mb-6">Editing Rule - {approverGroup.name}</h2>
               <Card>
                 <CardHeader>
-                  <OutlineButton onClick={saveGroup}>Save</OutlineButton>
+                  <div className="flex items-center gap-2">
+                    <OutlineButton onClick={saveGroup}>
+                      Save
+                    </OutlineButton>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        {approverGroup.name === "Treasurer" ? (
+                          <Button variant="destructive" disabled>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        ) : (
+                          <Button variant="destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        )}
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete the approver group "{approverGroup.name}".
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={deleteGroup}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="w-full max-w-xs space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Name</Label>
+                      <Label htmlFor="Name" className="text-white">
+                        Name <span className="text-red-500">*</span>
+                      </Label>{" "}
                       <Input
                         id="name"
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Approver group name"
+                        required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="threshold">Price Threshold ($)</Label>
-                      <Input
-                        id="threshold"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={thresholdDollars}
-                        onChange={(e) => setThresholdDollars(e.target.value)}
-                        placeholder="0.00"
-                      />
+                    <div>
+                      <Label htmlFor="threshold" className="text-white">
+                        Threshold $ <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative mt-2">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          $
+                        </span>
+                        <Input
+                          id="threshold"
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={thresholdCents / 100}
+                          onChange={(e) =>
+                            setThresholdCents(
+                              Math.round(parseFloat(e.target.value) * 100),
+                            )
+                          }
+                          onBlur={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            if (value <= 0) {
+                              setThresholdCents(1);
+                            }
+                          }}
+                          className="pl-7"
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label>Departments</Label>

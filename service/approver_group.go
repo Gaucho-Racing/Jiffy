@@ -6,6 +6,8 @@ import (
 	"jiffy/model"
 	"jiffy/utils"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func InitializeApproverGroups() {
@@ -77,13 +79,14 @@ func GetApproversForApproverGroup(groupID string) []model.User {
 }
 
 func CreateApproverGroup(approverGroup model.ApproverGroup) (model.ApproverGroup, error) {
-	if approverGroup.ID == "" {
-		return model.ApproverGroup{}, errors.New("approver group id is required")
-	} else if approverGroup.Name == "" {
+	if approverGroup.Name == "" {
 		return model.ApproverGroup{}, errors.New("approver group name is required")
 	}
 	if approverGroup.ThresholdCents < 0 {
 		return model.ApproverGroup{}, errors.New("threshold_cents must be non-negative")
+	}
+	if approverGroup.ID == "" {
+		approverGroup.ID = uuid.New().String()
 	}
 
 	var departmentIDs []string
