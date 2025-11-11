@@ -68,7 +68,7 @@ const Header = (props: HeaderProps) => {
               <DropdownMenuItem
                 onClick={() =>
                   window.open(
-                    "https://sso.gauchoracing.com/users/${currentUser.id}/edit",
+                    `https://sso.gauchoracing.com/users/${currentUser.id}/edit`,
                     "_blank",
                   )
                 }
