@@ -124,6 +124,10 @@ export function RequestDetailsTab({
                     ? `${purchaseRequest.shipping_address.name} - ${purchaseRequest.shipping_address.street_address}, ${purchaseRequest.shipping_address.city}, ${purchaseRequest.shipping_address.state} ${purchaseRequest.shipping_address.zip_code}`
                     : ""}
                 </p>
+                <p className="font-medium text-gray-400">
+                  Placed w/o approval?
+                </p>
+                <p>{purchaseRequest.placed_order_unapproved ? "Yes" : "No"}</p>
               </div>
             </div>
           </div>

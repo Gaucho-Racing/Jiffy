@@ -129,6 +129,7 @@ export interface PurchaseRequest {
   priority: number;
   needed_by_date: string;
   requested_purchaser: string;
+  placed_order_unapproved: boolean;
   shipping_address_id: string;
   shipping_address: ShippingAddress;
   screenshot_url: string;
@@ -179,6 +180,7 @@ export const initPurchaseRequest: PurchaseRequest = {
   priority: 1,
   needed_by_date: "",
   requested_purchaser: "",
+  placed_order_unapproved: false,
   shipping_address_id: "",
   shipping_address: {} as ShippingAddress,
   screenshot_url: "",
