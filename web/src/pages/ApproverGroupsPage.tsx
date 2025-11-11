@@ -124,69 +124,65 @@ export default function ApproverGroupsPage() {
             <div className="mb-6">
               <h2>Approver Groups</h2>
             </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {approverGroups.map((group) => (
-                  <Card key={group.id} className="border-neutral-800">
-                    <CardHeader>
-                      <CardTitle>{group.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-4 space-y-6">
-                        <div>
-                          <span className="text-gray-400">
-                            Cost threshold:{" "}
-                          </span>
-                          <span className="text-white">
-                            ${(group.threshold_cents / 100).toFixed(2)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">
-                            Departments this applies to:{" "}
-                          </span>
-                          {group.departments?.length > 0 && (
-                            <div>
-                              <span className="text-white">
-                                {group.departments
-                                  ?.map((department) => department.name)
-                                  .join(", ")}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Approvers: </span>
-                          {group.approvers?.length > 0 && (
-                            <div>
-                              <span className="text-white">
-                                {group.approvers
-                                  ?.map(
-                                    (approver) =>
-                                      approver.first_name +
-                                      " " +
-                                      approver.last_name,
-                                  )
-                                  .join(", ")}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {approverGroups.map((group) => (
+                <Card key={group.id} className="border-neutral-800">
+                  <CardHeader>
+                    <CardTitle>{group.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-4 space-y-6">
+                      <div>
+                        <span className="text-gray-400">Cost threshold: </span>
+                        <span className="text-white">
+                          ${(group.threshold_cents / 100).toFixed(2)}
+                        </span>
                       </div>
-                    </CardContent>
-                    <CardFooter>
-                      {isInnerCircle() && (
-                        <OutlineButton
-                          onClick={() =>
-                            navigate(`/approver-groups/${group.id}`)
-                          }
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Edit
-                        </OutlineButton>
-                      )}
-                    </CardFooter>
-                  </Card>
-                ))}
+                      <div>
+                        <span className="text-gray-400">
+                          Departments this applies to:{" "}
+                        </span>
+                        {group.departments?.length > 0 && (
+                          <div>
+                            <span className="text-white">
+                              {group.departments
+                                ?.map((department) => department.name)
+                                .join(", ")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Approvers: </span>
+                        {group.approvers?.length > 0 && (
+                          <div>
+                            <span className="text-white">
+                              {group.approvers
+                                ?.map(
+                                  (approver) =>
+                                    approver.first_name +
+                                    " " +
+                                    approver.last_name,
+                                )
+                                .join(", ")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    {isInnerCircle() && (
+                      <OutlineButton
+                        onClick={() => navigate(`/approver-groups/${group.id}`)}
+                      >
+                        <Edit2 className="mr-2 h-4 w-4" />
+                        Edit
+                      </OutlineButton>
+                    )}
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
             {approverGroups.length === 0 && (
               <div className="mt-8 text-center text-gray-400">

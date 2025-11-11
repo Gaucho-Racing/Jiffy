@@ -139,7 +139,7 @@ export default function ApproverGroupsEditPage() {
       notify.error("Please fill in all required fields");
       return;
     }
-    
+
     const selectedUserObjects = users.filter((u) =>
       selectedUserIds.includes(u.id),
     );
@@ -224,9 +224,7 @@ export default function ApproverGroupsEditPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <OutlineButton onClick={saveGroup}>
-                      Save
-                    </OutlineButton>
+                    <OutlineButton onClick={saveGroup}>Save</OutlineButton>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         {approverGroup.name === "Treasurer" ? (
