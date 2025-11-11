@@ -42,7 +42,6 @@ export function DataTable({ data }: DataTableProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-1"
               onClick={(e) => {
                 e.stopPropagation();
                 expandRow(value);
@@ -72,7 +71,7 @@ export function DataTable({ data }: DataTableProps) {
           const value =
             row.original.user?.first_name + " " + row.original.user?.last_name;
           return (
-            <div className="min-w-32 overflow-auto whitespace-nowrap">
+            <div className="min-w-40 max-w-40 truncate whitespace-nowrap">
               {value}
             </div>
           );
@@ -84,7 +83,7 @@ export function DataTable({ data }: DataTableProps) {
         cell: ({ row }) => {
           const value = row.original.department_id;
           return (
-            <div className="min-w-16 overflow-auto whitespace-nowrap">
+            <div className="min-w-16 max-w-16 truncate whitespace-nowrap">
               {value}
             </div>
           );
@@ -96,7 +95,7 @@ export function DataTable({ data }: DataTableProps) {
         cell: ({ row }) => {
           const value = row.original.component;
           return (
-            <div className="h-8 max-w-48 shrink place-self-center text-clip pt-1">
+            <div className="min-w-48 max-w-48 truncate whitespace-nowrap">
               {value}
             </div>
           );
@@ -109,7 +108,7 @@ export function DataTable({ data }: DataTableProps) {
         cell: ({ row }) => {
           const value = row.original.description;
           return (
-            <div className="h-8 max-w-72 shrink place-self-center text-clip pt-1">
+            <div className="min-w-72 max-w-72 truncate whitespace-nowrap">
               {value}
             </div>
           );
@@ -121,7 +120,7 @@ export function DataTable({ data }: DataTableProps) {
         cell: ({ row }) => {
           const value = row.original.needed_by_date;
           return (
-            <div className=" overflow-auto whitespace-nowrap">
+            <div className="min-w-24 max-w-24 truncate whitespace-nowrap">
               <span>{value ? new Date(value).toLocaleDateString() : ""}</span>
             </div>
           );
@@ -132,11 +131,7 @@ export function DataTable({ data }: DataTableProps) {
         header: "Priority",
         cell: ({ row }) => {
           const value = row.original.priority;
-          return (
-            <div className="min-w-16 overflow-auto whitespace-nowrap">
-              {value}
-            </div>
-          );
+          return <div className="min-w-16 whitespace-nowrap">{value}</div>;
         },
       },
       {
@@ -164,11 +159,13 @@ export function DataTable({ data }: DataTableProps) {
           };
 
           return (
-            <span
-              className={` inline-flex max-h-8 items-center justify-center whitespace-nowrap rounded-md border px-1 py-0.5 text-xs font-medium ${getStatusStyle(status)}`}
-            >
-              {status}
-            </span>
+            <div className="min-w-36 max-w-36">
+              <span
+                className={`whitespace-nowrap rounded-md border px-1 py-0.5 text-xs font-medium ${getStatusStyle(status)}`}
+              >
+                {status}
+              </span>
+            </div>
           );
         },
       },
@@ -213,7 +210,7 @@ export function DataTable({ data }: DataTableProps) {
                     <th
                       key={header.id}
                       colSpan={header.colSpan}
-                      className="px-2 py-2 text-left text-sm"
+                      className="whitespace-nowrap px-2 py-2 text-left text-sm"
                     >
                       {header.isPlaceholder ? null : (
                         <div
