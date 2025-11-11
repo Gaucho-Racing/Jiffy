@@ -223,11 +223,7 @@ export function AttachmentsTab({
                         </div>
                       </div>
 
-                      {attachment.description && (
-                        <p className="text-sm text-gray-400">
-                          {attachment.description}
-                        </p>
-                      )}
+                  
                     </div>
                   </CardContent>
                   {/* <CardFooter>
