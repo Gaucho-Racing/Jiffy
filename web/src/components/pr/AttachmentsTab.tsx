@@ -222,8 +222,6 @@ export function AttachmentsTab({
                           </Button>
                         </div>
                       </div>
-
-                  
                     </div>
                   </CardContent>
                   {/* <CardFooter>
