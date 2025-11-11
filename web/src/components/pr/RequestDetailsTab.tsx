@@ -125,7 +125,7 @@ export function RequestDetailsTab({
                     : ""}
                 </p>
                 <p className="font-medium text-gray-400">
-                  Placed w/o approval?
+                  Bought w/o approval?
                 </p>
                 <p>{purchaseRequest.placed_order_unapproved ? "Yes" : "No"}</p>
               </div>
