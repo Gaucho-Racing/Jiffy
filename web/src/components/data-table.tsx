@@ -11,7 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { PurchaseRequest, PurchaseRequestStatus } from "@/models/pr";
-import { ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
@@ -20,7 +20,9 @@ interface DataTableProps {
 }
 
 export function DataTable({ data }: DataTableProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([
+    { id: "id", desc: true },
+  ]);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [selectedRow, setSelectedRow] = React.useState<number | null>(null);
 
@@ -31,16 +33,36 @@ export function DataTable({ data }: DataTableProps) {
   const columns = React.useMemo<ColumnDef<PurchaseRequest>[]>(
     () => [
       {
+        id: "expand",
+        header: "",
+        cell: ({ row }) => {
+          const value = row.original.id;
+          const isExpanded = selectedRow === value;
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                expandRow(value);
+              }}
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </Button>
+          );
+        },
+      },
+      {
         accessorKey: "id",
         header: "ID",
         cell: ({ row }) => {
           const value = row.original.id;
-          return (
-            <div>
-              <div className="pl-2 hover:bg-white"> </div>
-              <div className="min-w-6">{value}</div>
-            </div>
-          );
+          return <div className="min-w-6">{value}</div>;
         },
       },
       {
@@ -74,7 +96,7 @@ export function DataTable({ data }: DataTableProps) {
         cell: ({ row }) => {
           const value = row.original.component;
           return (
-            <div className="min-w-32 overflow-auto whitespace-nowrap">
+            <div className="h-8 max-w-48 shrink place-self-center text-clip pt-1">
               {value}
             </div>
           );
@@ -87,7 +109,7 @@ export function DataTable({ data }: DataTableProps) {
         cell: ({ row }) => {
           const value = row.original.description;
           return (
-            <div className="h-8 min-w-96 place-self-center overflow-auto pt-1">
+            <div className="h-8 max-w-72 shrink place-self-center text-clip pt-1">
               {value}
             </div>
           );
@@ -99,7 +121,7 @@ export function DataTable({ data }: DataTableProps) {
         cell: ({ row }) => {
           const value = row.original.needed_by_date;
           return (
-            <div className="min-w-24 overflow-auto whitespace-nowrap">
+            <div className=" overflow-auto whitespace-nowrap">
               <span>{value ? new Date(value).toLocaleDateString() : ""}</span>
             </div>
           );
@@ -143,31 +165,15 @@ export function DataTable({ data }: DataTableProps) {
 
           return (
             <span
-              className={` inline-flex max-h-8 items-center justify-center overflow-auto whitespace-nowrap rounded-md border px-1 py-0.5 text-xs font-medium ${getStatusStyle(status)}`}
+              className={` inline-flex max-h-8 items-center justify-center whitespace-nowrap rounded-md border px-1 py-0.5 text-xs font-medium ${getStatusStyle(status)}`}
             >
               {status}
             </span>
           );
         },
       },
-      {
-        id: "navigate",
-        header: "",
-        cell: ({ row }) => {
-          return (
-            <button
-              onClick={() => (window.location.href = `/pr/${row.original.id}`)}
-              className=" rounded text-sm"
-            >
-              <div className="px-2">
-                <ExternalLink className="h-4 w-4" />
-              </div>
-            </button>
-          );
-        },
-      },
     ],
-    [],
+    [selectedRow],
   );
 
   const table = useReactTable({
@@ -249,7 +255,9 @@ export function DataTable({ data }: DataTableProps) {
                 <tr
                   key={row.id}
                   className="cursor-pointer hover:bg-gray-700/30"
-                  onClick={() => expandRow(row.original.id)}
+                  onClick={() =>
+                    (window.location.href = `/pr/${row.original.id}`)
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td
@@ -265,7 +273,10 @@ export function DataTable({ data }: DataTableProps) {
                 </tr>
                 {selectedRow === row.original.id && (
                   <tr>
-                    <td colSpan={columns.length} className="border-t px-2 py-1">
+                    <td
+                      colSpan={columns.length}
+                      className="border-t py-1 pl-8 pr-2"
+                    >
                       <div>
                         <div className="space-y-1">
                           {row.original.items &&

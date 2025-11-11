@@ -176,7 +176,7 @@ export function ApprovalsStatusTab({
 
   return (
     <>
-      <div className="mx-20 my-10">
+      <div className="mx-4 my-10 md:mx-20">
         <div className="mb-12 flex items-center justify-between">
           <div>
             <h3 className="text-2xl font-semibold">Current Status</h3>
@@ -217,20 +217,7 @@ export function ApprovalsStatusTab({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">
-                    {approval.user?.first_name
-                      ? `Approved by: ${approval.user.first_name} ${approval.user.last_name}`
-                      : null}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {approval.status !== ApprovalStatus.ApprovalPending
-                      ? `Date: ${new Date(approval.updated_at).toLocaleString()}`
-                      : null}
-                  </span>
-                </div>
-
-                <div>
+                <div className="mb-3 flex min-w-0 items-center gap-2">
                   {(approval.approver_group.approvers?.some(
                     (approver) => approver.id === currentUser.id,
                   ) ??
@@ -251,7 +238,7 @@ export function ApprovalsStatusTab({
                           Approve
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="destructive"
                           onClick={() =>
                             handleApprovalButton(
                               approval,
@@ -265,13 +252,17 @@ export function ApprovalsStatusTab({
                         </Button>
                       </div>
                     )}
+                  <div className="ml-auto flex justify-between">
+                    <p className="text-sm text-gray-400">
+                      {new Date(approval.created_at).toLocaleString()}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
-
       <AlertDialog open={showAdvanceDialog} onOpenChange={setShowAdvanceDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,8 @@ import {
 import { PurchaseRequest, PurchaseRequestAttachment } from "@/models/pr";
 import { notify } from "@/lib/notify";
 import { OutlineButton } from "../ui/outline-button";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { ExternalLink } from "lucide-react";
 
 interface AttachmentsTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
@@ -128,10 +130,10 @@ export function AttachmentsTab({
 
   return (
     <>
-      <div className="mx-20 my-10">
+      <div className="mx-4 my-10 md:mx-20">
         <div className=" flex items-center justify-between">
           <div>
-            <h3 className="text-2xl font-semibold">Attachments</h3>
+            <h3 className="text-2xl font-semibold">Receipts & Attachments</h3>
           </div>
           <OutlineButton onClick={handleUploadButton}>
             Upload Attachment
@@ -153,36 +155,41 @@ export function AttachmentsTab({
                   className="relative flex h-full flex-col"
                 >
                   <CardContent className="flex-1 p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-sm font-medium text-white">
-                        By:{" "}
-                        {attachment.user?.first_name
-                          ? `${attachment.user.first_name} ${attachment.user.last_name}`
-                          : "Unknown User"}
-                      </p>
+                    <div className="mb-3 flex min-w-0 items-center gap-2">
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <Avatar className="h-9 w-9 shrink-0">
+                          <AvatarImage src={attachment.user.avatar_url} />
+                        </Avatar>
+
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <span className="text-md truncate text-clip text-white">
+                            {attachment.user.first_name}{" "}
+                            {attachment.user.last_name}
+                          </span>
+                          <span className="trunacte text-clip text-xs text-gray-400">
+                            {attachment.user.email}
+                          </span>
+                        </div>
+                      </div>
+
                       <span
-                        className={`rounded-md border px-2 py-1 text-sm font-medium ${getAttachmentTypeStyle(attachment.type)}`}
+                        className={`shrink-0 rounded-md border px-2 py-1 text-sm font-medium ${getAttachmentTypeStyle(
+                          attachment.type,
+                        )}`}
                       >
                         {attachment.type}
                       </span>
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-300">
-                          File: {attachment.filename}
+                      <div className="flex justify-between space-x-4">
+                        <p className="shrink break-all text-sm text-gray-400">
+                          {attachment.filename}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="shrink-0 text-sm text-gray-400">
                           {new Date(attachment.created_at).toLocaleString()}
                         </p>
                       </div>
-
-                      {attachment.description && (
-                        <p className="text-sm text-gray-300">
-                          Description: {attachment.description}
-                        </p>
-                      )}
-
                       {attachment.content_type?.startsWith("image/") && (
                         <div className="mt-4">
                           <img
@@ -195,9 +202,35 @@ export function AttachmentsTab({
                           />
                         </div>
                       )}
+
+                      <div className="flex justify-between space-x-4">
+                        {attachment.description && (
+                          <p className="shrink break-all text-sm text-gray-400">
+                            {attachment.description}
+                          </p>
+                        )}
+                        <div className="ml-auto shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              window.open(attachment.url, "_blank")
+                            }
+                          >
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Open
+                          </Button>
+                        </div>
+                      </div>
+
+                      {attachment.description && (
+                        <p className="text-sm text-gray-400">
+                          {attachment.description}
+                        </p>
+                      )}
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  {/* <CardFooter>
                     <a
                       href={attachment.url}
                       target="_blank"
@@ -206,7 +239,7 @@ export function AttachmentsTab({
                     >
                       View File in New Tab
                     </a>
-                  </CardFooter>
+                  </CardFooter> */}
                 </Card>
               ),
             )

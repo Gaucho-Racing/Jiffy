@@ -214,7 +214,7 @@ export default function ApproverGroupsEditPage() {
               <Button
                 variant={"ghost"}
                 onClick={() => navigate(`/approver-groups`)}
-                className="flex items-center"
+                className="mb-8 flex items-center"
               >
                 <ArrowLeft className="mr-2 h-4 w-4 text-gray-400" />
                 Back to rules

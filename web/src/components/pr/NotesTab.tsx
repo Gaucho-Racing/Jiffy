@@ -14,6 +14,7 @@ import {
 import { PurchaseRequest, PurchaseRequestNote, NoteType } from "@/models/pr";
 import { notify } from "@/lib/notify";
 import { OutlineButton } from "../ui/outline-button";
+import { Avatar, AvatarImage } from "../ui/avatar";
 
 interface NotesTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
@@ -71,10 +72,10 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
 
   return (
     <>
-      <div className="mx-20 my-10">
+      <div className="mx-4 my-10 md:mx-20">
         <div className="mb-12 flex items-center justify-between">
           <div>
-            <h3 className="text-2xl font-semibold">Activity & Note History</h3>
+            <h3 className="text-2xl font-semibold">Activity & Note Log</h3>
           </div>
           <OutlineButton onClick={handleAddNoteButton}>Add Note</OutlineButton>
         </div>
@@ -84,23 +85,32 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
             purchaseRequest.notes.map((note: PurchaseRequestNote) => (
               <Card key={note.id} className="relative">
                 <CardContent className="p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-sm font-medium text-white">
-                      By:{" "}
-                      {note.user?.first_name
-                        ? `${note.user.first_name} ${note.user.last_name}`
-                        : "Unknown User"}
-                    </p>
+                  <div className="mb-3 flex min-w-0 items-center gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <Avatar className="h-9 w-9 shrink-0">
+                        <AvatarImage src={note.user.avatar_url} />
+                      </Avatar>
+
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-md truncate text-clip text-white">
+                          {note.user.first_name} {note.user.last_name}
+                        </span>
+                        <span className="trunacte text-clip text-xs text-gray-400">
+                          {note.user.email}
+                        </span>
+                      </div>
+                    </div>
+
                     <span
-                      className={`rounded-md border px-2 py-1 text-sm font-medium ${getNoteTypeStyle(note.type)}`}
+                      className={`shrink-0 rounded-md border px-2 py-1 text-sm font-medium ${getNoteTypeStyle(note.type)}`}
                     >
                       {note.type}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-300">{note.note}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-sm text-gray-400">{note.note}</p>
+                    <p className="text-sm text-gray-400">
                       {new Date(note.created_at).toLocaleString()}
                     </p>
                   </div>

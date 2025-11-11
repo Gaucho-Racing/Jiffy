@@ -354,13 +354,6 @@ export default function PurchaseRequestDetailsPage() {
                             edit and resubmit it for approval.
                           </p>
                         </div>
-                        <Button
-                          onClick={() => navigate(`/pr/${id}/edit`)}
-                          className="bg-red-600 text-white hover:bg-red-700"
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Edit Request
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
