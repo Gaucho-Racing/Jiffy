@@ -50,7 +50,8 @@ export default function PurchaseRequestDetailsPage() {
     if (hash && validTabs.includes(hash)) {
       setActiveTab(hash);
     }
-  }, [location.hash]);
+    window.scrollTo(0, 0);
+  }, [location.hash, location.pathname]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);

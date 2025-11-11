@@ -6,6 +6,7 @@ import { OutlineButton } from "@/components/ui/outline-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -218,11 +219,10 @@ export function ApprovalsStatusTab({
               </CardHeader>
               <CardContent>
                 <div className="mb-3 flex min-w-0 items-center gap-2">
-                  {(approval.approver_group.approvers?.some(
-                    (approver) => approver.id === currentUser.id,
-                  ) ??
-                    false) &&
-                    approval.status === ApprovalStatus.ApprovalPending && (
+                  {approval.status === ApprovalStatus.ApprovalPending ? (
+                    approval.approver_group.approvers?.some(
+                      (approver) => approver.id === currentUser.id,
+                    ) ? (
                       <div className="flex justify-end space-x-2">
                         <Button
                           variant="outline"
@@ -251,7 +251,23 @@ export function ApprovalsStatusTab({
                           Reject
                         </Button>
                       </div>
-                    )}
+                    ) : null
+                  ) : (
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <Avatar className="h-9 w-9 shrink-0">
+                        <AvatarImage src={approval.user.avatar_url} />
+                      </Avatar>
+
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-md truncate text-clip text-white">
+                          {approval.user.first_name} {approval.user.last_name}
+                        </span>
+                        <span className="trunacte text-clip text-xs text-gray-400">
+                          {approval.user.email}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   <div className="ml-auto flex justify-between">
                     <p className="text-sm text-gray-400">
                       {new Date(approval.created_at).toLocaleString()}

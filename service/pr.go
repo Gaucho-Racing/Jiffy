@@ -111,6 +111,12 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 					return model.PurchaseRequest{}, err
 				}
 			}
+			if !pr.PlacedOrderUnapproved && existingPR.PlacedOrderUnapproved {
+				if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Update("placed_order_unapproved", false).Error; err != nil {
+					utils.SugarLogger.Errorf("Error updating placed_order_unapproved for PR %d: %v", pr.ID, err)
+					return model.PurchaseRequest{}, err
+				}
+			}
 
 			if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Updates(pr).Error; err != nil {
 				utils.SugarLogger.Errorf("Error updating PR %d: %v", pr.ID, err)

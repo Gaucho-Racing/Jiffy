@@ -332,6 +332,10 @@ export default function EditPurchaseRequestPage() {
       items: cleanItems,
       estimated_cost_cents: estimatedCost,
       needed_by_date: date ? date.toISOString() : null,
+      shipping_address_id:
+        purchaseRequest.requested_purchaser === "Gaucho Racing"
+          ? purchaseRequest.shipping_address_id
+          : "",
     };
 
     try {
@@ -472,6 +476,9 @@ export default function EditPurchaseRequestPage() {
                               requested_purchaser: isUnapproved
                                 ? `${currentUser.first_name} ${currentUser.last_name}`
                                 : purchaseRequest.requested_purchaser,
+                              shipping_address_id: isUnapproved
+                                ? ""
+                                : purchaseRequest.shipping_address_id,
                             });
                           }}
                         >
@@ -939,6 +946,8 @@ export default function EditPurchaseRequestPage() {
                                 value === "club"
                                   ? "Gaucho Racing"
                                   : `${currentUser.first_name} ${currentUser.last_name}`,
+                              shipping_address_id:
+                                value === "self" ? "" : purchaseRequest.shipping_address_id,
                             });
                             if (value === "club") {
                               setReimbursementAcknowledged(false);
