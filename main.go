@@ -20,6 +20,7 @@ func main() {
 	//service.ConnectDiscord()
 	service.PingSentinel()
 	service.InitializeDepartments()
+	service.InitializeApproverGroups()
 	service.InitializeS3()
 	service.InitializeDrive()
 

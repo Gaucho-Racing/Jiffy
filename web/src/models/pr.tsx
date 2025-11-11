@@ -1,5 +1,6 @@
 import { User } from "@/models/user";
-import { ShippingAddress } from "./shipping_address";
+import { ShippingAddress } from "@/models/shipping_address";
+import { ApproverGroup } from "@/models/approver_group";
 
 export enum PurchaseRequestStatus {
   PurchaseRequestPending = "Pending Approval",
@@ -14,12 +15,6 @@ export enum ApprovalStatus {
   ApprovalPending = "Pending",
   ApprovalApproved = "Approved",
   ApprovalRejected = "Rejected",
-}
-
-export enum ApprovalType {
-  LeadApproval = "Lead",
-  TreasurerApproval = "Treasurer",
-  PresidentApproval = "President",
 }
 
 export enum NoteType {
@@ -81,11 +76,12 @@ export interface PurchaseRequestAttachment {
 }
 
 export interface PurchaseRequestApproval {
-  id: number;
+  id: string;
   purchase_request_id: number;
   user_id: string;
   user: User;
-  type: ApprovalType;
+  approver_group_id: string;
+  approver_group: ApproverGroup;
   status: ApprovalStatus;
   note: string;
   created_at: Date;
@@ -93,7 +89,7 @@ export interface PurchaseRequestApproval {
 }
 
 export interface PurchaseRequestItem {
-  id: number;
+  id: string;
   purchase_request_id: number;
   url: string;
   name: string;
@@ -104,7 +100,7 @@ export interface PurchaseRequestItem {
 }
 
 export interface PurchaseRequestNote {
-  id: number;
+  id: string;
   purchase_request_id: number;
   user_id: string;
   user: User;
@@ -133,7 +129,7 @@ export interface PurchaseRequest {
   priority: number;
   needed_by_date: string;
   requested_purchaser: string;
-  shipping_address_id: number;
+  shipping_address_id: string;
   shipping_address: ShippingAddress;
   screenshot_url: string;
   updated_at: Date;
@@ -141,19 +137,20 @@ export interface PurchaseRequest {
 }
 
 export const initPurchaseRequestApproval: PurchaseRequestApproval = {
-  id: 0,
+  id: "",
   purchase_request_id: 0,
   user_id: "",
   user: {} as User,
+  approver_group_id: "",
+  approver_group: {} as ApproverGroup,
   status: ApprovalStatus.ApprovalPending,
-  type: ApprovalType.LeadApproval,
   note: "",
   created_at: new Date(),
   updated_at: new Date(),
 };
 
 export const initPurchaseRequestItem: PurchaseRequestItem = {
-  id: 0,
+  id: "",
   purchase_request_id: 0,
   url: "",
   name: "",
@@ -182,7 +179,7 @@ export const initPurchaseRequest: PurchaseRequest = {
   priority: 1,
   needed_by_date: "",
   requested_purchaser: "",
-  shipping_address_id: 0,
+  shipping_address_id: "",
   shipping_address: {} as ShippingAddress,
   screenshot_url: "",
   updated_at: new Date(),

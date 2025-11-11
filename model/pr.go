@@ -19,7 +19,7 @@ type PurchaseRequest struct {
 	Priority             int                         `json:"priority"`
 	NeededByDate         time.Time                   `json:"needed_by_date"`
 	RequestedPurchaser   string                      `json:"requested_purchaser"`
-	ShippingAddressID    int                         `json:"shipping_address_id"`
+	ShippingAddressID    string                      `json:"shipping_address_id"`
 	ShippingAddress      ShippingAddress             `json:"shipping_address" gorm:"-"`
 	Attachments          []PurchaseRequestAttachment `json:"attachments" gorm:"foreignKey:PurchaseRequestID"`
 	Notes                []PurchaseRequestNote       `json:"notes" gorm:"foreignKey:PurchaseRequestID"`

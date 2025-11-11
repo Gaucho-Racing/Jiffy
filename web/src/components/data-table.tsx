@@ -197,7 +197,7 @@ export function DataTable({ data }: DataTableProps) {
           className="max-w-sm rounded-md border bg-black px-3 py-2"
         />
       </div>
-      <div className="overflow-auto rounded-md border pl-1">
+      <div className="overflow-auto rounded-md border">
         <table>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -254,7 +254,7 @@ export function DataTable({ data }: DataTableProps) {
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="overflow-hidden border-t px-2 text-sm hover:bg-gray-700/30 hover:outline hover:outline-2 hover:outline-offset-1"
+                      className="overflow-hidden border-t px-2 text-sm "
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -265,7 +265,7 @@ export function DataTable({ data }: DataTableProps) {
                 </tr>
                 {selectedRow === row.original.id && (
                   <tr>
-                    <td colSpan={columns.length} className="border-t px-6 py-2">
+                    <td colSpan={columns.length} className="border-t px-2 py-1">
                       <div>
                         <div className="space-y-1">
                           {row.original.items &&
@@ -274,18 +274,17 @@ export function DataTable({ data }: DataTableProps) {
                               (item: any, index: number) => (
                                 <div
                                   key={index}
-                                  className="font-sm grid grid-cols-[auto_auto_auto_1fr] gap-2 text-sm"
+                                  className="font-sm grid grid-cols-[1.2fr_14fr_3.2fr_1.5fr_0.5fr] gap-2 text-sm"
                                 >
-                                  <div className="font-medium">
-                                    Item {index + 1}: {item.name}
+                                  <div className="text-sm">
+                                    Item #{index + 1}:
                                   </div>
+                                  <div className="text-sm">{item.name}</div>
                                   <div className="">
                                     Unit Price: $
                                     {(item.unit_price_cents / 100).toFixed(2)}
                                   </div>
-                                  <div className="">
-                                    Quantity: {item.quantity}
-                                  </div>
+                                  <div className="">Qty: {item.quantity}</div>
                                   <div>
                                     {item.url && (
                                       <a
@@ -296,7 +295,7 @@ export function DataTable({ data }: DataTableProps) {
                                         }
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-blue-600 hover:underline"
+                                        className="text-blue-400 underline"
                                       >
                                         Link
                                       </a>

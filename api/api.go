@@ -55,6 +55,12 @@ func InitializeRoutes(router *gin.Engine) {
 	router.POST("/purchase-requests/:id/notes", CreateNote)
 	router.POST("/purchase-requests/:id/attachments", UploadAttachment)
 	router.GET("/purchase-requests/:id/attachments", GetAttachments)
+	router.POST("/approver-groups", CreateApproverGroup)
+	router.PATCH("/approver-groups/:id", UpdateApproverGroup)
+	router.DELETE("/approver-groups/:id", DeleteApproverGroup)
+	router.GET("/approver-groups", GetAllApproverGroups)
+	router.GET("/approver-groups/:id", GetApproverGroup)
+	router.POST("/sheets", PopulateSheets)
 }
 
 func AuthChecker() gin.HandlerFunc {

@@ -77,7 +77,7 @@ export function RequestDetailsTab({
                     : ""}
                 </p>
                 <p className="font-medium text-gray-400">Description </p>
-                <p className="max-h-32 overflow-y-auto">
+                <p className="max-h-32 break-all pr-4">
                   {purchaseRequest.description}
                 </p>
               </div>
@@ -131,7 +131,7 @@ export function RequestDetailsTab({
             <p className="mb-2 mt-20 font-medium text-gray-400">
               Items ({purchaseRequest.items?.length || 0})
             </p>
-            <div className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-[1fr_6fr_4fr_4fr_4fr_12fr]">
+            <div className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-[1fr_8fr_4fr_4fr_4fr_10fr]">
               <p className="text-sm font-medium text-gray-400"> </p>
               <p className="text-sm font-medium text-gray-400"> Item Name </p>
               <p className="text-sm font-medium text-gray-400"> Unit Price </p>
@@ -143,20 +143,22 @@ export function RequestDetailsTab({
               <div className="space-y-4">
                 {purchaseRequest.items.map((item, index) => (
                   <div key={item.id || index}>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_6fr_4fr_4fr_4fr_12fr]">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_8fr_4fr_4fr_4fr_10fr]">
                       <p className="text-sm font-medium text-gray-400">
                         #{index + 1}
                       </p>
 
-                      <p className="text-white">{item.name || "N/A"}</p>
+                      <p className="overflow-y-scroll break-all text-sm">
+                        {item.name || "N/A"}
+                      </p>
 
-                      <p className="text-white">
+                      <p className="text-sm">
                         ${((item.unit_price_cents || 0) / 100).toFixed(2)}
                       </p>
 
-                      <p className="text-white">{item.quantity || 0}</p>
+                      <p className="text-sm">{item.quantity || 0}</p>
 
-                      <p className="text-white">
+                      <p className="text-sm">
                         ${(calculateItemTotalCents(item) / 100).toFixed(2)}
                       </p>
                       <a

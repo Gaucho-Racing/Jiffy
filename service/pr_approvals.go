@@ -5,6 +5,8 @@ import (
 	"jiffy/database"
 	"jiffy/model"
 	"jiffy/utils"
+
+	"github.com/google/uuid"
 )
 
 func GetPurchaseRequestApprovals(prID int) []model.PurchaseRequestApproval {
@@ -15,24 +17,26 @@ func GetPurchaseRequestApprovals(prID int) []model.PurchaseRequestApproval {
 	}
 	for i := range approvals {
 		approvals[i].User, _ = GetUser(approvals[i].UserID)
+		approvals[i].ApproverGroup, _ = GetApproverGroupNameOnly(approvals[i].ApproverGroupID)
 	}
 	return approvals
 }
 
-func EditApproval(approvalID int, status model.ApprovalStatus, note string, userID string) (model.PurchaseRequestApproval, error) {
+func EditApproval(approvalID string, status model.ApprovalStatus, note string, userID string) (model.PurchaseRequestApproval, error) {
 	var approval model.PurchaseRequestApproval
-	if err := database.DB.First(&approval, approvalID).Error; err != nil {
-		utils.SugarLogger.Errorf("Approval not found: %d", approvalID)
+	if err := database.DB.First(&approval, "id = ?", approvalID).Error; err != nil {
+		utils.SugarLogger.Errorf("Approval not found: %s", approvalID)
 		return model.PurchaseRequestApproval{}, errors.New("approval not found")
 	}
 	if approval.Status != model.ApprovalPending {
 		return model.PurchaseRequestApproval{}, errors.New("you can only edit pending approvals")
 	}
+	if !isApprover(approval.ApproverGroupID, userID) {
+		return model.PurchaseRequestApproval{}, errors.New("you are not an approver for this type of approval")
+	}
+
 	approval.UserID = userID
 	approval.User, _ = GetUser(userID)
-	if !approval.User.IsInnerCircle() {
-		return model.PurchaseRequestApproval{}, errors.New("only inner circle members can edit approvals")
-	}
 
 	approval.Status = status
 
@@ -46,8 +50,6 @@ func EditApproval(approvalID int, status model.ApprovalStatus, note string, user
 			_, _ = CreateNote(approval.PurchaseRequestID, model.NoteRejected, userID, "Approval rejected: '"+note+"'")
 		}
 	}
-
-	//approval.User, _ = GetUser(approval.UserID)
 
 	pr := GetPurchaseRequestByID(approval.PurchaseRequestID, userID)
 
@@ -65,6 +67,8 @@ func EditApproval(approvalID int, status model.ApprovalStatus, note string, user
 			utils.SugarLogger.Errorf("Error updating PR status after approval: %v", err)
 		}
 	}
+
+	approval.ApproverGroup, _ = GetApproverGroupNameOnly(approval.ApproverGroupID)
 
 	return approval, nil
 }
@@ -89,14 +93,17 @@ func CreateInitialApprovals(prID int) error {
 		return err
 	}
 
-	initialApprovals := []model.PurchaseRequestApproval{
-		{PurchaseRequestID: prID, Type: model.LeadApproval, Status: model.ApprovalPending},
-		{PurchaseRequestID: prID, Type: model.TreasurerApproval, Status: model.ApprovalPending},
+	var approverGroupIDs []string
+	var initialApprovals []model.PurchaseRequestApproval
+	if err := database.DB.Table("approver_group_department").Where("department_id = ?", pr.DepartmentID).Pluck("approver_group_id", &approverGroupIDs).Error; err != nil {
+		utils.SugarLogger.Errorf("Error getting approver group ids for department %s: %v", pr.DepartmentID, err)
+		return err
 	}
-
-	if pr.EstimatedCostCents >= 50000 {
-		presidentApproval := model.PurchaseRequestApproval{PurchaseRequestID: prID, Type: model.PresidentApproval, Status: model.ApprovalPending}
-		initialApprovals = append(initialApprovals, presidentApproval)
+	for _, approverGroupID := range approverGroupIDs {
+		approverGroup, _ := GetApproverGroup(approverGroupID)
+		if approverGroup.ThresholdCents <= pr.EstimatedCostCents {
+			initialApprovals = append(initialApprovals, model.PurchaseRequestApproval{ID: uuid.New().String(), PurchaseRequestID: prID, ApproverGroupID: approverGroupID, Status: model.ApprovalPending})
+		}
 	}
 
 	if err := database.DB.Create(&initialApprovals).Error; err != nil {

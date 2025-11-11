@@ -24,8 +24,11 @@ import {
   validStatusAdvancements,
 } from "@/models/pr";
 import { notify } from "@/lib/notify";
+import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
+import { User } from "@/models/user";
 
 interface ApprovalsStatusTabProps {
+  currentUser: User;
   purchaseRequest: Partial<PurchaseRequest>;
   canApprove: boolean;
   canAdvance: boolean;
@@ -42,8 +45,8 @@ interface ApprovalsStatusTabProps {
 }
 
 export function ApprovalsStatusTab({
+  currentUser,
   purchaseRequest,
-  canApprove,
   canAdvance,
   onEditApproval,
   onAdvanceStatus,
@@ -161,6 +164,10 @@ export function ApprovalsStatusTab({
         setApprovalNote("");
         setSelectedApproval(null);
         setSelectedApprovalAction(null);
+      } catch (error: any) {
+        notify.error(
+          getAxiosErrorMessage(error) || "Failed to update approval status",
+        );
       } finally {
         setIsApproving(false);
       }
@@ -198,7 +205,9 @@ export function ApprovalsStatusTab({
               <CardHeader>
                 <CardTitle>
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold">{approval.type} Approval</p>
+                    <p className="font-semibold">
+                      {approval.approver_group.name} Approval
+                    </p>
                     <p
                       className={`rounded-md border-2 px-4 py-0.5 text-sm font-medium ${getApprovalStatusStyle(approval)}`}
                     >
@@ -207,29 +216,27 @@ export function ApprovalsStatusTab({
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-between">
-                <div className="text-sm text-gray-100">
-                  <p>
-                    Approved by:{" "}
-                    <span className="font-medium text-gray-100">
-                      {approval.user?.first_name
-                        ? `${approval.user.first_name} ${approval.user.last_name}`
-                        : "Pending approval"}
-                    </span>
-                  </p>
-                  <p>
-                    Date:{" "}
-                    <span className="font-medium text-gray-100">
-                      {approval.status !== ApprovalStatus.ApprovalPending
-                        ? new Date(approval.updated_at).toLocaleString()
-                        : "N/A"}
-                    </span>
-                  </p>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">
+                    {approval.user?.first_name
+                      ? `Approved by: ${approval.user.first_name} ${approval.user.last_name}`
+                      : null}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {approval.status !== ApprovalStatus.ApprovalPending
+                      ? `Date: ${new Date(approval.updated_at).toLocaleString()}`
+                      : null}
+                  </span>
                 </div>
+
                 <div>
-                  {canApprove &&
+                  {(approval.approver_group.approvers?.some(
+                    (approver) => approver.id === currentUser.id,
+                  ) ??
+                    false) &&
                     approval.status === ApprovalStatus.ApprovalPending && (
-                      <div className="flex space-x-2">
+                      <div className="flex justify-end space-x-2">
                         <Button
                           variant="outline"
                           onClick={() =>
@@ -358,7 +365,7 @@ export function ApprovalsStatusTab({
               {selectedApprovalAction === ApprovalStatus.ApprovalApproved
                 ? "Approve Request"
                 : "Reject Request"}{" "}
-              - ({selectedApproval?.type})
+              - ({selectedApproval?.approver_group.name})
             </AlertDialogTitle>
             <AlertDialogDescription>
               <div>

@@ -99,7 +99,7 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-300">Note: {note.note}</p>
+                    <p className="text-sm text-gray-300">{note.note}</p>
                     <p className="text-xs text-gray-400">
                       {new Date(note.created_at).toLocaleString()}
                     </p>

@@ -3,7 +3,7 @@ package model
 import "time"
 
 type PurchaseRequestNote struct {
-	ID                int       `json:"id" gorm:"primaryKey;autoIncrement"`
+	ID                string    `json:"id" gorm:"primaryKey"`
 	PurchaseRequestID int       `json:"purchase_request_id"`
 	UserID            string    `json:"user_id"`
 	User              User      `json:"user" gorm:"-"`

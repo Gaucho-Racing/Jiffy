@@ -11,6 +11,8 @@ import LoginPage from "@/pages/auth/LoginPage.tsx";
 import NewPurchaseRequestPage from "@/pages/NewPurchaseRequestPage.tsx";
 import PurchaseRequestDetailsPage from "@/pages/PurchaseRequestDetailsPage.tsx";
 import EditPurchaseRequestPage from "@/pages/EditPurchaseRequestPage.tsx";
+import ApproverGroupsPage from "@/pages/ApproverGroupsPage.tsx";
+import ApproverGroupsEditPage from "@/pages/ApproverGroupsEditPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +36,14 @@ const router = createBrowserRouter([
   {
     path: "/pr/:id/edit",
     element: <EditPurchaseRequestPage />,
+  },
+  {
+    path: "/approver-groups",
+    element: <ApproverGroupsPage />,
+  },
+  {
+    path: "/approver-groups/:id",
+    element: <ApproverGroupsEditPage />,
   },
 ]);
 
