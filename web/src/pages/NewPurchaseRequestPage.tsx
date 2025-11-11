@@ -473,18 +473,21 @@ export default function NewPurchaseRequestPage() {
                             <SelectValue placeholder="Select a priority level" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1">1 - Not Urgent</SelectItem>
+                            <SelectItem value="1">
+                              1 - Need this school year
+                            </SelectItem>
                             <SelectItem value="2">
-                              2 - Need this year
+                              2 - Need this quarter
                             </SelectItem>
                             <SelectItem value="3">
-                              3 - Need this quarter
+                              3 - Need this month
                             </SelectItem>
                             <SelectItem value="4">
-                              4 - Need this month
+                              4 - Need this WEEK
                             </SelectItem>
                             <SelectItem value="5">
-                              5 - NEED AS SOON AS POSSIBLE!!!
+                              5 - Need LITERALLY RIGHT NOW OR I AM GOING TO
+                              DIE!!!
                             </SelectItem>
                           </SelectContent>
                         </Select>
