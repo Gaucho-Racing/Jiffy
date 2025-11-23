@@ -188,6 +188,11 @@ export function DataTable({ data }: DataTableProps) {
       sorting,
       globalFilter,
     },
+    initialState: {
+      pagination: {
+        pageSize: 20,
+      },
+    },
   });
 
   return (
