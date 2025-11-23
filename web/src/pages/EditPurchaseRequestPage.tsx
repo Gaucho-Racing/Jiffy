@@ -86,6 +86,7 @@ export default function EditPurchaseRequestPage() {
     useState<Partial<ShippingAddress>>(initShippingAddress);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter rejected notes
   const rejectedNotes =
@@ -161,12 +162,6 @@ export default function EditPurchaseRequestPage() {
         setPurchaseRequest(purchaseRequestData);
         if (purchaseRequestData.needed_by_date) {
           setDate(new Date(purchaseRequestData.needed_by_date));
-        }
-        if (
-          purchaseRequestData.requested_purchaser &&
-          purchaseRequestData.requested_purchaser !== "Gaucho Racing"
-        ) {
-          setReimbursementAcknowledged(true);
         }
         if (purchaseRequestData.items && purchaseRequestData.items.length > 0) {
           setItems(purchaseRequestData.items);
@@ -342,6 +337,7 @@ export default function EditPurchaseRequestPage() {
           ? purchaseRequest.shipping_address_id
           : "",
     };
+    setIsSubmitting(true);
 
     try {
       const response = await axios.post(
@@ -358,6 +354,8 @@ export default function EditPurchaseRequestPage() {
       navigate(`/pr/${id}#attachments`);
     } catch (error: any) {
       notify.error(getAxiosErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1129,8 +1127,8 @@ export default function EditPurchaseRequestPage() {
                           >
                             Cancel
                           </Button>
-                          <OutlineButton type="submit">
-                            Update Request
+                          <OutlineButton type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "Loading..." : "Submit Request"}
                           </OutlineButton>
                         </div>
                       </div>

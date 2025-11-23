@@ -81,6 +81,7 @@ export default function NewPurchaseRequestPage() {
   const [showCreateAddressDialog, setShowCreateAddressDialog] = useState(false);
   const [newAddress, setNewAddress] =
     useState<Partial<ShippingAddress>>(initShippingAddress);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -271,7 +272,7 @@ export default function NewPurchaseRequestPage() {
           ? purchaseRequest.shipping_address_id
           : "",
     };
-
+    setIsSubmitting(true);
     try {
       const response = await axios.post(
         `${JIFFY_API_URL}/purchase-requests`,
@@ -287,6 +288,8 @@ export default function NewPurchaseRequestPage() {
       navigate(`/pr/${id}#attachments`);
     } catch (error: any) {
       notify.error(getAxiosErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -996,8 +999,8 @@ export default function NewPurchaseRequestPage() {
                           >
                             Cancel
                           </Button>
-                          <OutlineButton type="submit">
-                            Submit Request
+                          <OutlineButton type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "Loading..." : "Submit Request"}
                           </OutlineButton>
                         </div>
                       </div>
