@@ -215,6 +215,18 @@ func DeletePurchaseRequest(prID int) error {
 		utils.SugarLogger.Errorf("Error deleting items for PR %d: %v", prID, err)
 		return err
 	}
+
+	// To do: delete from s3
+	if err := database.DB.Where("purchase_request_id = ?", prID).Delete(&model.PurchaseRequestAttachment{}).Error; err != nil {
+		utils.SugarLogger.Errorf("Error deleting attachments for PR %d: %v", prID, err)
+		return err
+	}
+
+	if err := database.DB.Where("purchase_request_id = ?", prID).Delete(&model.PurchaseRequestNote{}).Error; err != nil {
+		utils.SugarLogger.Errorf("Error deleting notes for PR %d: %v", prID, err)
+		return err
+	}
+
 	if err := database.DB.Delete(&model.PurchaseRequest{}, prID).Error; err != nil {
 		utils.SugarLogger.Errorf("Error deleting PR %d: %v", prID, err)
 		return err
