@@ -35,6 +35,8 @@ export function DataTable({ data }: DataTableProps) {
       {
         id: "expand",
         header: "",
+        size: 50,
+        maxSize: 50,
         cell: ({ row }) => {
           const value = row.original.id;
           const isExpanded = selectedRow === value;
@@ -59,68 +61,70 @@ export function DataTable({ data }: DataTableProps) {
       {
         accessorKey: "id",
         header: "ID",
+        size: 48,
+        maxSize: 48,
+        minSize: 48,
         cell: ({ row }) => {
           const value = row.original.id;
-          return <div className="min-w-6">{value}</div>;
+          return <div>{value}</div>;
         },
       },
       {
         id: "requester",
         header: "Requester",
+        size: 140,
+        maxSize: 140,
+        minSize: 140,
         cell: ({ row }) => {
           const value =
             row.original.user?.first_name + " " + row.original.user?.last_name;
-          return (
-            <div className="min-w-40 max-w-40 truncate whitespace-nowrap">
-              {value}
-            </div>
-          );
+          return <div className="truncate whitespace-nowrap">{value}</div>;
         },
       },
       {
         accessorKey: "department_id",
         header: () => <span>Subteam</span>,
+        size: 84,
+        maxSize: 84,
+        minSize: 84,
         cell: ({ row }) => {
           const value = row.original.department_id;
-          return (
-            <div className="min-w-16 max-w-16 truncate whitespace-nowrap">
-              {value}
-            </div>
-          );
+          return <div className="truncate whitespace-nowrap">{value}</div>;
         },
       },
       {
         accessorKey: "component",
         header: "Component",
+        size: 250,
+        maxSize: 9999,
+        minSize: 250,
         cell: ({ row }) => {
           const value = row.original.component;
-          return (
-            <div className="min-w-48 max-w-48 truncate whitespace-nowrap">
-              {value}
-            </div>
-          );
+          return <div className="truncate whitespace-nowrap">{value}</div>;
         },
       },
       {
         accessorKey: "description",
         header: "Description",
+        size: 300,
+        maxSize: 9999,
+        minSize: 300,
         enableSorting: false,
         cell: ({ row }) => {
           const value = row.original.description;
-          return (
-            <div className="min-w-72 max-w-72 truncate whitespace-nowrap">
-              {value}
-            </div>
-          );
+          return <div className="truncate whitespace-nowrap">{value}</div>;
         },
       },
       {
         accessorKey: "needed_by_date",
         header: "Needed By",
+        size: 100,
+        maxSize: 100,
+        minSize: 100,
         cell: ({ row }) => {
           const value = row.original.needed_by_date;
           return (
-            <div className="min-w-24 max-w-24 truncate whitespace-nowrap">
+            <div className="truncate whitespace-nowrap">
               <span>{value ? new Date(value).toLocaleDateString() : ""}</span>
             </div>
           );
@@ -129,14 +133,20 @@ export function DataTable({ data }: DataTableProps) {
       {
         accessorKey: "priority",
         header: "Priority",
+        size: 72,
+        maxSize: 72,
+        minSize: 72,
         cell: ({ row }) => {
           const value = row.original.priority;
-          return <div className="min-w-16 whitespace-nowrap">{value}</div>;
+          return <div className="whitespace-nowrap">{value}</div>;
         },
       },
       {
         accessorKey: "status",
         header: "Status",
+        size: 140,
+        maxSize: 140,
+        minSize: 140,
         cell: ({ row }) => {
           const status = row.original.status;
           const getStatusStyle = (status: PurchaseRequestStatus) => {
@@ -159,13 +169,11 @@ export function DataTable({ data }: DataTableProps) {
           };
 
           return (
-            <div className="min-w-36 max-w-36">
-              <span
-                className={`whitespace-nowrap rounded-md border px-1 py-0.5 text-xs font-medium ${getStatusStyle(status)}`}
-              >
-                {status}
-              </span>
-            </div>
+            <span
+              className={`whitespace-nowrap rounded-md border px-1 py-0.5 text-xs font-medium ${getStatusStyle(status)}`}
+            >
+              {status}
+            </span>
           );
         },
       },
@@ -206,7 +214,7 @@ export function DataTable({ data }: DataTableProps) {
         />
       </div>
       <div className="overflow-auto rounded-md border">
-        <table>
+        <table className="w-full table-fixed">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="">
@@ -215,6 +223,7 @@ export function DataTable({ data }: DataTableProps) {
                     <th
                       key={header.id}
                       colSpan={header.colSpan}
+                      style={{ width: header.getSize() }}
                       className="whitespace-nowrap px-2 py-2 text-left text-sm"
                     >
                       {header.isPlaceholder ? null : (
@@ -264,7 +273,8 @@ export function DataTable({ data }: DataTableProps) {
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="overflow-hidden border-t px-2 text-sm "
+                      className="overflow-hidden border-t px-2 text-sm"
+                      style={{ width: cell.column.getSize() }}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
