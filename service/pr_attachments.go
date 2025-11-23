@@ -28,7 +28,11 @@ func CreateAttachment(prID int, userID string, file *multipart.FileHeader, attac
 		utils.SugarLogger.Errorf("Failed to create attachment: %v", err)
 		return model.PurchaseRequestAttachment{}, err
 	}
-	_, _ = CreateNote(prID, model.NoteAttachmentUploaded, userID, "Attachment uploaded: "+attachment.Filename+" - "+attachment.Description)
+	message := "Attachment uploaded: " + attachment.Filename
+	if attachment.Description != "" {
+		message = "Attachment uploaded: " + attachment.Filename + " - '" + attachment.Description + "'"
+	}
+	_, _ = CreateNote(prID, model.NoteAttachmentUploaded, userID, message)
 
 	return attachment, nil
 }

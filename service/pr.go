@@ -197,9 +197,11 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 		return model.PurchaseRequest{}, err
 	}
 
+	message := "Purchase request status changed from '" + string(existingPR.Status) + "' to '" + string(newStatus) + "'"
 	if note != "" {
-		_, _ = CreateNote(prID, model.NoteStatusChanged, userID, "Purchase request status changed from '"+string(existingPR.Status)+"' to '"+string(newStatus)+"': '"+note+"'")
+		message = "Purchase request status changed from '" + string(existingPR.Status) + "' to '" + string(newStatus) + "' - '" + note + "'"
 	}
+	_, _ = CreateNote(prID, model.NoteStatusChanged, userID, message)
 
 	return GetPurchaseRequestByID(prID, userID), nil
 }
