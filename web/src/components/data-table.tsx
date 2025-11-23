@@ -190,7 +190,7 @@ export function DataTable({ data }: DataTableProps) {
     },
     initialState: {
       pagination: {
-        pageSize: 25,
+        pageSize: 20,
       },
     },
   });
