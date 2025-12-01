@@ -116,7 +116,7 @@ func CreateApproverGroup(approverGroup model.ApproverGroup) (model.ApproverGroup
 	return GetApproverGroup(approverGroup.ID)
 }
 
-// TODO: fix edge case of orphaned approvals
+// TODO: fix edge case of orphaned pr_approval
 func DeleteApproverGroup(groupID string) error {
 	var approverGroup model.ApproverGroup
 	if err := database.DB.First(&approverGroup, "id = ?", groupID).Error; err != nil {

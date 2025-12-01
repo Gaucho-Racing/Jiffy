@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"jiffy/database"
 	"jiffy/model"
 	"jiffy/utils"
@@ -68,6 +69,16 @@ func EditApproval(approvalID string, status model.ApprovalStatus, note string, u
 		}
 	}
 
+	if newStatus == model.PurchaseRequestApproved {
+		dm := fmt.Sprintf("<@%s> Your purchase request has been **fully approved** for ordering and reimbursement! Contact your leads to manage ordering and shipping, and the treasurer for reimbursement details. \n\n https://jiffy.gauchoracing.com/pr/%d#approvals", pr.UserID, pr.ID)
+		SendDirectMessage(pr.UserID, dm)
+	} else if newStatus == model.PurchaseRequestRejected {
+		if status == model.ApprovalRejected {
+			dm := fmt.Sprintf("<@%s> Your purchase request has been **rejected** for ordering and reimbursement by %s! \n\n You **MUST** amend your request or this can't be reimbursed: https://jiffy.gauchoracing.com/pr/%d#approvals", pr.UserID, approval.User.FirstName+" "+approval.User.LastName, pr.ID)
+			SendDirectMessage(pr.UserID, dm)
+		}
+	}
+
 	approval.ApproverGroup, _ = GetApproverGroupNameOnly(approval.ApproverGroupID)
 
 	return approval, nil
@@ -82,35 +93,39 @@ func DeleteAllApprovals(prID int) error {
 	return nil
 }
 
-func CreateInitialApprovals(prID int) error {
+func CreateInitialApprovals(prID int) ([]model.PurchaseRequestApproval, error) {
 	var pr model.PurchaseRequest
-	if err := database.DB.First(&pr, "id = ?", prID).Error; err != nil {
-		utils.SugarLogger.Errorf("Error finding purchase request %d: %v", prID, err)
-		return err
-	}
-	if err := DeleteAllApprovals(prID); err != nil {
-		utils.SugarLogger.Errorf("Error deleting existing approvals for PR %d: %v", prID, err)
-		return err
-	}
-
 	var approverGroupIDs []string
 	var initialApprovals []model.PurchaseRequestApproval
+
+	if err := database.DB.First(&pr, "id = ?", prID).Error; err != nil {
+		utils.SugarLogger.Errorf("Error finding purchase request %d: %v", prID, err)
+		return []model.PurchaseRequestApproval{}, err
+	}
+	// refresh old approvals
+	if err := DeleteAllApprovals(prID); err != nil {
+		utils.SugarLogger.Errorf("Error deleting existing approvals for PR %d: %v", prID, err)
+		return []model.PurchaseRequestApproval{}, err
+	}
+
 	if err := database.DB.Table("approver_group_department").Where("department_id = ?", pr.DepartmentID).Pluck("approver_group_id", &approverGroupIDs).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting approver group ids for department %s: %v", pr.DepartmentID, err)
-		return err
+		return []model.PurchaseRequestApproval{}, err
 	}
-	for _, approverGroupID := range approverGroupIDs {
+	for i, approverGroupID := range approverGroupIDs {
 		approverGroup, _ := GetApproverGroup(approverGroupID)
 		if approverGroup.ThresholdCents <= pr.EstimatedCostCents {
 			initialApprovals = append(initialApprovals, model.PurchaseRequestApproval{ID: uuid.New().String(), PurchaseRequestID: prID, ApproverGroupID: approverGroupID, Status: model.ApprovalPending})
 		}
+		initialApprovals[i].ApproverGroup = approverGroup
+
 	}
 
 	if err := database.DB.Create(&initialApprovals).Error; err != nil {
 		utils.SugarLogger.Errorf("Error creating initial approvals for PR %d: %v", prID, err)
-		return err
+		return []model.PurchaseRequestApproval{}, err
 	}
 
 	utils.SugarLogger.Infof("Successfully created %d initial approvals for PR %d", len(initialApprovals), prID)
-	return nil
+	return initialApprovals, nil
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"jiffy/database"
 	"jiffy/model"
 	"jiffy/utils"
@@ -145,12 +146,23 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 	} else {
 		return model.PurchaseRequest{}, errors.New("you must provide at least one item")
 	}
-	if err := CreateInitialApprovals(pr.ID); err != nil {
+	initialApprovals, err := CreateInitialApprovals(pr.ID)
+	if err != nil {
 		utils.SugarLogger.Errorf("Error creating initial approvals for PR %s: %v", pr.ID, err)
 		return model.PurchaseRequest{}, err
 	}
 	pr = GetPurchaseRequestByID(pr.ID, userID)
 	utils.SugarLogger.Infof("Successfully created PR %d", pr.ID)
+
+	// Discord DM to all potential approvers for each group
+	for _, approval := range initialApprovals {
+		approvers := GetUserIDsForApproverGroup(approval.ApproverGroupID)
+		for _, appr := range approvers {
+			dm := fmt.Sprintf("<@%s> A new purchase/reimbursement request has been made that needs your approval as a **%s**! \n\n **Please approve or reject this promptly:** https://jiffy.gauchoracing.com/pr/%d#approvals", appr, approval.ApproverGroup.Name, pr.ID)
+			SendDirectMessage(appr, dm)
+		}
+	}
+
 	return pr, nil
 }
 
