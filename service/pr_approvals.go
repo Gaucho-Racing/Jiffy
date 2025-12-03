@@ -113,7 +113,11 @@ func CreateInitialApprovals(prID int) ([]model.PurchaseRequestApproval, error) {
 		return []model.PurchaseRequestApproval{}, err
 	}
 	for _, approverGroupID := range approverGroupIDs {
-		approverGroup, _ := GetApproverGroup(approverGroupID)
+		approverGroup, err := GetApproverGroup(approverGroupID)
+		if err != nil {
+			utils.SugarLogger.Errorf("Error getting approver group %s for PR %d: %v", approverGroupID, prID, err)
+			continue
+		}
 		if approverGroup.ThresholdCents <= pr.EstimatedCostCents {
 			approval := model.PurchaseRequestApproval{
 				ID:                uuid.New().String(),
