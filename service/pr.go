@@ -172,12 +172,9 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 		return model.PurchaseRequest{}, errors.New("purchase request not found")
 	}
 
-	user, err := GetUser(userID)
+	_, err := GetUser(userID)
 	if err != nil {
 		return model.PurchaseRequest{}, errors.New("user not found")
-	}
-	if !user.IsInnerCircle() {
-		return model.PurchaseRequest{}, errors.New("only inner circle members can edit status")
 	}
 
 	// Validate manual status changes
