@@ -266,6 +266,9 @@ export function DataTable({ data }: DataTableProps) {
                 <tr
                   key={row.id}
                   className="cursor-pointer hover:bg-gray-700/30"
+                  onClick={() =>
+                    (window.location.href = `/pr/${row.original.id}`)
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td
