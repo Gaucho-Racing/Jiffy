@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2 } from "lucide-react";
+import { Check } from "lucide-react";
+import { X } from "lucide-react";
+
 import { OutlineButton } from "@/components/ui/outline-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -225,16 +227,16 @@ export function ApprovalsStatusTab({
                     ) ? (
                       <div className="flex justify-end space-x-2">
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           onClick={() =>
                             handleApprovalButton(
                               approval,
                               ApprovalStatus.ApprovalApproved,
                             )
                           }
-                          className="flex items-center py-5"
+                          className="flex items-center py-5 bg-green-600 hover:bg-green-600/80"
                         >
-                          <Edit2 className="mr-2 h-4 w-4" />
+                          <Check className="mr-2 h-6 w-6" />
                           Approve
                         </Button>
                         <Button
@@ -247,7 +249,7 @@ export function ApprovalsStatusTab({
                           }
                           className="flex items-center py-5"
                         >
-                          <Edit2 className="mr-2 h-4 w-4" />
+                          <X className="mr-2 h-6 w-6" />
                           Reject
                         </Button>
                       </div>
