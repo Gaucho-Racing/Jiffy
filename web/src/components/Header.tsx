@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "@/lib/auth";
 import { useUser } from "@/lib/store";
 import { Button } from "./ui/button";
+import sheetsLogo from "../../public/logo/apps/sheets-logo.png"
 
 interface HeaderProps {
   className?: string;
@@ -48,6 +49,14 @@ const Header = (props: HeaderProps) => {
               Manage Approver Rules
             </Button>
           )}
+          <a href="https://docs.google.com/spreadsheets/d/1ZLmZxU0ZGiXS--56xRe0yNJlGU9n3NGLopQwtf0JLyw/" target="_blank">
+            <Button
+              variant="outline"
+            >
+              <img src={sheetsLogo} alt="Google Sheets" className="mr-3 h-5" />
+              View in Google Sheets
+            </Button>
+          </a>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar className="cursor-pointer">
