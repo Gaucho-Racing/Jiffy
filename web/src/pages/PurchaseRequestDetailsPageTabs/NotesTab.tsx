@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PurchaseRequest, PurchaseRequestNote, NoteType } from "@/models/pr";
 import { notify } from "@/lib/notify";
-import { OutlineButton } from "../ui/outline-button";
-import { Avatar, AvatarImage } from "../ui/avatar";
+import { OutlineButton } from "@/components/ui/outline-button";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 interface NotesTabProps {
   purchaseRequest: Partial<PurchaseRequest>;

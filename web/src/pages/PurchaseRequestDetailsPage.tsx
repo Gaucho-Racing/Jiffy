@@ -23,10 +23,10 @@ import { useUser } from "@/lib/store";
 import { checkCredentials } from "@/lib/auth";
 import React from "react";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
-import { RequestDetailsTab } from "@/components/pr/RequestDetailsTab";
-import { ApprovalsStatusTab } from "@/components/pr/ApprovalsStatusTab";
-import { AttachmentsTab } from "@/components/pr/AttachmentsTab";
-import { NotesTab } from "@/components/pr/NotesTab";
+import { RequestDetailsTab } from "@/pages/PurchaseRequestDetailsPageTabs/RequestDetailsTab";
+import { ApprovalsStatusTab } from "@/pages/PurchaseRequestDetailsPageTabs/ApprovalsStatusTab"; 
+import { AttachmentsTab } from "@/pages/PurchaseRequestDetailsPageTabs/AttachmentsTab";
+import { NotesTab } from "@/pages/PurchaseRequestDetailsPageTabs/NotesTab";
 
 export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();

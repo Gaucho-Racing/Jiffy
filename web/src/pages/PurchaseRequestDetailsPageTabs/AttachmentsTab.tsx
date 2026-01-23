@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PurchaseRequest, PurchaseRequestAttachment } from "@/models/pr";
 import { notify } from "@/lib/notify";
-import { OutlineButton } from "../ui/outline-button";
+import { OutlineButton } from "@/components/ui/outline-button";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { ExternalLink } from "lucide-react";
 
