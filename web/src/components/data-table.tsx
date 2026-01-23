@@ -266,9 +266,6 @@ export function DataTable({ data }: DataTableProps) {
                 <tr
                   key={row.id}
                   className="cursor-pointer hover:bg-gray-700/30"
-                  onClick={() =>
-                    (window.location.href = `/pr/${row.original.id}`)
-                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td
@@ -283,12 +280,10 @@ export function DataTable({ data }: DataTableProps) {
                     </td>
                   ))}
                 </tr>
+
                 {selectedRow === row.original.id && (
                   <tr>
-                    <td
-                      colSpan={columns.length}
-                      className="border-t py-1 pl-8 pr-2"
-                    >
+                    <td colSpan={columns.length} className="border-t px-4 py-1">
                       <div>
                         <div className="space-y-1">
                           {row.original.items &&

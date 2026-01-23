@@ -272,7 +272,7 @@ export function ApprovalsStatusTab({
                   )}
                   <div className="ml-auto flex justify-between">
                     <p className="text-sm text-gray-400">
-                      {new Date(approval.created_at).toLocaleString()}
+                      {new Date(approval.updated_at).toLocaleString()}
                     </p>
                   </div>
                 </div>
