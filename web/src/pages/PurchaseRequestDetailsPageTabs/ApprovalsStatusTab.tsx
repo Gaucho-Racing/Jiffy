@@ -234,7 +234,7 @@ export function ApprovalsStatusTab({
                               ApprovalStatus.ApprovalApproved,
                             )
                           }
-                          className="flex items-center py-5 bg-green-600 hover:bg-green-600/80"
+                          className="flex items-center bg-green-600 py-5 hover:bg-green-600/80"
                         >
                           <Check className="mr-2 h-6 w-6" />
                           Approve

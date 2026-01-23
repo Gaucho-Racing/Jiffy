@@ -24,7 +24,7 @@ import { checkCredentials } from "@/lib/auth";
 import React from "react";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { RequestDetailsTab } from "@/pages/PurchaseRequestDetailsPageTabs/RequestDetailsTab";
-import { ApprovalsStatusTab } from "@/pages/PurchaseRequestDetailsPageTabs/ApprovalsStatusTab"; 
+import { ApprovalsStatusTab } from "@/pages/PurchaseRequestDetailsPageTabs/ApprovalsStatusTab";
 import { AttachmentsTab } from "@/pages/PurchaseRequestDetailsPageTabs/AttachmentsTab";
 import { NotesTab } from "@/pages/PurchaseRequestDetailsPageTabs/NotesTab";
 
