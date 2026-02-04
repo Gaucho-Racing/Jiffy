@@ -71,6 +71,8 @@ export function DataTable({ data }: DataTableProps) {
       },
       {
         id: "requester",
+        accessorFn: (row) =>
+          row.user ? `${row.user.first_name} ${row.user.last_name}` : "",
         header: "Requester",
         size: 140,
         maxSize: 140,
