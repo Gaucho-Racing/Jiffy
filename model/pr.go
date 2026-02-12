@@ -43,3 +43,12 @@ const (
 	PurchaseRequestCollected  PurchaseRequestStatus = "Order Collected"
 	PurchaseRequestReimbursed PurchaseRequestStatus = "Reimbursed"
 )
+
+type ReimbursementType string
+
+const (
+	ReimbursementNotYet ReimbursementType = "Not Reimbursed Yet"
+	ReimbursementGR     ReimbursementType = "GR"
+	ReimbursementAS     ReimbursementType = "AS"
+	ReimbursementOther  ReimbursementType = "Other"
+)

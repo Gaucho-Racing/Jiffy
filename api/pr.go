@@ -107,7 +107,7 @@ func UpdatePurchaseRequestFields(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, result)
 }
 

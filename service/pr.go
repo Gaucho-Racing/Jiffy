@@ -83,6 +83,9 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 	}
 	pr.Status = model.PurchaseRequestPending
 	pr.EstimatedCostCents = calculateEstimatedCost(pr.Items) + pr.ShippingTaxCostCents
+	if isNew {
+		pr.ReimbursementType = string(model.ReimbursementNotYet)
+	}
 	if len(pr.Items) > 0 {
 		if !isNew {
 			if err := DeletePurchaseRequestItems(pr.ID); err != nil {
