@@ -17,6 +17,13 @@ export enum ApprovalStatus {
   ApprovalRejected = "Rejected",
 }
 
+export enum ReimbursementType {
+  ReimbursementNotYet = "Not Reimbursed Yet",
+  ReimbursementGR = "GR",
+  ReimbursementAS = "AS",
+  ReimbursementOther = "Other",
+}
+
 export enum NoteType {
   RequestSubmitted = "Request Submitted",
   Approved = "Approved",
