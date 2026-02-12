@@ -97,22 +97,67 @@ export default function PurchaseRequestDetailsPage() {
     );
   };
 
+  const fetchPurchaseRequest = async () => {
+    try {
+      const response = await axios.get(
+        `${JIFFY_API_URL}/purchase-requests/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+      const purchaseRequestData = response.data;
+      setPurchaseRequest(purchaseRequestData);
+    } catch (error: any) {
+      notify.error(
+        error.response?.data?.message || "Failed to fetch purchase request",
+      );
+      navigate("/");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const advanceStatus = async (
     nextStatus: PurchaseRequestStatus,
     note: string,
-    finalCostCents: number,
+    finalCostCents?: number,
+    reimbursementType?: string,
   ) => {
     if (!canAdvance()) {
       notify.error("You are not authorized to advance status");
       return;
     }
     try {
+      // First PATCH field updates if provided
+      const fieldUpdates: any = {};
+      if (finalCostCents !== undefined && finalCostCents > 0) {
+        fieldUpdates.final_cost_cents = finalCostCents;
+      }
+      if (reimbursementType) {
+        fieldUpdates.reimbursement_type = reimbursementType;
+      }
+
+      // Only make PATCH call if we have fields to update
+      if (Object.keys(fieldUpdates).length > 0) {
+        await axios.patch(
+          `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}`,
+          fieldUpdates,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+            },
+          },
+        );
+      }
+
+      // Finally PATCH status change
       await axios.patch(
         `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}/status`,
         {
           status: nextStatus,
           note: note,
-          final_cost_cents: finalCostCents,
         },
         {
           headers: {
@@ -255,27 +300,6 @@ export default function PurchaseRequestDetailsPage() {
   };
 
   useEffect(() => {
-    const fetchPurchaseRequest = async () => {
-      try {
-        const response = await axios.get(
-          `${JIFFY_API_URL}/purchase-requests/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-            },
-          },
-        );
-        const purchaseRequestData = response.data;
-        setPurchaseRequest(purchaseRequestData);
-      } catch (error: any) {
-        notify.error(
-          error.response?.data?.message || "Failed to fetch purchase request",
-        );
-        navigate("/");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchPurchaseRequest();
   }, [id, navigate]);
 
@@ -378,6 +402,8 @@ export default function PurchaseRequestDetailsPage() {
                     purchaseRequest={purchaseRequest}
                     department={department}
                     isLoading={isLoading}
+                    onUpdate={fetchPurchaseRequest}
+                    canAdvance={canAdvance()}
                   />
                 </TabsContent>
                 <TabsContent value="approvals" className="min-h-[600px]">

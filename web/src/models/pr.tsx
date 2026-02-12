@@ -139,6 +139,7 @@ export interface PurchaseRequest {
   placed_order_unapproved: boolean;
   shipping_address_id: string;
   shipping_address: ShippingAddress;
+  reimbursement_type: ReimbursementType;
   screenshot_url: string;
   updated_at: Date;
   created_at: Date;

@@ -8,6 +8,13 @@ import { OutlineButton } from "@/components/ui/outline-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
@@ -23,6 +30,7 @@ import {
   PurchaseRequestApproval,
   ApprovalStatus,
   PurchaseRequestStatus,
+  ReimbursementType,
   statusSteps,
   validStatusAdvancements,
 } from "@/models/pr";
@@ -43,7 +51,8 @@ interface ApprovalsStatusTabProps {
   onAdvanceStatus: (
     nextStatus: PurchaseRequestStatus,
     note: string,
-    finalCostCents: number,
+    finalCostCents?: number,
+    reimbursementType?: string,
   ) => Promise<void>;
 }
 
@@ -57,6 +66,7 @@ export function ApprovalsStatusTab({
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
   const [advanceNote, setAdvanceNote] = useState("");
   const [finalCostCents, setFinalCostCents] = useState(0);
+  const [reimbursementType, setReimbursementType] = useState<string>("");
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalNote, setApprovalNote] = useState("");
@@ -108,6 +118,7 @@ export function ApprovalsStatusTab({
     if (next !== null) {
       setAdvanceNote("");
       setFinalCostCents(0);
+      setReimbursementType("");
       setShowAdvanceDialog(true);
     } else {
       notify.error("You cannot advance status from this state!");
@@ -132,9 +143,21 @@ export function ApprovalsStatusTab({
       }
     }
 
+    if (nextStatus === PurchaseRequestStatus.PurchaseRequestReimbursed) {
+      if (!reimbursementType) {
+        notify.error("Please select a reimbursement type");
+        return;
+      }
+    }
+
     setIsAdvancing(true);
     try {
-      await onAdvanceStatus(nextStatus, advanceNote, finalCostCents);
+      await onAdvanceStatus(
+        nextStatus,
+        advanceNote,
+        finalCostCents,
+        reimbursementType,
+      );
       setShowAdvanceDialog(false);
     } finally {
       setIsAdvancing(false);
@@ -339,6 +362,33 @@ export function ApprovalsStatusTab({
                     {(purchaseRequest.estimated_cost_cents / 100).toFixed(2)}
                   </p>
                 )}
+              </div>
+            )}
+            {purchaseRequest.status ===
+              PurchaseRequestStatus.PurchaseRequestCollected && (
+              <div>
+                <Label htmlFor="reimbursement-type" className="text-white">
+                  Reimbursement Type <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={reimbursementType}
+                  onValueChange={setReimbursementType}
+                >
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Select reimbursement type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ReimbursementType.ReimbursementGR}>
+                      {ReimbursementType.ReimbursementGR}
+                    </SelectItem>
+                    <SelectItem value={ReimbursementType.ReimbursementAS}>
+                      {ReimbursementType.ReimbursementAS}
+                    </SelectItem>
+                    <SelectItem value={ReimbursementType.ReimbursementOther}>
+                      {ReimbursementType.ReimbursementOther}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
             <div>
