@@ -20,6 +20,11 @@ import (
 var SheetClient *sheets.Service
 
 func InitializeDrive() {
+	if config.DriveServiceAccount == "" {
+		utils.SugarLogger.Warnln("DRIVE_SERVICE_ACCOUNT not set - Google Sheets integration disabled")
+		return
+	}
+
 	ctx := context.Background()
 	decoded, err := base64.StdEncoding.DecodeString(config.DriveServiceAccount)
 	if err != nil {
@@ -35,6 +40,7 @@ func InitializeDrive() {
 		log.Fatalf("Unable to create Sheets service: %v", err)
 	}
 	SheetClient = srv
+	utils.SugarLogger.Infoln("Google Sheets service initialized")
 }
 
 func PopulateGR26PurchaseRequestsSheet() {
@@ -67,9 +73,9 @@ func PopulateGR26PurchaseRequestsSheet() {
 					UpdateCells: &sheets.UpdateCellsRequest{
 						Range: &sheets.GridRange{
 							SheetId:          int64(sheetId),
-							StartRowIndex:    5,  // A6 starts at index 5
+							StartRowIndex:    5,  // B6 starts at index 5
 							StartColumnIndex: 1,  // B column
-							EndColumnIndex:   20, // U column
+							EndColumnIndex:   21, // V column
 						},
 						Fields: "userEnteredValue",
 					},
@@ -112,6 +118,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 				purchaseRequest.Status,
 				purchaseRequest.RequestedPurchaser,
 				purchaseRequest.PlacedOrderUnapproved,
+				purchaseRequest.ReimbursementType,
 			}
 			for i := 1; i < numItems; i++ {
 				values[itemIndex+i] = []interface{}{
@@ -135,13 +142,14 @@ func PopulateGR26PurchaseRequestsSheet() {
 					purchaseRequest.Status,
 					purchaseRequest.RequestedPurchaser,
 					purchaseRequest.PlacedOrderUnapproved,
+					"↳",
 				}
 			}
 			itemIndex += numItems
 		}
 
 		// Write data (can still use A1 notation for updates as it's more convenient)
-		writeRange := fmt.Sprintf("'%s'!B6:U", sheetName)
+		writeRange := fmt.Sprintf("'%s'!B6:V", sheetName)
 		writeRequest := &sheets.ValueRange{
 			Values: values,
 		}
