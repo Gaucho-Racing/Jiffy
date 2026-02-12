@@ -22,6 +22,7 @@ type PurchaseRequest struct {
 	PlacedOrderUnapproved bool                        `json:"placed_order_unapproved"`
 	ShippingAddressID     string                      `json:"shipping_address_id"`
 	ShippingAddress       ShippingAddress             `json:"shipping_address" gorm:"-"`
+	ReimbursementType     string                      `json:"reimbursement_type"`
 	Attachments           []PurchaseRequestAttachment `json:"attachments" gorm:"foreignKey:PurchaseRequestID"`
 	Notes                 []PurchaseRequestNote       `json:"notes" gorm:"foreignKey:PurchaseRequestID"`
 	UpdatedAt             time.Time                   `gorm:"autoUpdateTime" json:"updated_at"`
