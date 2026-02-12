@@ -5,6 +5,7 @@ import (
 	"jiffy/service"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,6 +42,73 @@ func CreatePurchaseRequest(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, updatedPR)
+}
+
+func UpdatePurchaseRequestFields(c *gin.Context) {
+	idString := c.Param("id")
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	var request struct {
+		Component             *string    `json:"component"`
+		Vendor                *string    `json:"vendor"`
+		Priority              *int       `json:"priority"`
+		NeededByDate          *time.Time `json:"needed_by_date"`
+		Description           *string    `json:"description"`
+		ReimbursementType     *string    `json:"reimbursement_type"`
+		FinalCostCents        *int       `json:"final_cost_cents"`
+		RequestedPurchaser    *string    `json:"requested_purchaser"`
+		PlacedOrderUnapproved *bool      `json:"placed_order_unapproved"`
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updates := map[string]interface{}{}
+	if request.Component != nil {
+		updates["component"] = *request.Component
+	}
+	if request.Vendor != nil {
+		updates["vendor"] = *request.Vendor
+	}
+	if request.Priority != nil {
+		updates["priority"] = *request.Priority
+	}
+	if request.NeededByDate != nil {
+		updates["needed_by_date"] = *request.NeededByDate
+	}
+	if request.Description != nil {
+		updates["description"] = *request.Description
+	}
+	if request.ReimbursementType != nil {
+		updates["reimbursement_type"] = *request.ReimbursementType
+	}
+	if request.FinalCostCents != nil {
+		updates["final_cost_cents"] = *request.FinalCostCents
+	}
+	if request.RequestedPurchaser != nil {
+		updates["requested_purchaser"] = *request.RequestedPurchaser
+	}
+	if request.PlacedOrderUnapproved != nil {
+		updates["placed_order_unapproved"] = *request.PlacedOrderUnapproved
+	}
+
+	if len(updates) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No fields provided"})
+		return
+	}
+
+	result, err := service.UpdatePurchaseRequestFields(id, GetRequestUserID(c), updates)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	c.JSON(http.StatusOK, result)
 }
 
 func UpdatePurchaseRequestStatus(c *gin.Context) {

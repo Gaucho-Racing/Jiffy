@@ -39,6 +39,7 @@ func InitializeRoutes(router *gin.Engine) {
 	router.GET("/purchase-requests", GetAllPurchaseRequests)
 	router.GET("/purchase-requests/:id", GetPurchaseRequestByID)
 	router.POST("/purchase-requests", CreatePurchaseRequest)
+	router.PATCH("/purchase-requests/:id", UpdatePurchaseRequestFields)
 	router.PATCH("/purchase-requests/:id/status", UpdatePurchaseRequestStatus)
 	router.DELETE("/purchase-requests/:id", DeletePurchaseRequest)
 	router.PATCH("/purchase-requests/:id/approvals/:approvalID", EditApproval)

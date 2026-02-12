@@ -215,6 +215,37 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 	return GetPurchaseRequestByID(prID, userID), nil
 }
 
+func UpdatePurchaseRequestFields(prID int, userID string, updates map[string]interface{}) (model.PurchaseRequest, error) {
+	if len(updates) == 0 {
+		return model.PurchaseRequest{}, errors.New("no fields provided")
+	}
+
+	existingPR := GetPurchaseRequestByID(prID, userID)
+	if existingPR.ID == 0 {
+		return model.PurchaseRequest{}, errors.New("purchase request not found")
+	}
+
+	user, err := GetUser(userID)
+	if err != nil {
+		return model.PurchaseRequest{}, errors.New("user not found")
+	}
+
+	if existingPR.UserID != userID && !user.IsInnerCircle() {
+		return model.PurchaseRequest{}, errors.New("you can only edit your own purchase requests")
+	}
+
+	if existingPR.Status == model.PurchaseRequestPending || existingPR.Status == model.PurchaseRequestRejected {
+		return model.PurchaseRequest{}, errors.New("You can only change this after approval for clarity purposes! Please edit your request through the form and await approval.")
+	}
+
+	if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", prID).Updates(updates).Error; err != nil {
+		utils.SugarLogger.Errorf("Error updating PR %d fields: %v", prID, err)
+		return model.PurchaseRequest{}, err
+	}
+
+	return GetPurchaseRequestByID(prID, userID), nil
+}
+
 func DeletePurchaseRequest(prID int) error {
 	if err := DeleteAllApprovals(prID); err != nil {
 		utils.SugarLogger.Errorf("Error deleting approvals for PR %d: %v", prID, err)
