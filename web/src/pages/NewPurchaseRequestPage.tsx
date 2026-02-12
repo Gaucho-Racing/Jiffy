@@ -1042,7 +1042,7 @@ export default function NewPurchaseRequestPage() {
               </Label>
               <Input
                 id="street-address"
-                placeholder="6969 Segovia Rd"
+                placeholder="UCSB, CoE Machine shop, Arts Building 524, Rm 0249"
                 value={newAddress.street_address || ""}
                 onChange={(e) =>
                   setNewAddress({
@@ -1059,7 +1059,7 @@ export default function NewPurchaseRequestPage() {
                 </Label>
                 <Input
                   id="city"
-                  placeholder="Goleta"
+                  placeholder="Santa Barbara"
                   value={newAddress.city || ""}
                   onChange={(e) =>
                     setNewAddress({ ...newAddress, city: e.target.value })
@@ -1087,7 +1087,7 @@ export default function NewPurchaseRequestPage() {
                 </Label>
                 <Input
                   id="zip-code"
-                  placeholder="93117"
+                  placeholder="93106"
                   value={newAddress.zip_code || ""}
                   onChange={(e) =>
                     setNewAddress({ ...newAddress, zip_code: e.target.value })
