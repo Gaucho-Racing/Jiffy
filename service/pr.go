@@ -239,6 +239,77 @@ func UpdatePurchaseRequestFields(prID int, userID string, updates map[string]int
 		return model.PurchaseRequest{}, err
 	}
 
+	// Create a note describing the field changes with before/after values
+	changeMessages := []string{}
+	fieldMapping := map[string]string{
+		"component":               "Component",
+		"vendor":                  "Vendor",
+		"priority":                "Priority",
+		"needed_by_date":          "Needed By Date",
+		"description":             "Description",
+		"reimbursement_type":      "Reimbursement Type",
+		"final_cost_cents":        "Final Price",
+		"requested_purchaser":     "Requested Purchaser",
+		"placed_order_unapproved": "Placed Order Without Approval",
+	}
+
+	for fieldKey, newValue := range updates {
+		displayName := fieldMapping[fieldKey]
+		if displayName == "" {
+			continue
+		}
+
+		var oldValueStr, newValueStr string
+
+		// Get old values and format for display
+		switch fieldKey {
+		case "component":
+			oldValueStr = existingPR.Component
+			newValueStr = fmt.Sprintf("%v", newValue)
+		case "vendor":
+			oldValueStr = existingPR.Vendor
+			newValueStr = fmt.Sprintf("%v", newValue)
+		case "priority":
+			oldValueStr = fmt.Sprintf("%d", existingPR.Priority)
+			newValueStr = fmt.Sprintf("%v", newValue)
+		case "needed_by_date":
+			oldValueStr = existingPR.NeededByDate.Format("2006-01-02")
+			newValueStr = fmt.Sprintf("%v", newValue)
+		case "description":
+			oldValueStr = existingPR.Description
+			newValueStr = fmt.Sprintf("%v", newValue)
+		case "reimbursement_type":
+			oldValueStr = existingPR.ReimbursementType
+			newValueStr = fmt.Sprintf("%v", newValue)
+		case "final_cost_cents":
+			oldValueStr = fmt.Sprintf("$%.2f", float64(existingPR.FinalCostCents)/100)
+			if newValInt, ok := newValue.(float64); ok {
+				newValueStr = fmt.Sprintf("$%.2f", newValInt/100)
+			} else {
+				newValueStr = fmt.Sprintf("%v", newValue)
+			}
+		case "requested_purchaser":
+			oldValueStr = existingPR.RequestedPurchaser
+			newValueStr = fmt.Sprintf("%v", newValue)
+		case "placed_order_unapproved":
+			oldValueStr = fmt.Sprintf("%v", existingPR.PlacedOrderUnapproved)
+			newValueStr = fmt.Sprintf("%v", newValue)
+		}
+
+		changeMessages = append(changeMessages, fmt.Sprintf("Updated the field %s from '%s' to '%s'", displayName, oldValueStr, newValueStr))
+	}
+
+	// Create notes for all changes
+	if len(changeMessages) > 0 {
+		var noteMessage string
+		if len(changeMessages) == 1 {
+			noteMessage = changeMessages[0]
+		} else {
+			noteMessage = fmt.Sprintf("Multiple updates: %s", fmt.Sprint(changeMessages))
+		}
+		_, _ = CreateNote(prID, model.NoteRequestAmended, userID, noteMessage)
+	}
+
 	return GetPurchaseRequestByID(prID, userID), nil
 }
 
