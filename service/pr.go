@@ -169,7 +169,7 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 	return pr, nil
 }
 
-func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus, finalCostCents int, note string, userID string) (model.PurchaseRequest, error) {
+func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus, note string, userID string) (model.PurchaseRequest, error) {
 	existingPR := GetPurchaseRequestByID(prID, userID)
 	if existingPR.ID == 0 {
 		return model.PurchaseRequest{}, errors.New("purchase request not found")
@@ -186,9 +186,6 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 		if newStatus != model.PurchaseRequestOrdered {
 			return model.PurchaseRequest{}, errors.New("invalid status change")
 		}
-		if finalCostCents <= 0 {
-			return model.PurchaseRequest{}, errors.New("final cost is required when advancing to Ordered")
-		}
 	case model.PurchaseRequestOrdered:
 		if newStatus != model.PurchaseRequestCollected {
 			return model.PurchaseRequest{}, errors.New("invalid status change")
@@ -200,11 +197,7 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 	default:
 		return model.PurchaseRequest{}, errors.New("invalid status change")
 	}
-	if finalCostCents > 0 && newStatus == model.PurchaseRequestOrdered {
-		if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", prID).Update("final_cost_cents", finalCostCents).Error; err != nil {
-			return model.PurchaseRequest{}, err
-		}
-	}
+
 	if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", prID).Update("status", newStatus).Error; err != nil {
 		return model.PurchaseRequest{}, err
 	}

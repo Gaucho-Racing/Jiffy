@@ -119,15 +119,14 @@ func UpdatePurchaseRequestStatus(c *gin.Context) {
 		return
 	}
 	var request struct {
-		Status         model.PurchaseRequestStatus `json:"status" binding:"required"`
-		FinalCostCents int                         `json:"final_cost_cents"`
-		Note           string                      `json:"note"`
+		Status model.PurchaseRequestStatus `json:"status" binding:"required"`
+		Note   string                      `json:"note"`
 	}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	result, err := service.UpdatePurchaseRequestStatus(id, request.Status, request.FinalCostCents, request.Note, GetRequestUserID(c))
+	result, err := service.UpdatePurchaseRequestStatus(id, request.Status, request.Note, GetRequestUserID(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
