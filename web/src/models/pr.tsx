@@ -191,6 +191,7 @@ export const initPurchaseRequest: PurchaseRequest = {
   placed_order_unapproved: false,
   shipping_address_id: "",
   shipping_address: {} as ShippingAddress,
+  reimbursement_type: ReimbursementType.ReimbursementNotYet,
   screenshot_url: "",
   updated_at: new Date(),
   created_at: new Date(),
