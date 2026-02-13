@@ -84,6 +84,10 @@ export function DataTable({ data }: DataTableProps) {
     return counts;
   }, [data]);
 
+  const myPrCount = React.useMemo(() => {
+    return data.filter((pr) => pr.user_id === currentUser.id).length;
+  }, [data, currentUser.id]);
+
   const isPartialSubteam =
     subteamFilters.length > 0 && subteamFilters.length < subteamOptions.length;
   const isPartialStatus =
@@ -373,7 +377,7 @@ export function DataTable({ data }: DataTableProps) {
             viewMineOnly ? "h-10 bg-accent text-accent-foreground" : "h-10"
           }
         >
-          View My PRs
+          View My PRs ({myPrCount})
         </Button>
         <Popover open={subteamOpen} onOpenChange={setSubteamOpen}>
           <div onMouseEnter={openSubteam} onMouseLeave={closeSubteam}>
