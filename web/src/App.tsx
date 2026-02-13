@@ -10,7 +10,10 @@ import { OutlineButton } from "./components/ui/outline-button";
 import { JIFFY_API_URL } from "@/consts/config";
 import axios from "axios";
 import { notify } from "@/lib/notify";
-import { PurchaseRequest } from "@/models/pr";
+import {
+  PurchaseRequest,
+  PurchaseRequestStatus,
+} from "@/models/pr";
 import { DataTable } from "@/components/data-table";
 
 function App() {
@@ -19,10 +22,14 @@ function App() {
   const [purchaseRequests, setPurchaseRequests] = useState<PurchaseRequest[]>(
     [],
   );
+  const [actionRequiredRequests, setActionRequiredRequests] = useState<
+    PurchaseRequest[]
+  >([]);
 
   React.useEffect(() => {
     checkAuth().then(() => {
       getPurchaseRequests();
+      getActionRequiredRequests();
     });
   }, []);
 
@@ -46,13 +53,38 @@ function App() {
         },
       });
       const purchaseRequestData = response.data;
-      setPurchaseRequests(purchaseRequestData);
+      setPurchaseRequests(
+        Array.isArray(purchaseRequestData) ? purchaseRequestData : [],
+      );
     } catch (error: any) {
       notify.error(
         error.response?.data?.message || "Failed to fetch purchase requests",
       );
     }
   };
+
+  const getActionRequiredRequests = async () => {
+    try {
+      const response = await axios.get(
+        `${JIFFY_API_URL}/purchase-requests/action-required`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+      const purchaseRequestData = response.data;
+      setActionRequiredRequests(
+        Array.isArray(purchaseRequestData) ? purchaseRequestData : [],
+      );
+    } catch (error: any) {
+      notify.error(
+        error.response?.data?.message ||
+          "Failed to fetch action required requests",
+      );
+    }
+  };
+
 
   return (
     <>
@@ -69,6 +101,16 @@ function App() {
                 </div>
               </OutlineButton>
             </div>
+            {actionRequiredRequests.length > 0 && (
+              <>
+                <div className="mt-8 mb-6">
+                  <h2>Your Approval Is Required!</h2>
+                </div>
+
+                <DataTable data={actionRequiredRequests} />
+              </>
+            )}
+
             <div className="mb-6">
               <h2>All Purchase Requests</h2>
             </div>

@@ -23,6 +23,33 @@ func GetAllPurchaseRequests() []model.PurchaseRequest {
 	return prs
 }
 
+func GetActionRequiredPurchaseRequests(userID string) []model.PurchaseRequest {
+	var prs []model.PurchaseRequest
+	if err := database.DB.Preload("Items").Preload("Approvals").Preload("Notes").Where("status = ?", model.PurchaseRequestPending).Order("created_at DESC").Find(&prs).Error; err != nil {
+		utils.SugarLogger.Errorf("Error getting action required purchase requests: %v", err)
+		return nil
+	}
+
+	var filtered []model.PurchaseRequest
+	for _, pr := range prs {
+		pr.User, _ = GetUser(pr.UserID)
+		// Check if user is an eligible approver for any pending (unapproved) approval
+		hasActionable := false
+		for _, approval := range pr.Approvals {
+			// Only include if approval is still pending (not approved or rejected) and user can approve it
+			utils.SugarLogger.Infof("PR %d approval status: %s (pending: %s), isApprover: %v", pr.ID, approval.Status, model.ApprovalPending, isApprover(approval.ApproverGroupID, userID))
+			if approval.Status == model.ApprovalPending && isApprover(approval.ApproverGroupID, userID) {
+				hasActionable = true
+				break
+			}
+		}
+		if hasActionable {
+			filtered = append(filtered, pr)
+		}
+	}
+	return filtered
+}
+
 func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 	var pr model.PurchaseRequest
 	if err := database.DB.Preload("Items").Preload("Approvals", func(db *gorm.DB) *gorm.DB {

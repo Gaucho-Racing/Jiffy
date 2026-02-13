@@ -221,10 +221,6 @@ export default function PurchaseRequestDetailsPage() {
     status: ApprovalStatus,
     note: string,
   ) => {
-    if (!canApprove()) {
-      notify.error("You are not authorized to approve/reject this request");
-      return;
-    }
     try {
       await axios.patch(
         `${JIFFY_API_URL}/purchase-requests/${purchaseRequest?.id}/approvals/${approval.id}`,

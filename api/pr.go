@@ -15,6 +15,11 @@ func GetAllPurchaseRequests(c *gin.Context) {
 	c.JSON(http.StatusOK, prs)
 }
 
+func GetActionRequiredPurchaseRequests(c *gin.Context) {
+	prs := service.GetActionRequiredPurchaseRequests(GetRequestUserID(c))
+	c.JSON(http.StatusOK, prs)
+}
+
 func GetPurchaseRequestByID(c *gin.Context) {
 	idString := c.Param("id")
 	id, err := strconv.Atoi(idString)
