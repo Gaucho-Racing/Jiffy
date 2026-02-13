@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import {
   getFilteredRowModel,
@@ -560,80 +561,95 @@ export function DataTable({ data }: DataTableProps) {
             ))}
           </thead>
           <tbody className="">
-            {table.getRowModel().rows.map((row) => (
-              <>
-                <tr
-                  key={row.id}
-                  className="cursor-pointer hover:bg-gray-700/30"
-                  onClick={() =>
-                    (window.location.href = `/pr/${row.original.id}`)
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="overflow-hidden border-t px-2 text-sm"
-                      style={{ width: cell.column.getSize() }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-
-                {selectedRow === row.original.id && (
-                  <tr>
-                    <td colSpan={columns.length} className="border-t px-4 py-1">
-                      <div>
-                        <div className="space-y-1">
-                          {row.original.items &&
-                          row.original.items.length > 0 ? (
-                            row.original.items.map(
-                              (item: any, index: number) => (
-                                <div
-                                  key={index}
-                                  className="font-sm grid grid-cols-[1.2fr_14fr_3.2fr_1.5fr_0.5fr] gap-2 text-sm"
-                                >
-                                  <div className="text-sm">
-                                    Item #{index + 1}:
-                                  </div>
-                                  <div className="text-sm">{item.name}</div>
-                                  <div className="">
-                                    Unit Price: $
-                                    {(item.unit_price_cents / 100).toFixed(2)}
-                                  </div>
-                                  <div className="">Qty: {item.quantity}</div>
-                                  <div>
-                                    {item.url && (
-                                      <a
-                                        href={
-                                          item.url.match(/^https?:\/\//)
-                                            ? item.url
-                                            : `https://${item.url}`
-                                        }
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-400 underline"
-                                      >
-                                        Link
-                                      </a>
-                                    )}
-                                  </div>
-                                </div>
-                              ),
+            {table.getRowModel().rows.map((row) => {
+              const rowHref = `/pr/${row.original.id}`;
+              return (
+                <>
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer hover:bg-gray-700/30"
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      const isExpandCell = cell.column.id === "expand";
+                      return (
+                        <td
+                          key={cell.id}
+                          className="overflow-hidden border-t px-2 text-sm"
+                          style={{ width: cell.column.getSize() }}
+                        >
+                          {isExpandCell ? (
+                            flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
                             )
                           ) : (
-                            <span>No items found</span>
+                            <Link to={rowHref} className="block w-full">
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </Link>
                           )}
-                        </div>
-                      </div>
-                    </td>
+                        </td>
+                      );
+                    })}
                   </tr>
-                )}
-              </>
-            ))}
+
+                  {selectedRow === row.original.id && (
+                    <tr>
+                      <td
+                        colSpan={columns.length}
+                        className="border-t px-4 py-1"
+                      >
+                        <div>
+                          <div className="space-y-1">
+                            {row.original.items &&
+                            row.original.items.length > 0 ? (
+                              row.original.items.map(
+                                (item: any, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="font-sm grid grid-cols-[1.2fr_14fr_3.2fr_1.5fr_0.5fr] gap-2 text-sm"
+                                  >
+                                    <div className="text-sm">
+                                      Item #{index + 1}:
+                                    </div>
+                                    <div className="text-sm">{item.name}</div>
+                                    <div className="">
+                                      Unit Price: $
+                                      {(item.unit_price_cents / 100).toFixed(2)}
+                                    </div>
+                                    <div className="">Qty: {item.quantity}</div>
+                                    <div>
+                                      {item.url && (
+                                        <a
+                                          href={
+                                            item.url.match(/^https?:\/\//)
+                                              ? item.url
+                                              : `https://${item.url}`
+                                          }
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-400 underline"
+                                        >
+                                          Link
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                ),
+                              )
+                            ) : (
+                              <span>No items found</span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              );
+            })}
           </tbody>
         </table>
       </div>
