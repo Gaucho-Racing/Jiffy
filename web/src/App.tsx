@@ -10,10 +10,7 @@ import { OutlineButton } from "./components/ui/outline-button";
 import { JIFFY_API_URL } from "@/consts/config";
 import axios from "axios";
 import { notify } from "@/lib/notify";
-import {
-  PurchaseRequest,
-  PurchaseRequestStatus,
-} from "@/models/pr";
+import { PurchaseRequest } from "@/models/pr";
 import { DataTable } from "@/components/data-table";
 import { AlertTriangle } from "lucide-react";
 
@@ -30,17 +27,15 @@ function App() {
   const [hasLoadedActionRequired, setHasLoadedActionRequired] = useState(false);
   const actionRequiredCount = actionRequiredRequests.length;
 
-  const pulseDurationSeconds = actionRequiredCount > 0
-    ? Math.max(.4, 2.5 / (1 + actionRequiredCount * 0.2))
-    : 2.5;
+  const pulseDurationSeconds =
+    actionRequiredCount > 0
+      ? Math.max(0.4, 2.5 / (1 + actionRequiredCount * 0.2))
+      : 2.5;
 
   React.useEffect(() => {
     const loadData = async () => {
       await checkAuth();
-      await Promise.all([
-        getPurchaseRequests(),
-        getActionRequiredRequests(),
-      ]);
+      await Promise.all([getPurchaseRequests(), getActionRequiredRequests()]);
     };
 
     loadData();
@@ -102,7 +97,6 @@ function App() {
     }
   };
 
-
   return (
     <>
       {currentUser.id == "" ? (
@@ -123,19 +117,20 @@ function App() {
                 <div className="mt-8">
                   <h2 className="inline-flex items-baseline gap-3">
                     <AlertTriangle
-                      className="h-10 w-10 mx-1 text-red-600 animate-pulse translate-y-2.5"
+                      className="mx-1 h-10 w-10 translate-y-2.5 animate-pulse text-red-600"
                       style={{ animationDuration: `${pulseDurationSeconds}s` }}
                       aria-hidden="true"
                     />
-                    <span className="pb-12 inline-flex items-center gap-4">
+                    <span className="inline-flex items-center gap-4 pb-12">
                       <span className="underline decoration-red-600">
-                      Your Approval Is Required!
+                        Your Approval Is Required!
                       </span>
-                    <span className="text-sm font-normal italic translate-y-1">(Approve or Reject these ASAP!)</span>
-
+                      <span className="translate-y-1 text-sm font-normal italic">
+                        (Approve or Reject these ASAP!)
+                      </span>
                     </span>
                     <AlertTriangle
-                      className="h-10 w-10 mx-1 text-red-600 animate-pulse translate-y-2.5"
+                      className="mx-1 h-10 w-10 translate-y-2.5 animate-pulse text-red-600"
                       style={{ animationDuration: `${pulseDurationSeconds}s` }}
                       aria-hidden="true"
                     />
@@ -145,15 +140,14 @@ function App() {
                 <DataTable data={actionRequiredRequests} />
               </div>
             )}
-            
 
             {hasLoadedAllRequests && (
               <>
-                <div className="pb-12 mt-12">
+                <div className="mt-12 pb-12">
                   <h2 className="inline-flex items-baseline gap-4">
                     <span className="inline-flex items-center gap-4">
                       <span>All Purchase Requests</span>
-                      <span className="text-sm font-normal italic translate-y-1">
+                      <span className="translate-y-1 text-sm font-normal italic">
                         (Update your order status often to be reimbursed!)
                       </span>
                     </span>
@@ -163,7 +157,6 @@ function App() {
                 <DataTable data={purchaseRequests} />
               </>
             )}
-            
           </div>
           <Footer />
         </div>

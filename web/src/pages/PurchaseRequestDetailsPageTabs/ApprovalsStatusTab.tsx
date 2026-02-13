@@ -216,9 +216,10 @@ export function ApprovalsStatusTab({
 
         <div className="mb-4 grid grid-cols-6 gap-2">
           {statusSteps.map((step) => {
-            const displayText = step === PurchaseRequestStatus.PurchaseRequestReimbursed 
-              ? `Reimbursed (${purchaseRequest.reimbursement_type || '?'})` 
-              : step;
+            const displayText =
+              step === PurchaseRequestStatus.PurchaseRequestReimbursed
+                ? `Reimbursed (${purchaseRequest.reimbursement_type || "?"})`
+                : step;
             return (
               <div
                 key={step}

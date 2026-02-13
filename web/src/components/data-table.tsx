@@ -85,11 +85,9 @@ export function DataTable({ data }: DataTableProps) {
   }, [data]);
 
   const isPartialSubteam =
-    subteamFilters.length > 0 &&
-    subteamFilters.length < subteamOptions.length;
+    subteamFilters.length > 0 && subteamFilters.length < subteamOptions.length;
   const isPartialStatus =
-    statusFilters.length > 0 &&
-    statusFilters.length < statusOptions.length;
+    statusFilters.length > 0 && statusFilters.length < statusOptions.length;
 
   const toggleSubteam = (value: string) => {
     setSubteamFilters((prev) =>
@@ -298,25 +296,10 @@ export function DataTable({ data }: DataTableProps) {
             : row.getValue(id) === value,
         cell: ({ row }) => {
           const status = row.original.status;
-          const displayText = status === PurchaseRequestStatus.PurchaseRequestReimbursed ? `Reimbursed (${row.original.reimbursement_type || '?'})` : status;
-          const getStatusStyle = (status: PurchaseRequestStatus) => {
-            switch (status) {
-              case PurchaseRequestStatus.PurchaseRequestApproved:
-                return "bg-green-600/70 border-green-600 text-green-100";
-              case PurchaseRequestStatus.PurchaseRequestRejected:
-                return "bg-red-600/50 border-red-600 text-red-100";
-              case PurchaseRequestStatus.PurchaseRequestPending:
-                return "bg-cyan-600/70 border-cyan-500/50 text-cyan-100";
-              case PurchaseRequestStatus.PurchaseRequestOrdered:
-                return "bg-blue-600/60 border-blue-600 text-white";
-              case PurchaseRequestStatus.PurchaseRequestCollected:
-                return "bg-gr-purple/60 border-gr-purple text-white";
-              case PurchaseRequestStatus.PurchaseRequestReimbursed:
-                return "bg-gr-pink/50 border-gr-pink text-white";
-              default:
-                return "bg-gray-400 text-white";
-            }
-          };
+          const displayText =
+            status === PurchaseRequestStatus.PurchaseRequestReimbursed
+              ? `Reimbursed (${row.original.reimbursement_type || "?"})`
+              : status;
 
           return (
             <span
@@ -414,7 +397,9 @@ export function DataTable({ data }: DataTableProps) {
               onMouseLeave={closeSubteam}
             >
               <div className="flex items-center justify-between px-2 pb-1">
-                <span className="text-xs text-muted-foreground">Filter by Subteam</span>
+                <span className="text-xs text-muted-foreground">
+                  Filter by Subteam
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -441,7 +426,9 @@ export function DataTable({ data }: DataTableProps) {
                       >
                         <Check
                           className={
-                            selected ? "h-4 w-4 opacity-100" : "h-4 w-4 opacity-0"
+                            selected
+                              ? "h-4 w-4 opacity-100"
+                              : "h-4 w-4 opacity-0"
                           }
                         />
                         <span>{option}</span>
@@ -478,7 +465,9 @@ export function DataTable({ data }: DataTableProps) {
               onMouseLeave={closeStatus}
             >
               <div className="flex items-center justify-between px-2 pb-1">
-                <span className="text-xs text-muted-foreground">Filter by Status</span>
+                <span className="text-xs text-muted-foreground">
+                  Filter by Status
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
