@@ -15,6 +15,7 @@ import {
   PurchaseRequestStatus,
 } from "@/models/pr";
 import { DataTable } from "@/components/data-table";
+import { AlertTriangle } from "lucide-react";
 
 function App() {
   const navigate = useNavigate();
@@ -22,15 +23,27 @@ function App() {
   const [purchaseRequests, setPurchaseRequests] = useState<PurchaseRequest[]>(
     [],
   );
+  const [hasLoadedAllRequests, setHasLoadedAllRequests] = useState(false);
   const [actionRequiredRequests, setActionRequiredRequests] = useState<
     PurchaseRequest[]
   >([]);
+  const [hasLoadedActionRequired, setHasLoadedActionRequired] = useState(false);
+  const actionRequiredCount = actionRequiredRequests.length;
+
+  const pulseDurationSeconds = actionRequiredCount > 0
+    ? Math.max(.4, 2.5 / (1 + actionRequiredCount * 0.2))
+    : 2.5;
 
   React.useEffect(() => {
-    checkAuth().then(() => {
-      getPurchaseRequests();
-      getActionRequiredRequests();
-    });
+    const loadData = async () => {
+      await checkAuth();
+      await Promise.all([
+        getPurchaseRequests(),
+        getActionRequiredRequests(),
+      ]);
+    };
+
+    loadData();
   }, []);
 
   const checkAuth = async () => {
@@ -60,6 +73,8 @@ function App() {
       notify.error(
         error.response?.data?.message || "Failed to fetch purchase requests",
       );
+    } finally {
+      setHasLoadedAllRequests(true);
     }
   };
 
@@ -82,6 +97,8 @@ function App() {
         error.response?.data?.message ||
           "Failed to fetch action required requests",
       );
+    } finally {
+      setHasLoadedActionRequired(true);
     }
   };
 
@@ -93,7 +110,7 @@ function App() {
       ) : (
         <div className="flex min-h-screen flex-col justify-between">
           <Header />
-          <div className="flex min-h-screen flex-col justify-start p-4 lg:p-32 lg:pt-6">
+          <div className="mb-96 flex min-h-screen flex-col justify-start p-4 lg:p-32 lg:pt-6">
             <div className=" place-self-end">
               <OutlineButton onClick={() => navigate("/pr/new")}>
                 <div className="flex items-center gap-2">
@@ -101,21 +118,52 @@ function App() {
                 </div>
               </OutlineButton>
             </div>
-            {actionRequiredRequests.length > 0 && (
-              <>
-                <div className="mt-8 mb-6">
-                  <h2>Your Approval Is Required!</h2>
+            {hasLoadedActionRequired && actionRequiredCount > 0 && (
+              <div className="mb-12">
+                <div className="mt-8">
+                  <h2 className="inline-flex items-baseline gap-3">
+                    <AlertTriangle
+                      className="h-10 w-10 mx-1 text-red-600 animate-pulse translate-y-2.5"
+                      style={{ animationDuration: `${pulseDurationSeconds}s` }}
+                      aria-hidden="true"
+                    />
+                    <span className="pb-12 inline-flex items-center gap-4">
+                      <span className="underline decoration-red-600">
+                      Your Approval Is Required!
+                      </span>
+                    <span className="text-sm font-normal italic translate-y-1">(Approve or Reject these ASAP!)</span>
+
+                    </span>
+                    <AlertTriangle
+                      className="h-10 w-10 mx-1 text-red-600 animate-pulse translate-y-2.5"
+                      style={{ animationDuration: `${pulseDurationSeconds}s` }}
+                      aria-hidden="true"
+                    />
+                  </h2>
                 </div>
 
                 <DataTable data={actionRequiredRequests} />
+              </div>
+            )}
+            
+
+            {hasLoadedAllRequests && (
+              <>
+                <div className="pb-12 mt-12">
+                  <h2 className="inline-flex items-baseline gap-4">
+                    <span className="inline-flex items-center gap-4">
+                      <span>All Purchase Requests</span>
+                      <span className="text-sm font-normal italic translate-y-1">
+                        (Update your order status often to be reimbursed!)
+                      </span>
+                    </span>
+                  </h2>
+                </div>
+
+                <DataTable data={purchaseRequests} />
               </>
             )}
-
-            <div className="mb-6">
-              <h2>All Purchase Requests</h2>
-            </div>
-
-            <DataTable data={purchaseRequests} />
+            
           </div>
           <Footer />
         </div>

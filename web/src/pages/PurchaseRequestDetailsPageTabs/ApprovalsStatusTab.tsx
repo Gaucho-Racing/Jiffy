@@ -215,14 +215,19 @@ export function ApprovalsStatusTab({
         </div>
 
         <div className="mb-4 grid grid-cols-6 gap-2">
-          {statusSteps.map((step) => (
-            <div
-              key={step}
-              className={`overflow-hidden rounded-md border-2 py-1 text-center text-sm font-medium transition-colors ${getPurchaseRequestStatusStyle(step)}`}
-            >
-              {step}
-            </div>
-          ))}
+          {statusSteps.map((step) => {
+            const displayText = step === PurchaseRequestStatus.PurchaseRequestReimbursed 
+              ? `Reimbursed (${purchaseRequest.reimbursement_type || '?'})` 
+              : step;
+            return (
+              <div
+                key={step}
+                className={`overflow-hidden rounded-md border-2 py-1 text-center text-sm font-medium transition-colors ${getPurchaseRequestStatusStyle(step)}`}
+              >
+                {displayText}
+              </div>
+            );
+          })}
         </div>
 
         <div>
