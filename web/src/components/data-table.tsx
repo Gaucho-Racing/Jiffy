@@ -33,7 +33,7 @@ export function DataTable({ data }: DataTableProps) {
   const [columnVisibility] = React.useState({ user_id: false });
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [selectedRow, setSelectedRow] = React.useState<number | null>(null);
-  const [viewMineOnly, setViewMineOnly] = React.useState(true);
+  const [viewMineOnly, setViewMineOnly] = React.useState(false);
   const [subteamFilters, setSubteamFilters] = React.useState<string[]>([]);
   const [statusFilters, setStatusFilters] = React.useState<
     PurchaseRequestStatus[]
@@ -298,7 +298,7 @@ export function DataTable({ data }: DataTableProps) {
           const status = row.original.status;
           const displayText =
             status === PurchaseRequestStatus.PurchaseRequestReimbursed
-              ? `Reimbursed (${row.original.reimbursement_type || "?"})`
+              ? `Reimbursed - (${row.original.reimbursement_type || "?"})`
               : status;
 
           return (

@@ -218,7 +218,7 @@ export function ApprovalsStatusTab({
           {statusSteps.map((step) => {
             const displayText =
               step === PurchaseRequestStatus.PurchaseRequestReimbursed
-                ? `Reimbursed (${purchaseRequest.reimbursement_type || "?"})`
+                ? `Reimbursed - (${purchaseRequest.reimbursement_type || "?"})`
                 : step;
             return (
               <div

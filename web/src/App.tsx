@@ -88,10 +88,7 @@ function App() {
         Array.isArray(purchaseRequestData) ? purchaseRequestData : [],
       );
     } catch (error: any) {
-      notify.error(
-        error.response?.data?.message ||
-          "Failed to fetch action required requests",
-      );
+      // Silently fail - API may return error when no requests exist
     } finally {
       setHasLoadedActionRequired(true);
     }
