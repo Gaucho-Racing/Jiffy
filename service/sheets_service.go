@@ -111,7 +111,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 				purchaseRequest.Items[0].Quantity,
 				fmt.Sprintf("$%.2f", float64(purchaseRequest.Items[0].UnitPriceCents)/100),
 				fmt.Sprintf("$%.2f", float64(purchaseRequest.ShippingTaxCostCents)/100),
-				fmt.Sprintf("$%.2f", float64(purchaseRequest.DiscountsCents)/100),
+				fmt.Sprintf("-$%.2f", float64(purchaseRequest.DiscountsCents)/100),
 				fmt.Sprintf("$%.2f", float64(purchaseRequest.EstimatedCostCents)/100),
 				fmt.Sprintf("$%.2f", float64(purchaseRequest.FinalCostCents)/100),
 				purchaseRequest.NeededByDate.Format("01/02/2006"),

@@ -254,7 +254,7 @@ export default function NewPurchaseRequestPage() {
     }
     const itemsCost = calculateEstimatedCostCents(nonEmptyItems);
     const estimatedCost =
-      itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0);
+      Math.max(0,itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0) - (purchaseRequest.discounts_cents || 0));
     const cleanItems = nonEmptyItems.map((item) => ({
       url: item.url,
       name: item.name,
@@ -777,7 +777,64 @@ export default function NewPurchaseRequestPage() {
                           />
                         </div>
                       </div>
-
+                      <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="discounts">
+                          Discounts
+                        </Label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-gray-400">
+                            -$
+                          </span>
+                          <Input
+                            id="discounts"
+                            type="text"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            className="pl-6"
+                            value={
+                              displayValues["discounts"] !== undefined
+                                ? displayValues["discounts"]
+                                : purchaseRequest.discounts_cents !=
+                                      null &&
+                                    purchaseRequest.discounts_cents !==
+                                      0
+                                  ? (
+                                      purchaseRequest.discounts_cents /
+                                      100
+                                    ).toString()
+                                  : ""
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (
+                                value === "" ||
+                                /^\d*\.?\d{0,2}$/.test(value)
+                              ) {
+                                setDisplayValues((prev) => ({
+                                  ...prev,
+                                  discounts: value,
+                                }));
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const value = parseFloat(e.target.value) || 0;
+                              setPurchaseRequest({
+                                ...purchaseRequest,
+                                discounts_cents: Math.round(
+                                  value * 100,
+                                ),
+                              });
+                              setDisplayValues((prev) => {
+                                const newValues = { ...prev };
+                                delete newValues["discounts"];
+                                return newValues;
+                              });
+                            }}
+                            onFocus={(e) => e.target.select()}
+                          />
+                        </div>
+                      </div>
                       <div className="grid grid-cols-2 items-center gap-4 pb-8">
                         <Label className="opacity-30">Estimated Cost</Label>
                         <div className="relative">
@@ -789,11 +846,11 @@ export default function NewPurchaseRequestPage() {
                             id="estimated_cost"
                             className="pl-6"
                             value={(
-                              (calculateEstimatedCostCents(items) +
+                              Math.max(0,(calculateEstimatedCostCents(items) +
                                 (purchaseRequest.shipping_tax_cost_cents ||
-                                  0)) /
+                                  0) - (purchaseRequest.discounts_cents || 0)) /
                               100
-                            ).toFixed(2)}
+                            ).toFixed(2))}
                           />
                         </div>
                       </div>

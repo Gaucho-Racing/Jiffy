@@ -130,6 +130,7 @@ export interface PurchaseRequest {
   notes: PurchaseRequestNote[];
   vendor: string;
   shipping_tax_cost_cents: number;
+  discounts_cents: number;
   estimated_cost_cents: number;
   final_cost_cents: number;
   description: string;
@@ -182,6 +183,7 @@ export const initPurchaseRequest: PurchaseRequest = {
   notes: [],
   vendor: "",
   shipping_tax_cost_cents: 0,
+  discounts_cents: 0,
   estimated_cost_cents: 0,
   final_cost_cents: 0,
   description: "",
