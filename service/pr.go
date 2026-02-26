@@ -109,7 +109,7 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 		}
 	}
 	pr.Status = model.PurchaseRequestPending
-	pr.EstimatedCostCents = calculateEstimatedCost(pr.Items) + pr.ShippingTaxCostCents
+	pr.EstimatedCostCents = calculateEstimatedCost(pr.Items) + pr.ShippingTaxCostCents - pr.DiscountsCents
 	if isNew {
 		pr.ReimbursementType = string(model.ReimbursementNotYet)
 	}
@@ -139,6 +139,12 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 			if pr.ShippingTaxCostCents == 0 && existingPR.ShippingTaxCostCents != 0 {
 				if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Update("shipping_tax_cost_cents", 0).Error; err != nil {
 					utils.SugarLogger.Errorf("Error updating shipping/tax cost for PR %d: %v", pr.ID, err)
+					return model.PurchaseRequest{}, err
+				}
+			}
+			if pr.DiscountsCents == 0 && existingPR.DiscountsCents != 0 {
+				if err := database.DB.Model(&model.PurchaseRequest{}).Where("id = ?", pr.ID).Update("discounts_cents", 0).Error; err != nil {
+					utils.SugarLogger.Errorf("Error updating discounts for PR %d: %v", pr.ID, err)
 					return model.PurchaseRequest{}, err
 				}
 			}

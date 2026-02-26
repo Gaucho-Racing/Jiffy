@@ -13,6 +13,7 @@ type PurchaseRequest struct {
 	Items                 []PurchaseRequestItem       `json:"items" gorm:"foreignKey:PurchaseRequestID"`
 	Vendor                string                      `json:"vendor"`
 	ShippingTaxCostCents  int                         `json:"shipping_tax_cost_cents"`
+	DiscountsCents        int                         `json:"discounts_cents"`
 	EstimatedCostCents    int                         `json:"estimated_cost_cents"`
 	FinalCostCents        int                         `json:"final_cost_cents"`
 	Description           string                      `json:"description"`
