@@ -490,15 +490,11 @@ export function RequestDetailsTab({
                         )
                       : "0.00"}
                   </p>
-                  <p className="font-medium text-gray-400">
-                    Discounts{" "}
-                  </p>
+                  <p className="font-medium text-gray-400">Discounts </p>
                   <p>
                     -$
                     {purchaseRequest.discounts_cents
-                      ? (purchaseRequest.discounts_cents / 100).toFixed(
-                          2,
-                        )
+                      ? (purchaseRequest.discounts_cents / 100).toFixed(2)
                       : "0.00"}
                   </p>
                   <p className="font-medium text-gray-400">Estimated Cost </p>

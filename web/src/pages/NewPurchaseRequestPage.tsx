@@ -253,8 +253,12 @@ export default function NewPurchaseRequestPage() {
       return;
     }
     const itemsCost = calculateEstimatedCostCents(nonEmptyItems);
-    const estimatedCost =
-      Math.max(0,itemsCost + (purchaseRequest.shipping_tax_cost_cents || 0) - (purchaseRequest.discounts_cents || 0));
+    const estimatedCost = Math.max(
+      0,
+      itemsCost +
+        (purchaseRequest.shipping_tax_cost_cents || 0) -
+        (purchaseRequest.discounts_cents || 0),
+    );
     const cleanItems = nonEmptyItems.map((item) => ({
       url: item.url,
       name: item.name,
@@ -778,9 +782,7 @@ export default function NewPurchaseRequestPage() {
                         </div>
                       </div>
                       <div className="grid grid-cols-2 items-center gap-4">
-                        <Label htmlFor="discounts">
-                          Discounts
-                        </Label>
+                        <Label htmlFor="discounts">Discounts</Label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 transform text-sm text-gray-400">
                             -$
@@ -795,13 +797,10 @@ export default function NewPurchaseRequestPage() {
                             value={
                               displayValues["discounts"] !== undefined
                                 ? displayValues["discounts"]
-                                : purchaseRequest.discounts_cents !=
-                                      null &&
-                                    purchaseRequest.discounts_cents !==
-                                      0
+                                : purchaseRequest.discounts_cents != null &&
+                                    purchaseRequest.discounts_cents !== 0
                                   ? (
-                                      purchaseRequest.discounts_cents /
-                                      100
+                                      purchaseRequest.discounts_cents / 100
                                     ).toString()
                                   : ""
                             }
@@ -821,9 +820,7 @@ export default function NewPurchaseRequestPage() {
                               const value = parseFloat(e.target.value) || 0;
                               setPurchaseRequest({
                                 ...purchaseRequest,
-                                discounts_cents: Math.round(
-                                  value * 100,
-                                ),
+                                discounts_cents: Math.round(value * 100),
                               });
                               setDisplayValues((prev) => {
                                 const newValues = { ...prev };
@@ -845,12 +842,13 @@ export default function NewPurchaseRequestPage() {
                             disabled
                             id="estimated_cost"
                             className="pl-6"
-                            value={(
-                              Math.max(0,(calculateEstimatedCostCents(items) +
-                                (purchaseRequest.shipping_tax_cost_cents ||
-                                  0) - (purchaseRequest.discounts_cents || 0)) /
-                              100
-                            ).toFixed(2))}
+                            value={Math.max(
+                              0,
+                              (calculateEstimatedCostCents(items) +
+                                (purchaseRequest.shipping_tax_cost_cents || 0) -
+                                (purchaseRequest.discounts_cents || 0)) /
+                                100,
+                            ).toFixed(2)}
                           />
                         </div>
                       </div>
