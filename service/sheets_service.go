@@ -75,7 +75,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 							SheetId:          int64(sheetId),
 							StartRowIndex:    5,  // B6 starts at index 5
 							StartColumnIndex: 1,  // B column
-							EndColumnIndex:   21, // V column
+							EndColumnIndex:   22, // W column
 						},
 						Fields: "userEnteredValue",
 					},
@@ -111,6 +111,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 				purchaseRequest.Items[0].Quantity,
 				fmt.Sprintf("$%.2f", float64(purchaseRequest.Items[0].UnitPriceCents)/100),
 				fmt.Sprintf("$%.2f", float64(purchaseRequest.ShippingTaxCostCents)/100),
+				fmt.Sprintf("$%.2f", float64(purchaseRequest.DiscountsCents)/100),
 				fmt.Sprintf("$%.2f", float64(purchaseRequest.EstimatedCostCents)/100),
 				fmt.Sprintf("$%.2f", float64(purchaseRequest.FinalCostCents)/100),
 				purchaseRequest.NeededByDate.Format("01/02/2006"),
@@ -137,6 +138,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 					"↳",
 					"↳",
 					"↳",
+					"↳",
 					purchaseRequest.NeededByDate.Format("01/02/2006"),
 					purchaseRequest.Priority,
 					purchaseRequest.Status,
@@ -149,7 +151,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 		}
 
 		// Write data (can still use A1 notation for updates as it's more convenient)
-		writeRange := fmt.Sprintf("'%s'!B6:V", sheetName)
+		writeRange := fmt.Sprintf("'%s'!B6:W", sheetName)
 		writeRequest := &sheets.ValueRange{
 			Values: values,
 		}
