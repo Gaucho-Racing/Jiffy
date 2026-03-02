@@ -6,7 +6,9 @@ import {
   ReimbursementType,
 } from "@/models/pr";
 import { Department } from "@/models/departments";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { User } from "@/models/user";
+import { useUser } from "@/lib/store";
 import { Pencil, CalendarIcon } from "lucide-react";
 import {
   Dialog,
@@ -54,11 +56,52 @@ export function RequestDetailsTab({
   onUpdate,
   canAdvance = false,
 }: RequestDetailsTabProps) {
+  const currentUser = useUser();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<string>("");
   const [editingValue, setEditingValue] = useState<any>("");
   const [editingDate, setEditingDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reimburse To User dialogs
+  const [reimburseChoiceOpen, setReimburseChoiceOpen] = useState(false);
+  const [reimburseSelectOpen, setReimburseSelectOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [selectedReimburseUserID, setSelectedReimburseUserID] = useState("");
+
+  useEffect(() => {
+    axios
+      .get(`${JIFFY_API_URL}/users`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+        },
+      })
+      .then((res) => setAllUsers(res.data))
+      .catch(() => {});
+  }, []);
+
+  const submitReimburseUser = async (userID: string) => {
+    try {
+      await axios.patch(
+        `${JIFFY_API_URL}/purchase-requests/${purchaseRequest.id}`,
+        { reimburse_to_user_id: userID },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
+          },
+        },
+      );
+      notify.success("Reimburse To updated successfully");
+      setReimburseChoiceOpen(false);
+      setReimburseSelectOpen(false);
+      if (onUpdate) onUpdate();
+    } catch (error: any) {
+      notify.error(
+        getAxiosErrorMessage(error) || "Failed to update Reimburse To",
+      );
+    }
+  };
 
   const openEditDialog = (
     fieldName: string,
@@ -118,6 +161,9 @@ export function RequestDetailsTab({
         valueToSend = editingValue === "true";
       } else if (config.type === "date") {
         valueToSend = new Date(editingValue).toISOString();
+      } else if (config.type === "user") {
+        // For user field, send the name as-is (backend will resolve to ID)
+        valueToSend = editingValue;
       }
 
       await axios.patch(
@@ -320,14 +366,99 @@ export function RequestDetailsTab({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Reimburse To — choice dialog */}
+      <Dialog open={reimburseChoiceOpen} onOpenChange={setReimburseChoiceOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Reimburse To</DialogTitle>
+            <DialogDescription>
+              Who should be reimbursed for this purchase request?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReimburseChoiceOpen(false);
+                submitReimburseUser(currentUser.id);
+              }}
+            >
+              Set as Myself
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReimburseChoiceOpen(false);
+                setReimburseSelectOpen(true);
+              }}
+            >
+              Select User
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <div className="mx-12 mx-4 my-10 flex justify-start rounded-lg border bg-background p-8 pl-24">
+      {/* Reimburse To — user search dialog */}
+      <Dialog open={reimburseSelectOpen} onOpenChange={setReimburseSelectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Reimburse To User</DialogTitle>
+            <DialogDescription>
+              {" "}
+              Who should be reimbursed for this purchase request?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <Input
+              placeholder="Search users..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+            />
+            <div className="max-h-60 overflow-y-auto rounded border">
+              {allUsers
+                .filter((u) =>
+                  `${u.first_name} ${u.last_name} ${u.email}`
+                    .toLowerCase()
+                    .includes(userSearch.toLowerCase()),
+                )
+                .map((u) => (
+                  <div
+                    key={u.id}
+                    onClick={() => setSelectedReimburseUserID(u.id)}
+                    className={`flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-accent ${selectedReimburseUserID === u.id ? "bg-accent" : ""}`}
+                  >
+                    <div>
+                      <p>
+                        {u.first_name} {u.last_name}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setReimburseSelectOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!selectedReimburseUserID}
+              onClick={() => submitReimburseUser(selectedReimburseUserID)}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="flex justify-start rounded-lg border bg-background py-10 pl-8 lg:pl-24">
         {isLoading ? (
           <></>
         ) : (
           <div className="w-full space-y-8">
-            <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2">
-              <div>
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              <div className="order-1 mb-8 xl:order-1">
                 <p className="mb-2 font-medium text-gray-400">Requester</p>
                 <div className="flex items-center pl-8">
                   <Avatar className="mr-4 h-12 w-12">
@@ -345,270 +476,312 @@ export function RequestDetailsTab({
                   </div>
                 </div>
               </div>
-              <div>
-                <div className="grid grid-cols-1 pt-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[auto_1fr] xl:gap-x-24">
-                  <p className="font-medium text-gray-400">ID #</p>
-                  <p>{purchaseRequest.id}</p>
-                  <p className="font-medium text-gray-400">Date Requested</p>
-                  <p>
-                    {purchaseRequest.created_at
-                      ? new Date(
-                          purchaseRequest.created_at,
-                        ).toLocaleDateString()
-                      : ""}
+
+              <div className="order-3 grid grid-cols-2 self-start pt-2 lg:grid-cols-[4fr_5fr] xl:order-2">
+                <p className="font-medium text-gray-400">ID #</p>
+                <p>{purchaseRequest.id}</p>
+                <p className="font-medium text-gray-400">Date Requested</p>
+                <p>
+                  {purchaseRequest.created_at
+                    ? new Date(purchaseRequest.created_at).toLocaleDateString()
+                    : ""}
+                </p>
+                <p className="font-medium text-gray-400">Status</p>
+                <p>{purchaseRequest.status}</p>
+              </div>
+
+              <div className="order-2 lg:order-3">
+                <div className="flex items-center gap-2">
+                  <p className="pb-2 font-medium text-gray-400">
+                    Reimburse To - (Who Paid?)
                   </p>
-                  <p className="font-medium text-gray-400">Status</p>
-                  <p>{purchaseRequest.status}</p>
+                  {!purchaseRequest.reimburse_to_user?.first_name && (
+                    <Pencil
+                      className="h-6 w-6 cursor-pointer text-green-400 hover:text-green-600"
+                      onClick={() => {
+                        setSelectedReimburseUserID("");
+                        setUserSearch("");
+                        setReimburseChoiceOpen(true);
+                      }}
+                    />
+                  )}
+                  {purchaseRequest.reimburse_to_user?.first_name &&
+                    purchaseRequest.status !== "Reimbursed" && (
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                        onClick={() => {
+                          setSelectedReimburseUserID("");
+                          setUserSearch("");
+                          setReimburseChoiceOpen(true);
+                        }}
+                      />
+                    )}
+                </div>
+                <div className="mb-8 flex items-center pl-8 lg:mb-0">
+                  <Avatar className="mr-4 h-12 w-12">
+                    <AvatarImage
+                      src={purchaseRequest.reimburse_to_user?.avatar_url}
+                    />
+                    <AvatarFallback>
+                      <h3 className="font-lg text-gray-500">?</h3>
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start justify-center">
+                    <div>
+                      {purchaseRequest.reimburse_to_user?.first_name ||
+                        "Not Set"}{" "}
+                      {purchaseRequest.reimburse_to_user?.last_name}
+                    </div>
+                    <div className="text-gray-400">
+                      {purchaseRequest.reimburse_to_user?.email ||
+                        "SET REIMBURSEMENT RECIPIENT ASAP!"}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="mb-20">
-              <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-2 lg:items-start">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-24 xl:grid-cols-[auto_1fr]">
-                  <p className="font-medium text-gray-400">Subteam </p>
-                  <p>{department?.name}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">Component </p>
-                    {canAdvance &&
-                      purchaseRequest.status !== "Pending Approval" &&
-                      purchaseRequest.status !== "Request Rejected" && (
-                        <Pencil
-                          className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                          onClick={() =>
-                            openEditDialog(
-                              "Component",
-                              purchaseRequest.component,
-                              "text",
-                            )
-                          }
-                        />
-                      )}
-                  </div>
-                  <p>{purchaseRequest.component}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">Vendor </p>
-                    {canAdvance &&
-                      purchaseRequest.status !== "Pending Approval" &&
-                      purchaseRequest.status !== "Request Rejected" && (
-                        <Pencil
-                          className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                          onClick={() =>
-                            openEditDialog(
-                              "Vendor",
-                              purchaseRequest.vendor,
-                              "text",
-                            )
-                          }
-                        />
-                      )}
-                  </div>
-                  <p>{purchaseRequest.vendor}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">Priority </p>
-                    {canAdvance &&
-                      purchaseRequest.status !== "Pending Approval" &&
-                      purchaseRequest.status !== "Request Rejected" && (
-                        <Pencil
-                          className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                          onClick={() =>
-                            openEditDialog(
-                              "Priority",
-                              purchaseRequest.priority,
-                              "number",
-                            )
-                          }
-                        />
-                      )}
-                  </div>
-                  <p>{purchaseRequest.priority}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">Needed By </p>
-                    {canAdvance &&
-                      purchaseRequest.status !== "Pending Approval" &&
-                      purchaseRequest.status !== "Request Rejected" && (
-                        <Pencil
-                          className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                          onClick={() =>
-                            openEditDialog(
-                              "Needed By",
-                              purchaseRequest.needed_by_date,
-                              "date",
-                            )
-                          }
-                        />
-                      )}
-                  </div>
-                  <p>
-                    {purchaseRequest.needed_by_date
-                      ? new Date(
-                          purchaseRequest.needed_by_date,
-                        ).toLocaleDateString()
-                      : ""}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">Description </p>
-                    {canAdvance &&
-                      purchaseRequest.status !== "Pending Approval" &&
-                      purchaseRequest.status !== "Request Rejected" && (
-                        <Pencil
-                          className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                          onClick={() =>
-                            openEditDialog(
-                              "Description",
-                              purchaseRequest.description,
-                              "text",
-                            )
-                          }
-                        />
-                      )}
-                  </div>
-                  <p className="max-h-32 break-all pr-4">
-                    {purchaseRequest.description}
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:gap-x-10 xl:grid-cols-[auto_1fr]">
-                  <p className="font-medium text-gray-400">
-                    Estimated Item Total{" "}
-                  </p>
-                  <p>
-                    $
-                    {purchaseRequest.items
-                      ? (
-                          calculateEstimatedCostCents(purchaseRequest.items) /
-                          100
-                        ).toFixed(2)
-                      : "0.00"}
-                  </p>
-                  <p className="font-medium text-gray-400">
-                    Estimated Shipping/Tax{" "}
-                  </p>
-                  <p>
-                    $
-                    {purchaseRequest.shipping_tax_cost_cents
-                      ? (purchaseRequest.shipping_tax_cost_cents / 100).toFixed(
-                          2,
-                        )
-                      : "0.00"}
-                  </p>
-                  <p className="font-medium text-gray-400">Discounts </p>
-                  <p>
-                    -$
-                    {purchaseRequest.discounts_cents
-                      ? (purchaseRequest.discounts_cents / 100).toFixed(2)
-                      : "0.00"}
-                  </p>
-                  <p className="font-medium text-gray-400">Estimated Cost </p>
-                  <p>
-                    $
-                    {purchaseRequest.estimated_cost_cents
-                      ? (purchaseRequest.estimated_cost_cents / 100).toFixed(2)
-                      : "0.00"}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">Who will order?</p>
-                    {canAdvance &&
-                      purchaseRequest.status !== "Pending Approval" &&
-                      purchaseRequest.status !== "Request Rejected" && (
-                        <Pencil
-                          className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                          onClick={() =>
-                            openEditDialog(
-                              "Who will order?",
-                              purchaseRequest.requested_purchaser,
-                              "text",
-                            )
-                          }
-                        />
-                      )}
-                  </div>
-                  <p>{purchaseRequest.requested_purchaser}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">Final Price </p>
-                    {canAdvance &&
-                      purchaseRequest.status !== "Pending Approval" &&
-                      purchaseRequest.status !== "Request Rejected" && (
-                        <Pencil
-                          className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                          onClick={() =>
-                            openEditDialog(
-                              "Final Price",
-                              purchaseRequest.final_cost_cents,
-                              "cents",
-                            )
-                          }
-                        />
-                      )}
-                  </div>
-                  <p>
-                    {purchaseRequest.final_cost_cents &&
-                    purchaseRequest.final_cost_cents > 0
-                      ? `$${(purchaseRequest.final_cost_cents / 100).toFixed(2)}`
-                      : ""}
-                  </p>
-                  <p className="font-medium text-gray-400">Requested Address</p>
-                  <p className="max-h-32 overflow-y-auto">
-                    {purchaseRequest.shipping_address?.name
-                      ? `${purchaseRequest.shipping_address.name} - ${purchaseRequest.shipping_address.street_address}, ${purchaseRequest.shipping_address.city}, ${purchaseRequest.shipping_address.state} ${purchaseRequest.shipping_address.zip_code}`
-                      : ""}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">
-                      Bought w/o approval?
-                    </p>
-                    {canAdvance &&
-                      purchaseRequest.status !== "Pending Approval" &&
-                      purchaseRequest.status !== "Request Rejected" && (
-                        <Pencil
-                          className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                          onClick={() =>
-                            openEditDialog(
-                              "Bought w/o approval?",
-                              purchaseRequest.placed_order_unapproved,
-                              "boolean",
-                            )
-                          }
-                        />
-                      )}
-                  </div>
-                  <p>
-                    {purchaseRequest.placed_order_unapproved ? "Yes" : "No"}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-400">
-                      Reimbursement Type
-                    </p>
-                    {canAdvance && purchaseRequest.status === "Reimbursed" && (
+
+              <div className="order-4 grid grid-cols-2 pt-8 lg:grid-cols-[4fr_5fr] xl:order-4">
+                {/* <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">Who will order?</p>
+                  {canAdvance &&
+                    purchaseRequest.status !== "Pending Approval" &&
+                    purchaseRequest.status !== "Request Rejected" && (
                       <Pencil
                         className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
                         onClick={() =>
                           openEditDialog(
-                            "Reimbursement Type",
-                            purchaseRequest.reimbursement_type,
+                            "Who will order?",
+                            purchaseRequest.requested_purchaser,
                             "text",
                           )
                         }
                       />
                     )}
-                  </div>
-                  <p>{purchaseRequest.reimbursement_type}</p>
                 </div>
+                <p>{purchaseRequest.requested_purchaser}</p> */}
+
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">
+                    Bought w/o approval?
+                  </p>
+                  {canAdvance &&
+                    purchaseRequest.status !== "Pending Approval" &&
+                    purchaseRequest.status !== "Request Rejected" && (
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                        onClick={() =>
+                          openEditDialog(
+                            "Bought w/o approval?",
+                            purchaseRequest.placed_order_unapproved,
+                            "boolean",
+                          )
+                        }
+                      />
+                    )}
+                </div>
+                <p>{purchaseRequest.placed_order_unapproved ? "Yes" : "No"}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">
+                    Reimbursement Type
+                  </p>
+                  {canAdvance && purchaseRequest.status === "Reimbursed" && (
+                    <Pencil
+                      className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                      onClick={() =>
+                        openEditDialog(
+                          "Reimbursement Type",
+                          purchaseRequest.reimbursement_type,
+                          "text",
+                        )
+                      }
+                    />
+                  )}
+                </div>
+                <p>{purchaseRequest.reimbursement_type}</p>
+                <p className="font-medium text-gray-400">Requested Address</p>
+                <div className="max-h-10 overflow-y-auto pr-2">
+                  {purchaseRequest.shipping_address?.name
+                    ? `${purchaseRequest.shipping_address.name} - ${purchaseRequest.shipping_address.street_address}, ${purchaseRequest.shipping_address.city}, ${purchaseRequest.shipping_address.state} ${purchaseRequest.shipping_address.zip_code}`
+                    : ""}
+                </div>
+              </div>
+              <div className="order-5 grid grid-cols-2 self-start pt-8 lg:grid-cols-[4fr_5fr] xl:order-5">
+                <p className="font-medium text-gray-400">Subteam </p>
+                <p>{department?.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">Component </p>
+                  {canAdvance &&
+                    purchaseRequest.status !== "Pending Approval" &&
+                    purchaseRequest.status !== "Request Rejected" && (
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                        onClick={() =>
+                          openEditDialog(
+                            "Component",
+                            purchaseRequest.component,
+                            "text",
+                          )
+                        }
+                      />
+                    )}
+                </div>
+                <p>{purchaseRequest.component}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">Vendor </p>
+                  {canAdvance &&
+                    purchaseRequest.status !== "Pending Approval" &&
+                    purchaseRequest.status !== "Request Rejected" && (
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                        onClick={() =>
+                          openEditDialog(
+                            "Vendor",
+                            purchaseRequest.vendor,
+                            "text",
+                          )
+                        }
+                      />
+                    )}
+                </div>
+                <p>{purchaseRequest.vendor}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">Priority </p>
+                  {canAdvance &&
+                    purchaseRequest.status !== "Pending Approval" &&
+                    purchaseRequest.status !== "Request Rejected" && (
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                        onClick={() =>
+                          openEditDialog(
+                            "Priority",
+                            purchaseRequest.priority,
+                            "number",
+                          )
+                        }
+                      />
+                    )}
+                </div>
+                <p>{purchaseRequest.priority}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">Needed By </p>
+                  {canAdvance &&
+                    purchaseRequest.status !== "Pending Approval" &&
+                    purchaseRequest.status !== "Request Rejected" && (
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                        onClick={() =>
+                          openEditDialog(
+                            "Needed By",
+                            purchaseRequest.needed_by_date,
+                            "date",
+                          )
+                        }
+                      />
+                    )}
+                </div>
+                <p>
+                  {purchaseRequest.needed_by_date
+                    ? new Date(
+                        purchaseRequest.needed_by_date,
+                      ).toLocaleDateString()
+                    : ""}
+                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">Description </p>
+                  {canAdvance &&
+                    purchaseRequest.status !== "Pending Approval" &&
+                    purchaseRequest.status !== "Request Rejected" && (
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                        onClick={() =>
+                          openEditDialog(
+                            "Description",
+                            purchaseRequest.description,
+                            "text",
+                          )
+                        }
+                      />
+                    )}
+                </div>
+                <p className="max-h-32 break-all pr-4">
+                  {purchaseRequest.description}
+                </p>
+              </div>
+              <div className="order-6 grid grid-cols-2 self-start pt-8 lg:grid-cols-[4fr_5fr] xl:order-6 ">
+                <p className="font-medium text-gray-400">
+                  Estimated Item Total{" "}
+                </p>
+                <p>
+                  $
+                  {purchaseRequest.items
+                    ? (
+                        calculateEstimatedCostCents(purchaseRequest.items) / 100
+                      ).toFixed(2)
+                    : "0.00"}
+                </p>
+                <p className="font-medium text-gray-400">
+                  Estimated Shipping/Tax{" "}
+                </p>
+                <p>
+                  $
+                  {purchaseRequest.shipping_tax_cost_cents
+                    ? (purchaseRequest.shipping_tax_cost_cents / 100).toFixed(2)
+                    : "0.00"}
+                </p>
+                <p className="font-medium text-gray-400">Discounts </p>
+                <p>
+                  -$
+                  {purchaseRequest.discounts_cents
+                    ? (purchaseRequest.discounts_cents / 100).toFixed(2)
+                    : "0.00"}
+                </p>
+                <p className="font-medium text-gray-400">Estimated Cost </p>
+                <p>
+                  $
+                  {purchaseRequest.estimated_cost_cents
+                    ? (purchaseRequest.estimated_cost_cents / 100).toFixed(2)
+                    : "0.00"}
+                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-400">Final Price </p>
+                  {canAdvance &&
+                    purchaseRequest.status !== "Pending Approval" &&
+                    purchaseRequest.status !== "Request Rejected" && (
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
+                        onClick={() =>
+                          openEditDialog(
+                            "Final Price",
+                            purchaseRequest.final_cost_cents,
+                            "cents",
+                          )
+                        }
+                      />
+                    )}
+                </div>
+                <p>
+                  {purchaseRequest.final_cost_cents &&
+                  purchaseRequest.final_cost_cents > 0
+                    ? `$${(purchaseRequest.final_cost_cents / 100).toFixed(2)}`
+                    : ""}
+                </p>
               </div>
             </div>
             <div>
               <p className="mb-2 mt-20 font-medium text-gray-400">
-                Items ({purchaseRequest.items?.length || 0})
+                ITEMS ({purchaseRequest.items?.length || 0})
               </p>
               <div className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-[1fr_8fr_4fr_4fr_4fr_10fr]">
                 <p className="text-sm font-medium text-gray-400"> </p>
-                <p className="text-sm font-medium text-gray-400"> Item Name </p>
+                <p className="text-sm font-medium text-gray-400"> ITEM NAME </p>
                 <p className="text-sm font-medium text-gray-400">
                   {" "}
-                  Unit Price{" "}
+                  UNIT PRICE{" "}
                 </p>
-                <p className="text-sm font-medium text-gray-400"> Quantity </p>
+                <p className="text-sm font-medium text-gray-400"> QUANTITY </p>
                 <p className="text-sm font-medium text-gray-400">
                   {" "}
-                  Item Total{" "}
+                  ITEM TOTAL{" "}
                 </p>
                 <p className="text-sm font-medium text-gray-400"> URL </p>
               </div>

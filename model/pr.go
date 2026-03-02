@@ -24,6 +24,8 @@ type PurchaseRequest struct {
 	ShippingAddressID     string                      `json:"shipping_address_id"`
 	ShippingAddress       ShippingAddress             `json:"shipping_address" gorm:"-"`
 	ReimbursementType     string                      `json:"reimbursement_type"`
+	ReimburseToUserID     string                      `json:"reimburse_to_user_id"`
+	ReimburseToUser       User                        `json:"reimburse_to_user" gorm:"-"`
 	Attachments           []PurchaseRequestAttachment `json:"attachments" gorm:"foreignKey:PurchaseRequestID"`
 	Notes                 []PurchaseRequestNote       `json:"notes" gorm:"foreignKey:PurchaseRequestID"`
 	UpdatedAt             time.Time                   `gorm:"autoUpdateTime" json:"updated_at"`

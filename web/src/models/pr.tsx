@@ -141,6 +141,8 @@ export interface PurchaseRequest {
   shipping_address_id: string;
   shipping_address: ShippingAddress;
   reimbursement_type: ReimbursementType;
+  reimburse_to_user_id: string;
+  reimburse_to_user: User;
   screenshot_url: string;
   updated_at: Date;
   created_at: Date;
@@ -194,6 +196,8 @@ export const initPurchaseRequest: PurchaseRequest = {
   shipping_address_id: "",
   shipping_address: {} as ShippingAddress,
   reimbursement_type: ReimbursementType.ReimbursementNotYet,
+  reimburse_to_user_id: "",
+  reimburse_to_user: {} as User,
   screenshot_url: "",
   updated_at: new Date(),
   created_at: new Date(),

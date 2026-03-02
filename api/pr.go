@@ -67,6 +67,7 @@ func UpdatePurchaseRequestFields(c *gin.Context) {
 		FinalCostCents        *int       `json:"final_cost_cents"`
 		RequestedPurchaser    *string    `json:"requested_purchaser"`
 		PlacedOrderUnapproved *bool      `json:"placed_order_unapproved"`
+		ReimburseToUserID     *string    `json:"reimburse_to_user_id"`
 	}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -100,6 +101,9 @@ func UpdatePurchaseRequestFields(c *gin.Context) {
 	}
 	if request.PlacedOrderUnapproved != nil {
 		updates["placed_order_unapproved"] = *request.PlacedOrderUnapproved
+	}
+	if request.ReimburseToUserID != nil {
+		updates["reimburse_to_user_id"] = *request.ReimburseToUserID
 	}
 
 	if len(updates) == 0 {

@@ -64,6 +64,9 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 	}
 
 	pr.User, _ = GetUser(pr.UserID)
+	if pr.ReimburseToUserID != "" {
+		pr.ReimburseToUser, _ = GetUser(pr.ReimburseToUserID)
+	}
 	for i := range pr.Approvals {
 		if pr.Approvals[i].UserID != "" {
 			pr.Approvals[i].User, _ = GetUser(pr.Approvals[i].UserID)
@@ -263,7 +266,8 @@ func UpdatePurchaseRequestFields(prID int, userID string, updates map[string]int
 		return model.PurchaseRequest{}, errors.New("you can only edit your own purchase requests")
 	}
 
-	if existingPR.Status == model.PurchaseRequestPending || existingPR.Status == model.PurchaseRequestRejected {
+	onlyReimburseUser := len(updates) == 1 && updates["reimburse_to_user_id"] != nil
+	if !onlyReimburseUser && (existingPR.Status == model.PurchaseRequestPending || existingPR.Status == model.PurchaseRequestRejected) {
 		return model.PurchaseRequest{}, errors.New("You can only change this after approval for clarity purposes! Please edit your request through the form and await approval.")
 	}
 
@@ -283,6 +287,7 @@ func UpdatePurchaseRequestFields(prID int, userID string, updates map[string]int
 		"reimbursement_type":      "Reimbursement Type",
 		"final_cost_cents":        "Final Price",
 		"requested_purchaser":     "Requested Purchaser",
+		"reimburse_to_user_id":    "Reimburse To User",
 		"placed_order_unapproved": "Placed Order Without Approval",
 	}
 
@@ -324,6 +329,21 @@ func UpdatePurchaseRequestFields(prID int, userID string, updates map[string]int
 		case "requested_purchaser":
 			oldValueStr = existingPR.RequestedPurchaser
 			newValueStr = fmt.Sprintf("%v", newValue)
+		case "reimburse_to_user_id":
+			if existingPR.ReimburseToUserID != "" {
+				oldValueStr = fmt.Sprintf("%s %s", existingPR.ReimburseToUser.FirstName, existingPR.ReimburseToUser.LastName)
+			} else {
+				oldValueStr = "Not Set"
+			}
+			if newUserID, ok := newValue.(string); ok {
+				if newUser, err := GetUser(newUserID); err == nil {
+					newValueStr = fmt.Sprintf("%s %s", newUser.FirstName, newUser.LastName)
+				} else {
+					newValueStr = fmt.Sprintf("%v", newValue)
+				}
+			} else {
+				newValueStr = fmt.Sprintf("%v", newValue)
+			}
 		case "placed_order_unapproved":
 			oldValueStr = fmt.Sprintf("%v", existingPR.PlacedOrderUnapproved)
 			newValueStr = fmt.Sprintf("%v", newValue)
