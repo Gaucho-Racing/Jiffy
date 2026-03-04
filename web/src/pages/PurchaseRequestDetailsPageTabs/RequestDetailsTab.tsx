@@ -541,7 +541,7 @@ export function RequestDetailsTab({
               </div>
 
               <div className="order-4 grid grid-cols-2 pt-8 lg:grid-cols-[4fr_5fr] xl:order-4">
-                {/* <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <p className="font-medium text-gray-400">Who will order?</p>
                   {canAdvance &&
                     purchaseRequest.status !== "Pending Approval" &&
@@ -558,7 +558,7 @@ export function RequestDetailsTab({
                       />
                     )}
                 </div>
-                <p>{purchaseRequest.requested_purchaser}</p> */}
+                <p>{purchaseRequest.requested_purchaser}</p>
 
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-gray-400">
