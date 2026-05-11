@@ -483,7 +483,14 @@ export function RequestDetailsTab({
                 <p className="font-medium text-gray-400">Date Requested</p>
                 <p>
                   {purchaseRequest.created_at
-                    ? new Date(purchaseRequest.created_at).toLocaleDateString()
+                    ? new Date(purchaseRequest.created_at).toLocaleDateString(
+                        undefined,
+                        {
+                          month: "numeric",
+                          day: "numeric",
+                          year: "2-digit",
+                        },
+                      )
                     : ""}
                 </p>
                 <p className="font-medium text-gray-400">Status</p>
@@ -683,7 +690,11 @@ export function RequestDetailsTab({
                   {purchaseRequest.needed_by_date
                     ? new Date(
                         purchaseRequest.needed_by_date,
-                      ).toLocaleDateString()
+                      ).toLocaleDateString(undefined, {
+                        month: "numeric",
+                        day: "numeric",
+                        year: "2-digit",
+                      })
                     : ""}
                 </p>
                 <div className="flex items-center gap-2">

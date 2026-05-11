@@ -26,7 +26,7 @@ interface DataTableProps {
 export function DataTable({ data }: DataTableProps) {
   const currentUser = useUser();
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "id", desc: true },
+    { id: "created_at", desc: true },
   ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -201,6 +201,29 @@ export function DataTable({ data }: DataTableProps) {
         },
       },
       {
+        accessorKey: "created_at",
+        header: "Created",
+        size: 80,
+        maxSize: 100,
+        minSize: 80,
+        cell: ({ row }) => {
+          const value = row.original.created_at;
+          return (
+            <div className="truncate whitespace-nowrap">
+              <span>
+                {value
+                  ? new Date(value).toLocaleDateString(undefined, {
+                      month: "numeric",
+                      day: "numeric",
+                      year: "2-digit",
+                    })
+                  : ""}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "id",
         header: "ID",
         size: 48,
@@ -254,9 +277,9 @@ export function DataTable({ data }: DataTableProps) {
       {
         accessorKey: "description",
         header: "Description",
-        size: 300,
+        size: 270,
         maxSize: 9999,
-        minSize: 300,
+        minSize: 270,
         enableSorting: false,
         cell: ({ row }) => {
           const value = row.original.description;
@@ -265,25 +288,33 @@ export function DataTable({ data }: DataTableProps) {
       },
       {
         accessorKey: "needed_by_date",
-        header: "Needed By",
-        size: 100,
+        header: "Need By",
+        size: 80,
         maxSize: 100,
-        minSize: 100,
+        minSize: 80,
         cell: ({ row }) => {
           const value = row.original.needed_by_date;
           return (
             <div className="truncate whitespace-nowrap">
-              <span>{value ? new Date(value).toLocaleDateString() : ""}</span>
+              <span>
+                {value
+                  ? new Date(value).toLocaleDateString(undefined, {
+                      month: "numeric",
+                      day: "numeric",
+                      year: "2-digit",
+                    })
+                  : ""}
+              </span>
             </div>
           );
         },
       },
       {
         accessorKey: "priority",
-        header: "Priority",
-        size: 72,
-        maxSize: 72,
-        minSize: 72,
+        header: "Prio.",
+        size: 50,
+        maxSize: 50,
+        minSize: 50,
         cell: ({ row }) => {
           const value = row.original.priority;
           return <div className="whitespace-nowrap">{value}</div>;
@@ -598,7 +629,7 @@ export function DataTable({ data }: DataTableProps) {
                   {selectedRow === row.original.id && (
                     <tr>
                       <td
-                        colSpan={columns.length}
+                        colSpan={row.getVisibleCells().length}
                         className="border-t px-4 py-1"
                       >
                         <div>
