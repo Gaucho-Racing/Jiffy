@@ -55,6 +55,12 @@ import { AuthLoading } from "@/components/AuthLoading";
 import Header from "@/components/Header";
 import { OutlineButton } from "@/components/ui/outline-button";
 import Footer from "@/components/Footer";
+import {
+  ComponentSelectField,
+  COMPONENT_MICHIGAN_TRAVEL_2026,
+  MICHIGAN_COMPONENT_DEPARTMENT_NAME,
+  applyComponentDepartmentUpdate,
+} from "@/components/ComponentSelectField";
 import { getUser, useUser } from "@/lib/store";
 import { checkCredentials } from "@/lib/auth";
 import React from "react";
@@ -126,6 +132,27 @@ export default function EditPurchaseRequestPage() {
     };
     fetchDepartments();
   }, []);
+
+  const isDepartmentLocked =
+    purchaseRequest.component === COMPONENT_MICHIGAN_TRAVEL_2026;
+
+  useEffect(() => {
+    if (
+      purchaseRequest.component !== COMPONENT_MICHIGAN_TRAVEL_2026 ||
+      departments.length === 0
+    ) {
+      return;
+    }
+    const businessDept = departments.find(
+      (d) => d.name === MICHIGAN_COMPONENT_DEPARTMENT_NAME,
+    );
+    if (businessDept && purchaseRequest.department_id !== businessDept.id) {
+      setPurchaseRequest((prev) => ({
+        ...prev,
+        department_id: businessDept.id,
+      }));
+    }
+  }, [purchaseRequest.component, departments]);
 
   useEffect(() => {
     const fetchPurchaseRequest = async () => {
@@ -279,7 +306,7 @@ export default function EditPurchaseRequestPage() {
       return;
     }
     if (!purchaseRequest.component) {
-      notify.error("Please enter a component");
+      notify.error("Please select a component");
       return;
     }
     if (!purchaseRequest.vendor) {
@@ -518,6 +545,7 @@ export default function EditPurchaseRequestPage() {
                         </Label>
                         <Select
                           value={purchaseRequest.department_id}
+                          disabled={isDepartmentLocked}
                           onValueChange={(value) =>
                             setPurchaseRequest({
                               ...purchaseRequest,
@@ -540,19 +568,20 @@ export default function EditPurchaseRequestPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="grid grid-cols-2 items-center gap-4">
+                      <div className="grid grid-cols-2 items-start gap-4">
                         <Label htmlFor="component">
                           Component <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                          id="component"
-                          placeholder="Enter component / subsystem"
+                        <ComponentSelectField
                           value={purchaseRequest.component || ""}
-                          onChange={(e) =>
-                            setPurchaseRequest({
-                              ...purchaseRequest,
-                              component: e.target.value,
-                            })
+                          onChange={(component) =>
+                            setPurchaseRequest((prev) =>
+                              applyComponentDepartmentUpdate(
+                                prev,
+                                component,
+                                departments,
+                              ),
+                            )
                           }
                         />
                       </div>
