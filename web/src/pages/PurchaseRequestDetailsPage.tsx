@@ -73,9 +73,9 @@ export default function PurchaseRequestDetailsPage() {
   const canApprove = () => {
     // rly need to change to (to add) custom approvers
     return (
-      currentUser.roles.includes("d_admin") ||
-      currentUser.roles.includes("d_officer") ||
-      currentUser.roles.includes("d_lead")
+      currentUser.groups.includes("Admins") ||
+      currentUser.groups.includes("Officers") ||
+      currentUser.groups.includes("Leads")
     );
   };
 

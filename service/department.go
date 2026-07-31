@@ -92,7 +92,7 @@ func GetApproversForDepartment(departmentID string) []model.User {
 	database.DB.Table("department_approver").Where("department_id = ?", departmentID).Pluck("user_id", &approverIds)
 	approvers := make([]model.User, 0)
 	for _, approverId := range approverIds {
-		user, err := GetUser(approverId)
+		user, err := GetUser(approverId, "")
 		if err != nil {
 			utils.SugarLogger.Errorln("Error getting approver with id: " + approverId + " for department: " + departmentID)
 		} else {

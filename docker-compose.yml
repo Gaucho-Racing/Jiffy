@@ -1,16 +1,70 @@
 name: jiffy
 
 services:
-  postgres:
-    image: postgres:17-alpine
+  kerbecs:
+    container_name: jiffy-kerbecs
+    image: bk1031/kerbecs:latest
+    restart: always
     ports:
-      - 5432:5432
+      - "10310:10310"
+    volumes:
+      - ./kerbecs.yaml:/etc/kerbecs/kerbecs.yaml:ro
+    environment:
+      KERBECS_CONFIG: /etc/kerbecs/kerbecs.yaml
+    depends_on:
+      - jiffy
+      - web
+
+  jiffy:
+    container_name: jiffy-api
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: always
+    env_file:
+      - ./example.env
+    working_dir: /app
+    volumes:
+      - .:/app
+      - jiffy_gopath:/go
+    depends_on:
+      - db
+    environment:
+      ENV: DEV
+      PORT: 9999
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: password
+      DATABASE_NAME: jiffy
+
+  web:
+    container_name: jiffy-web
+    image: node:22-alpine
+    restart: always
+    working_dir: /app
+    command: >
+      sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+    environment:
+      VITE_JIFFY_API_URL: http://localhost:10310/api
+      VITE_SENTINEL_URL: https://sso.gauchoracing.com
+      VITE_SENTINEL_CLIENT_ID: 7Dq6snA9MO8z
+
+  db:
+    container_name: jiffy-db
+    image: postgres:18-alpine
+    restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: password
       POSTGRES_DB: jiffy
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
 
 volumes:
   pgdata:
+  jiffy_gopath:
+  web_node_modules:

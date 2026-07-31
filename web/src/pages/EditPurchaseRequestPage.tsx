@@ -170,7 +170,7 @@ export default function EditPurchaseRequestPage() {
         if (
           !(
             purchaseRequestData.user_id === user.id ||
-            user.roles.includes("d_admin")
+            user.groups.includes("Admins")
           )
         ) {
           notify.error("You can only edit your own purchase requests");

@@ -6,38 +6,56 @@ import (
 	"jiffy/database"
 	"jiffy/model"
 	"jiffy/utils"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 func GetAllPurchaseRequests() []model.PurchaseRequest {
+	return GetAllPurchaseRequestsWithToken("")
+}
+
+func GetAllPurchaseRequestsWithToken(accessToken string) []model.PurchaseRequest {
 	var prs []model.PurchaseRequest
-	if err := database.DB.Preload("Items").Preload("Approvals").Preload("Notes").Order("created_at DESC").Find(&prs).Error; err != nil {
+	// List view only needs items + author names — skip approvals/notes preloads.
+	if err := database.DB.Preload("Items").Order("created_at DESC").Find(&prs).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting purchase requests: %v", err)
 		return nil
 	}
+	ids := make([]string, 0, len(prs))
 	for i := range prs {
-		prs[i].User, _ = GetUser(prs[i].UserID)
+		ids = append(ids, prs[i].UserID)
+	}
+	users := GetUsers(ids, accessToken)
+	for i := range prs {
+		if user, ok := users[prs[i].UserID]; ok {
+			prs[i].User = user
+		}
 	}
 	return prs
 }
 
-func GetActionRequiredPurchaseRequests(userID string) []model.PurchaseRequest {
+func GetActionRequiredPurchaseRequests(userID string, accessToken string) []model.PurchaseRequest {
 	var prs []model.PurchaseRequest
-	if err := database.DB.Preload("Items").Preload("Approvals").Preload("Notes").Where("status = ?", model.PurchaseRequestPending).Order("created_at DESC").Find(&prs).Error; err != nil {
+	if err := database.DB.Preload("Items").Preload("Approvals").Where("status = ?", model.PurchaseRequestPending).Order("created_at DESC").Find(&prs).Error; err != nil {
 		utils.SugarLogger.Errorf("Error getting action required purchase requests: %v", err)
 		return nil
 	}
 
+	ids := make([]string, 0, len(prs))
+	for _, pr := range prs {
+		ids = append(ids, pr.UserID)
+	}
+	users := GetUsers(ids, accessToken)
+
 	var filtered []model.PurchaseRequest
 	for _, pr := range prs {
-		pr.User, _ = GetUser(pr.UserID)
-		// Check if user is an eligible approver for any pending (unapproved) approval
+		if user, ok := users[pr.UserID]; ok {
+			pr.User = user
+		}
 		hasActionable := false
 		for _, approval := range pr.Approvals {
-			// Only include if approval is still pending (not approved or rejected) and user can approve it
-			utils.SugarLogger.Infof("PR %d approval status: %s (pending: %s), isApprover: %v", pr.ID, approval.Status, model.ApprovalPending, isApprover(approval.ApproverGroupID, userID))
 			if approval.Status == model.ApprovalPending && isApprover(approval.ApproverGroupID, userID) {
 				hasActionable = true
 				break
@@ -50,7 +68,7 @@ func GetActionRequiredPurchaseRequests(userID string) []model.PurchaseRequest {
 	return filtered
 }
 
-func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
+func GetPurchaseRequestByID(id int, userID string, viewerGroups []string, accessToken string) model.PurchaseRequest {
 	var pr model.PurchaseRequest
 	if err := database.DB.Preload("Items").Preload("Approvals", func(db *gorm.DB) *gorm.DB {
 		return db.Order("id ASC")
@@ -63,24 +81,58 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 		return model.PurchaseRequest{}
 	}
 
-	pr.User, _ = GetUser(pr.UserID)
+	ids := []string{pr.UserID}
 	if pr.ReimburseToUserID != "" {
-		pr.ReimburseToUser, _ = GetUser(pr.ReimburseToUserID)
+		ids = append(ids, pr.ReimburseToUserID)
 	}
 	for i := range pr.Approvals {
 		if pr.Approvals[i].UserID != "" {
-			pr.Approvals[i].User, _ = GetUser(pr.Approvals[i].UserID)
+			ids = append(ids, pr.Approvals[i].UserID)
 		}
-		pr.Approvals[i].ApproverGroup, _ = GetApproverGroup(pr.Approvals[i].ApproverGroupID)
 	}
 	for i := range pr.Notes {
-		pr.Notes[i].User, _ = GetUser(pr.Notes[i].UserID)
+		ids = append(ids, pr.Notes[i].UserID)
 	}
 	for i := range pr.Attachments {
-		pr.Attachments[i].User, _ = GetUser(pr.Attachments[i].UserID)
+		ids = append(ids, pr.Attachments[i].UserID)
 	}
-	currentUser, _ := GetUser(userID)
-	if pr.UserID != userID && !currentUser.IsInnerCircle() {
+	users := GetUsers(ids, accessToken)
+
+	if user, ok := users[pr.UserID]; ok {
+		pr.User = user
+	}
+	if pr.ReimburseToUserID != "" {
+		if user, ok := users[pr.ReimburseToUserID]; ok {
+			pr.ReimburseToUser = user
+		}
+	}
+	groupCache := map[string]model.ApproverGroup{}
+	for i := range pr.Approvals {
+		if pr.Approvals[i].UserID != "" {
+			if user, ok := users[pr.Approvals[i].UserID]; ok {
+				pr.Approvals[i].User = user
+			}
+		}
+		gid := pr.Approvals[i].ApproverGroupID
+		if group, ok := groupCache[gid]; ok {
+			pr.Approvals[i].ApproverGroup = group
+		} else {
+			group, _ := GetApproverGroupForApprovalCheck(gid)
+			groupCache[gid] = group
+			pr.Approvals[i].ApproverGroup = group
+		}
+	}
+	for i := range pr.Notes {
+		if user, ok := users[pr.Notes[i].UserID]; ok {
+			pr.Notes[i].User = user
+		}
+	}
+	for i := range pr.Attachments {
+		if user, ok := users[pr.Attachments[i].UserID]; ok {
+			pr.Attachments[i].User = user
+		}
+	}
+	if pr.UserID != userID && !model.IsInnerCircle(viewerGroups) {
 		pr.ShippingAddressID = ""
 		pr.ShippingAddress = model.ShippingAddress{} // hide address
 		return pr
@@ -93,14 +145,14 @@ func GetPurchaseRequestByID(id int, userID string) model.PurchaseRequest {
 	return pr
 }
 
-func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.PurchaseRequest, error) {
+func CreatePurchaseRequest(pr model.PurchaseRequest, userID string, accessToken string) (model.PurchaseRequest, error) {
 	isNew := pr.ID == 0
 
 	var existingPR model.PurchaseRequest
 	if isNew {
 		pr.UserID = userID
 	} else {
-		existingPR = GetPurchaseRequestByID(pr.ID, userID)
+		existingPR = GetPurchaseRequestByID(pr.ID, userID, nil, accessToken)
 		if existingPR.ID == 0 {
 			return model.PurchaseRequest{}, errors.New("purchase request not found")
 		}
@@ -190,7 +242,7 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 		utils.SugarLogger.Errorf("Error creating initial approvals for PR %s: %v", pr.ID, err)
 		return model.PurchaseRequest{}, err
 	}
-	pr = GetPurchaseRequestByID(pr.ID, userID)
+	pr = GetPurchaseRequestByID(pr.ID, userID, nil, accessToken)
 	utils.SugarLogger.Infof("Successfully created PR %d", pr.ID)
 
 	// Discord DM to all potential approvers for each group
@@ -205,14 +257,13 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string) (model.Purch
 	return pr, nil
 }
 
-func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus, note string, userID string) (model.PurchaseRequest, error) {
-	existingPR := GetPurchaseRequestByID(prID, userID)
+func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus, note string, userID string, viewerGroups []string, accessToken string) (model.PurchaseRequest, error) {
+	existingPR := GetPurchaseRequestByID(prID, userID, viewerGroups, accessToken)
 	if existingPR.ID == 0 {
 		return model.PurchaseRequest{}, errors.New("purchase request not found")
 	}
 
-	_, err := GetUser(userID)
-	if err != nil {
+	if strings.TrimSpace(userID) == "" {
 		return model.PurchaseRequest{}, errors.New("user not found")
 	}
 
@@ -244,25 +295,24 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 	}
 	_, _ = CreateNote(prID, model.NoteStatusChanged, userID, message)
 
-	return GetPurchaseRequestByID(prID, userID), nil
+	return GetPurchaseRequestByID(prID, userID, viewerGroups, accessToken), nil
 }
 
-func UpdatePurchaseRequestFields(prID int, userID string, updates map[string]interface{}) (model.PurchaseRequest, error) {
+func UpdatePurchaseRequestFields(prID int, userID string, viewerGroups []string, accessToken string, updates map[string]interface{}) (model.PurchaseRequest, error) {
 	if len(updates) == 0 {
 		return model.PurchaseRequest{}, errors.New("no fields provided")
 	}
 
-	existingPR := GetPurchaseRequestByID(prID, userID)
+	existingPR := GetPurchaseRequestByID(prID, userID, viewerGroups, accessToken)
 	if existingPR.ID == 0 {
 		return model.PurchaseRequest{}, errors.New("purchase request not found")
 	}
 
-	user, err := GetUser(userID)
-	if err != nil {
+	if strings.TrimSpace(userID) == "" {
 		return model.PurchaseRequest{}, errors.New("user not found")
 	}
 
-	if existingPR.UserID != userID && !user.IsInnerCircle() {
+	if existingPR.UserID != userID && !model.IsInnerCircle(viewerGroups) {
 		return model.PurchaseRequest{}, errors.New("you can only edit your own purchase requests")
 	}
 
@@ -336,7 +386,7 @@ func UpdatePurchaseRequestFields(prID int, userID string, updates map[string]int
 				oldValueStr = "Not Set"
 			}
 			if newUserID, ok := newValue.(string); ok {
-				if newUser, err := GetUser(newUserID); err == nil {
+				if newUser, err := GetUser(newUserID, accessToken); err == nil {
 					newValueStr = fmt.Sprintf("%s %s", newUser.FirstName, newUser.LastName)
 				} else {
 					newValueStr = fmt.Sprintf("%v", newValue)
@@ -363,7 +413,7 @@ func UpdatePurchaseRequestFields(prID int, userID string, updates map[string]int
 		_, _ = CreateNote(prID, model.NoteRequestAmended, userID, noteMessage)
 	}
 
-	return GetPurchaseRequestByID(prID, userID), nil
+	return GetPurchaseRequestByID(prID, userID, viewerGroups, accessToken), nil
 }
 
 func DeletePurchaseRequest(prID int) error {

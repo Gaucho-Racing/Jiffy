@@ -25,6 +25,7 @@ var Sentinel = struct {
 	ClientID     string
 	ClientSecret string
 	Token        string
+	SAToken      string
 	RedirectURI  string
 }{
 	Url:          os.Getenv("SENTINEL_URL"),
@@ -32,6 +33,7 @@ var Sentinel = struct {
 	ClientID:     os.Getenv("SENTINEL_CLIENT_ID"),
 	ClientSecret: os.Getenv("SENTINEL_CLIENT_SECRET"),
 	Token:        os.Getenv("SENTINEL_TOKEN"),
+	SAToken:      os.Getenv("SENTINEL_SA_TOKEN"),
 	RedirectURI:  os.Getenv("SENTINEL_REDIRECT_URI"),
 }
 

@@ -17,13 +17,13 @@ func GetPurchaseRequestApprovals(prID int) []model.PurchaseRequestApproval {
 		return nil
 	}
 	for i := range approvals {
-		approvals[i].User, _ = GetUser(approvals[i].UserID)
+		approvals[i].User, _ = GetUser(approvals[i].UserID, "")
 		approvals[i].ApproverGroup, _ = GetApproverGroupNameOnly(approvals[i].ApproverGroupID)
 	}
 	return approvals
 }
 
-func EditApproval(approvalID string, status model.ApprovalStatus, note string, userID string) (model.PurchaseRequestApproval, error) {
+func EditApproval(approvalID string, status model.ApprovalStatus, note string, userID string, accessToken string) (model.PurchaseRequestApproval, error) {
 	var approval model.PurchaseRequestApproval
 	if err := database.DB.First(&approval, "id = ?", approvalID).Error; err != nil {
 		utils.SugarLogger.Errorf("Approval not found: %s", approvalID)
@@ -37,7 +37,7 @@ func EditApproval(approvalID string, status model.ApprovalStatus, note string, u
 	}
 
 	approval.UserID = userID
-	approval.User, _ = GetUser(userID)
+	approval.User, _ = GetUser(userID, accessToken)
 
 	approval.Status = status
 
@@ -52,7 +52,7 @@ func EditApproval(approvalID string, status model.ApprovalStatus, note string, u
 		}
 	}
 
-	pr := GetPurchaseRequestByID(approval.PurchaseRequestID, userID)
+	pr := GetPurchaseRequestByID(approval.PurchaseRequestID, userID, nil, accessToken)
 
 	newStatus := model.PurchaseRequestApproved
 	for _, appr := range pr.Approvals {
@@ -113,7 +113,7 @@ func CreateInitialApprovals(prID int) ([]model.PurchaseRequestApproval, error) {
 		return []model.PurchaseRequestApproval{}, err
 	}
 	for _, approverGroupID := range approverGroupIDs {
-		approverGroup, err := GetApproverGroup(approverGroupID)
+		approverGroup, err := GetApproverGroup(approverGroupID, "")
 		if err != nil {
 			utils.SugarLogger.Errorf("Error getting approver group %s for PR %d: %v", approverGroupID, prID, err)
 			continue

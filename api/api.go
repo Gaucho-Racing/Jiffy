@@ -2,6 +2,7 @@ package api
 
 import (
 	"jiffy/config"
+	"jiffy/model"
 	"jiffy/service"
 	"jiffy/utils"
 	"net/http"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/exp/slices"
 )
 
 func SetupRouter() *gin.Engine {
@@ -67,28 +67,88 @@ func InitializeRoutes(router *gin.Engine) {
 
 func AuthChecker() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.GetHeader("Authorization") != "" {
-			authHeader := c.GetHeader("Authorization")
-			if strings.HasPrefix(authHeader, "Bearer ") {
-				claims, err := service.ValidateJWT(strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
-				if err != nil {
-					utils.SugarLogger.Errorln("Failed to validate token: " + err.Error())
-					c.AbortWithStatusJSON(401, gin.H{"message": err.Error()})
-				} else {
-					utils.SugarLogger.Infof("Decoded token: %s", claims.Subject)
-					utils.SugarLogger.Infof("↳ Client ID: %s", claims.Audience[0])
-					utils.SugarLogger.Infof("↳ Scope: %s", claims.Scope)
-					utils.SugarLogger.Infof("↳ Issued at: %s", claims.IssuedAt.String())
-					utils.SugarLogger.Infof("↳ Expires at: %s", claims.ExpiresAt.String())
-					c.Set("Auth-Token", strings.Split(c.GetHeader("Authorization"), "Bearer ")[1])
-					c.Set("Auth-UserID", claims.Subject)
-					c.Set("Auth-Audience", claims.Audience[0])
-					c.Set("Auth-Scope", claims.Scope)
-				}
+		if c.Request.URL.Path == "/auth/login" {
+			c.Next()
+			return
+		}
+
+		authHeader := c.GetHeader("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			token := strings.TrimPrefix(authHeader, "Bearer ")
+			claims, err := service.ValidateToken(token)
+			if err != nil {
+				utils.SugarLogger.Errorln("Failed to validate token: " + err.Error())
+				c.AbortWithStatusJSON(401, gin.H{"message": err.Error()})
+				return
 			}
+			userID := claimString(claims, "user_id")
+			if userID == "" {
+				userID = claimString(claims, "sub")
+			}
+			utils.SugarLogger.Infof("Decoded token: entity=%s user=%s", claimString(claims, "sub"), userID)
+			utils.SugarLogger.Infof("↳ Audience: %s", claimStringSliceFirst(claims, "aud"))
+			utils.SugarLogger.Infof("↳ Scope: %s", claimString(claims, "scope"))
+			c.Set("Auth-Token", token)
+			c.Set("Auth-Claims", claims)
+			c.Set("Auth-UserID", userID)
+			c.Set("Auth-EntityID", claimString(claims, "sub"))
+			c.Set("Auth-Audience", claimStringSliceFirst(claims, "aud"))
+			c.Set("Auth-Scope", claimString(claims, "scope"))
+			c.Set("Auth-Groups", claimStringSlice(claims, "groups"))
 		}
 		c.Next()
 	}
+}
+
+func claimString(claims map[string]interface{}, key string) string {
+	if claims == nil {
+		return ""
+	}
+	value, ok := claims[key].(string)
+	if !ok {
+		return ""
+	}
+	return value
+}
+
+func claimStringSlice(claims map[string]interface{}, key string) []string {
+	if claims == nil {
+		return []string{}
+	}
+	switch value := claims[key].(type) {
+	case []string:
+		return value
+	case []interface{}:
+		result := make([]string, 0, len(value))
+		for _, item := range value {
+			if str, ok := item.(string); ok && str != "" {
+				result = append(result, str)
+			}
+		}
+		return result
+	case string:
+		if value == "" {
+			return []string{}
+		}
+		return []string{value}
+	default:
+		return []string{}
+	}
+}
+
+func claimStringSliceFirst(claims map[string]interface{}, key string) string {
+	groups := claimStringSlice(claims, key)
+	if len(groups) == 0 {
+		// aud / similar may be a single string handled above; fall back
+		if claims == nil {
+			return ""
+		}
+		if s, ok := claims[key].(string); ok {
+			return s
+		}
+		return ""
+	}
+	return groups[0]
 }
 
 func UnauthorizedPanicHandler() gin.HandlerFunc {
@@ -143,9 +203,52 @@ func RequestUserHasEmail(c *gin.Context, email string) bool {
 	return GetRequestUserEmail(c) == email
 }
 
-func RequestUserHasRole(c *gin.Context, role string) bool {
-	roles := service.GetRolesForUser(GetRequestUserID(c))
-	return slices.Contains(roles, role)
+func RequestTokenHasGroupName(c *gin.Context, groupName string) bool {
+	return model.HasGroup(GetRequestTokenGroupNames(c), groupName)
+}
+
+func RequestTokenIsInnerCircle(c *gin.Context) bool {
+	return model.IsInnerCircle(GetRequestTokenGroupNames(c))
+}
+
+func RequestTokenIsAdmin(c *gin.Context) bool {
+	return model.IsAdminGroup(GetRequestTokenGroupNames(c))
+}
+
+func GetRequestTokenGroupNames(c *gin.Context) []string {
+	groups, exists := c.Get("Auth-Groups")
+	if !exists {
+		return claimStringSlice(GetRequestTokenClaims(c), "groups")
+	}
+	value, ok := groups.([]string)
+	if !ok {
+		return []string{}
+	}
+	return value
+}
+
+func GetRequestTokenClaims(c *gin.Context) map[string]interface{} {
+	claims, exists := c.Get("Auth-Claims")
+	if !exists {
+		return nil
+	}
+	value, ok := claims.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	return value
+}
+
+func GetRequestToken(c *gin.Context) string {
+	token, exists := c.Get("Auth-Token")
+	if !exists {
+		return ""
+	}
+	str, ok := token.(string)
+	if !ok {
+		return ""
+	}
+	return str
 }
 
 func GetRequestUserID(c *gin.Context) string {

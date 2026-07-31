@@ -12,28 +12,34 @@ Check out our wiki page [here](https://wiki.gauchoracing.com/books/jiffy) to lea
 
 ## Getting Started
 
-### Local Database
+Run the local development stack with Docker Compose:
 
-Start by running SingleStore locally using the provided Docker image.
-
-```
-docker run \
-    -d --name singlestoredb-dev \
-    -e ROOT_PASSWORD="password" \
-    -p 3306:3306 -p 8080:8080 -p 9000:9000 \
-    ghcr.io/singlestore-labs/singlestoredb-dev:latest
+```bash
+# Fill Sentinel (and optional Discord/S3/Drive) secrets in example.env first.
+# Pull SENTINEL_CLIENT_SECRET and SENTINEL_TOKEN from Vault app secrets `jiffy-prod`.
+docker compose up --build
 ```
 
-Note the `--platform linux/amd64` instruction which is required when running on Apple Silicon.
+The development proxy serves Jiffy at:
 
+```text
+http://localhost:10310
 ```
-docker run \
-    -d --name singlestoredb-dev \
-    -e ROOT_PASSWORD="password" \
-    --platform linux/amd64 \
-    -p 3306:3306 -p 8080:8080 -p 9000:9000 \
-    ghcr.io/singlestore-labs/singlestoredb-dev:latest
+
+The API is available under:
+
+```text
+http://localhost:10310/api
 ```
+
+The compose stack starts:
+
+- `jiffy`: Go API server (Air hot-reload)
+- `web`: React/Vite frontend
+- `db`: PostgreSQL
+- `kerbecs`: local reverse proxy
+
+Optional integrations (Discord, S3, Google Sheets) can be left blank in `example.env` for basic API/UI development. Auth against Sentinel requires the client secret and service-account token.
 
 ## Contributing
 

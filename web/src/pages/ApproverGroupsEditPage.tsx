@@ -49,9 +49,9 @@ export default function ApproverGroupsEditPage() {
 
   const isInnerCircle = () => {
     return (
-      currentUser.roles.includes("d_admin") ||
-      currentUser.roles.includes("d_officer") ||
-      currentUser.roles.includes("d_lead")
+      currentUser.groups.includes("Admins") ||
+      currentUser.groups.includes("Officers") ||
+      currentUser.groups.includes("Leads")
     );
   };
 
@@ -77,13 +77,8 @@ export default function ApproverGroupsEditPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [groupRes, usersRes, departmentsRes] = await Promise.all([
+        const [groupRes, departmentsRes] = await Promise.all([
           axios.get(`${JIFFY_API_URL}/approver-groups/${id}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-            },
-          }),
-          axios.get(`${JIFFY_API_URL}/users`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
             },
@@ -96,7 +91,8 @@ export default function ApproverGroupsEditPage() {
         ]);
 
         setApproverGroup(groupRes.data);
-        setUsers(usersRes.data);
+        // User directory search is paused — keep current approvers as the only options.
+        setUsers(groupRes.data.approvers || []);
         setDepartments(departmentsRes.data);
         setSelectedUserIds(
           groupRes.data.approvers?.map((u: User) => u.id) || [],

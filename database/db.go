@@ -31,6 +31,7 @@ func InitializeDB() error {
 		utils.SugarLogger.Infoln("Connected to database")
 		db.AutoMigrate(
 			&model.UserRole{},
+			&model.UnmigratedUser{},
 			&model.Department{},
 			&model.DepartmentApprover{},
 			&model.DepartmentBudget{},

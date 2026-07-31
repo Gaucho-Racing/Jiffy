@@ -1,44 +1,26 @@
 package service
 
 import (
-	"context"
-	"jiffy/config"
-	"jiffy/model"
+	"fmt"
 	"jiffy/utils"
-
-	"github.com/golang-jwt/jwt"
-	"github.com/lestrrat-go/jwx/jwk"
 )
 
-var publicKey interface{}
-
+// InitializeKeys is retained for startup compatibility. Token validation is
+// performed remotely via Sentinel's /api/core/token/validate endpoint.
 func InitializeKeys() {
-	set, err := jwk.Fetch(context.Background(), config.Sentinel.JwksUrl)
-	if err != nil {
-		utils.SugarLogger.Errorln("Failed to fetch JWKS:", err)
-		return
-	}
-
-	key, ok := set.Get(0)
-	if !ok {
-		utils.SugarLogger.Errorln("No keys found in JWKS")
-		return
-	}
-
-	if err := key.Raw(&publicKey); err != nil {
-		utils.SugarLogger.Errorln("Failed to get public key:", err)
-		return
-	}
+	utils.SugarLogger.Infoln("Using Sentinel remote token validation")
 }
 
-func ValidateJWT(token string) (*model.AuthClaims, error) {
-	claims := &model.AuthClaims{}
-	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return publicKey, nil
-	})
+// ValidateJWT validates a bearer token with Sentinel and returns a claims map.
+// Kept for callers that still expect this name; prefer ValidateToken directly.
+func ValidateJWT(token string) (map[string]interface{}, error) {
+	claims, err := ValidateToken(token)
 	if err != nil {
 		utils.SugarLogger.Errorln(err.Error())
 		return nil, err
+	}
+	if claims == nil {
+		return nil, fmt.Errorf("sentinel token validate returned empty claims")
 	}
 	return claims, nil
 }

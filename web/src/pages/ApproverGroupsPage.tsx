@@ -28,9 +28,9 @@ export default function ApproverGroupsPage() {
 
   const isInnerCircle = () => {
     return (
-      currentUser.roles.includes("d_admin") ||
-      currentUser.roles.includes("d_officer") ||
-      currentUser.roles.includes("d_lead")
+      currentUser.groups.includes("Admins") ||
+      currentUser.groups.includes("Officers") ||
+      currentUser.groups.includes("Leads")
     );
   };
 

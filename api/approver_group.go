@@ -9,7 +9,7 @@ import (
 )
 
 func GetAllApproverGroups(c *gin.Context) {
-	approverGroups, err := service.GetAllApproverGroups()
+	approverGroups, err := service.GetAllApproverGroups(GetRequestToken(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -19,7 +19,7 @@ func GetAllApproverGroups(c *gin.Context) {
 
 func GetApproverGroup(c *gin.Context) {
 	id := c.Param("id")
-	approverGroup, err := service.GetApproverGroup(id)
+	approverGroup, err := service.GetApproverGroup(id, GetRequestToken(c))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "approver group not found"})
 		return
@@ -28,13 +28,7 @@ func GetApproverGroup(c *gin.Context) {
 }
 
 func CreateApproverGroup(c *gin.Context) {
-	userID := GetRequestUserID(c)
-	user, err := service.GetUser(userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if !user.IsInnerCircle() {
+	if !RequestTokenIsInnerCircle(c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only inner circle members can create approver groups"})
 		return
 	}
@@ -44,7 +38,7 @@ func CreateApproverGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	approverGroup, err = service.CreateApproverGroup(approverGroup)
+	approverGroup, err := service.CreateApproverGroup(approverGroup)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -55,18 +49,12 @@ func CreateApproverGroup(c *gin.Context) {
 func DeleteApproverGroup(c *gin.Context) {
 	id := c.Param("id")
 
-	userID := GetRequestUserID(c)
-	user, err := service.GetUser(userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if !user.IsInnerCircle() {
+	if !RequestTokenIsInnerCircle(c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only inner circle members can delete approver groups"})
 		return
 	}
 
-	err = service.DeleteApproverGroup(id)
+	err := service.DeleteApproverGroup(id)
 	if err != nil {
 		if err.Error() == "approver group not found" {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -79,13 +67,7 @@ func DeleteApproverGroup(c *gin.Context) {
 }
 
 func UpdateApproverGroup(c *gin.Context) {
-	userID := GetRequestUserID(c)
-	user, err := service.GetUser(userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if !user.IsInnerCircle() {
+	if !RequestTokenIsInnerCircle(c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only inner circle members can edit approver groups"})
 		return
 	}
@@ -95,7 +77,7 @@ func UpdateApproverGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	approverGroup, err = service.CreateApproverGroup(approverGroup)
+	approverGroup, err := service.CreateApproverGroup(approverGroup)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

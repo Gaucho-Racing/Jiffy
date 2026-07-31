@@ -10,27 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func InitializeApproverGroups() {
-	departments, _ := GetAllDepartments()
-	user, _ := GetUser("1291217367182868511") // Zach
-	users := []model.User{user}
-	CreateApproverGroup(model.ApproverGroup{
-		ID:             "86e2b2da-e65d-4e20-97e7-832a7786be51",
-		Name:           "Treasurer",
-		Departments:    departments,
-		Approvers:      users,
-		ThresholdCents: 0,
-	})
-}
-
-func GetAllApproverGroups() ([]model.ApproverGroup, error) {
+func GetAllApproverGroups(accessToken string) ([]model.ApproverGroup, error) {
 	var approverGroups []model.ApproverGroup
 	if err := database.DB.Find(&approverGroups).Error; err != nil {
 		return nil, err
 	}
 	for i := range approverGroups {
 		approverGroups[i].Departments = GetDepartmentsForApproverGroup(approverGroups[i].ID)
-		approverGroups[i].Approvers = GetApproversForApproverGroup(approverGroups[i].ID)
+		approverGroups[i].Approvers = GetApproversForApproverGroup(approverGroups[i].ID, accessToken)
 	}
 	return approverGroups, nil
 }
@@ -42,13 +29,13 @@ func isApprover(groupID string, userID string) bool {
 	return true
 }
 
-func GetApproverGroup(groupID string) (model.ApproverGroup, error) {
+func GetApproverGroup(groupID string, accessToken string) (model.ApproverGroup, error) {
 	var approverGroup model.ApproverGroup
 	if err := database.DB.First(&approverGroup, "id = ?", groupID).Error; err != nil {
 		return model.ApproverGroup{}, err
 	}
 	approverGroup.Departments = GetDepartmentsForApproverGroup(groupID)
-	approverGroup.Approvers = GetApproversForApproverGroup(groupID)
+	approverGroup.Approvers = GetApproversForApproverGroup(groupID, accessToken)
 	return approverGroup, nil
 }
 
@@ -65,15 +52,19 @@ func GetDepartmentsForApproverGroup(groupID string) []model.Department {
 	return departments
 }
 
-func GetApproversForApproverGroup(groupID string) []model.User {
-	var approvers []model.User
+func GetApproversForApproverGroup(groupID string, accessToken string) []model.User {
 	var userIDs []string
 	if err := database.DB.Table("approver_group_approver").Where("approver_group_id = ?", groupID).Pluck("user_id", &userIDs).Error; err != nil {
 		return nil
 	}
+	usersByID := GetUsers(userIDs, accessToken)
+	approvers := make([]model.User, 0, len(userIDs))
 	for _, userID := range userIDs {
-		user, _ := GetUser(userID)
-		approvers = append(approvers, user)
+		if user, ok := usersByID[userID]; ok {
+			approvers = append(approvers, user)
+		} else {
+			approvers = append(approvers, model.User{ID: userID, Groups: []string{}})
+		}
 	}
 	return approvers
 }
@@ -113,7 +104,7 @@ func CreateApproverGroup(approverGroup model.ApproverGroup) (model.ApproverGroup
 	}
 	SetDepartmentIDsForApproverGroup(approverGroup.ID, departmentIDs)
 	SetUserIDsForApproverGroup(approverGroup.ID, userIDs)
-	return GetApproverGroup(approverGroup.ID)
+	return GetApproverGroup(approverGroup.ID, "")
 }
 
 // TODO: fix edge case of orphaned pr_approval
@@ -155,6 +146,25 @@ func GetApproverGroupNameOnly(groupID string) (model.ApproverGroup, error) {
 		ID:   groupID,
 		Name: groupName,
 	}, nil
+}
+
+// GetApproverGroupForApprovalCheck returns name + approver ids (no nested profile
+// hydration) so the UI can check currentUser.id membership cheaply.
+func GetApproverGroupForApprovalCheck(groupID string) (model.ApproverGroup, error) {
+	group, err := GetApproverGroupNameOnly(groupID)
+	if err != nil {
+		return model.ApproverGroup{}, err
+	}
+	var userIDs []string
+	if err := database.DB.Table("approver_group_approver").Where("approver_group_id = ?", groupID).Pluck("user_id", &userIDs).Error; err != nil {
+		return group, nil
+	}
+	approvers := make([]model.User, 0, len(userIDs))
+	for _, id := range userIDs {
+		approvers = append(approvers, model.User{ID: id, Groups: []string{}})
+	}
+	group.Approvers = approvers
+	return group, nil
 }
 
 func GetDepartmentIDsForApproverGroup(groupID string) []string {

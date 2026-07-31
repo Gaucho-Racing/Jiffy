@@ -6,8 +6,7 @@ import {
   ReimbursementType,
 } from "@/models/pr";
 import { Department } from "@/models/departments";
-import { useState, useEffect } from "react";
-import { User } from "@/models/user";
+import { useState } from "react";
 import { useUser } from "@/lib/store";
 import { Pencil, CalendarIcon } from "lucide-react";
 import {
@@ -65,21 +64,6 @@ export function RequestDetailsTab({
 
   // Reimburse To User dialogs
   const [reimburseChoiceOpen, setReimburseChoiceOpen] = useState(false);
-  const [reimburseSelectOpen, setReimburseSelectOpen] = useState(false);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [userSearch, setUserSearch] = useState("");
-  const [selectedReimburseUserID, setSelectedReimburseUserID] = useState("");
-
-  useEffect(() => {
-    axios
-      .get(`${JIFFY_API_URL}/users`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
-        },
-      })
-      .then((res) => setAllUsers(res.data))
-      .catch(() => {});
-  }, []);
 
   const submitReimburseUser = async (userID: string) => {
     try {
@@ -94,7 +78,6 @@ export function RequestDetailsTab({
       );
       notify.success("Reimburse To updated successfully");
       setReimburseChoiceOpen(false);
-      setReimburseSelectOpen(false);
       if (onUpdate) onUpdate();
     } catch (error: any) {
       notify.error(
@@ -372,10 +355,11 @@ export function RequestDetailsTab({
           <DialogHeader>
             <DialogTitle>Set Reimburse To</DialogTitle>
             <DialogDescription>
-              Who should be reimbursed for this purchase request?
+              User directory search is paused under the new Sentinel auth model.
+              You can still set yourself as the reimbursement recipient.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-3 py-4">
+          <div className="grid grid-cols-1 gap-3 py-4">
             <Button
               variant="outline"
               onClick={() => {
@@ -385,71 +369,7 @@ export function RequestDetailsTab({
             >
               Set as Myself
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setReimburseChoiceOpen(false);
-                setReimburseSelectOpen(true);
-              }}
-            >
-              Select User
-            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reimburse To — user search dialog */}
-      <Dialog open={reimburseSelectOpen} onOpenChange={setReimburseSelectOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Select Reimburse To User</DialogTitle>
-            <DialogDescription>
-              {" "}
-              Who should be reimbursed for this purchase request?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-4">
-            <Input
-              placeholder="Search users..."
-              value={userSearch}
-              onChange={(e) => setUserSearch(e.target.value)}
-            />
-            <div className="max-h-60 overflow-y-auto rounded border">
-              {allUsers
-                .filter((u) =>
-                  `${u.first_name} ${u.last_name} ${u.email}`
-                    .toLowerCase()
-                    .includes(userSearch.toLowerCase()),
-                )
-                .map((u) => (
-                  <div
-                    key={u.id}
-                    onClick={() => setSelectedReimburseUserID(u.id)}
-                    className={`flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-accent ${selectedReimburseUserID === u.id ? "bg-accent" : ""}`}
-                  >
-                    <div>
-                      <p>
-                        {u.first_name} {u.last_name}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setReimburseSelectOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={!selectedReimburseUserID}
-              onClick={() => submitReimburseUser(selectedReimburseUserID)}
-            >
-              Confirm
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
       <div className="flex justify-start rounded-lg border bg-background py-10 pl-8 lg:pl-24">
@@ -505,22 +425,14 @@ export function RequestDetailsTab({
                   {!purchaseRequest.reimburse_to_user?.first_name && (
                     <Pencil
                       className="h-6 w-6 cursor-pointer text-green-400 hover:text-green-600"
-                      onClick={() => {
-                        setSelectedReimburseUserID("");
-                        setUserSearch("");
-                        setReimburseChoiceOpen(true);
-                      }}
+                      onClick={() => setReimburseChoiceOpen(true)}
                     />
                   )}
                   {purchaseRequest.reimburse_to_user?.first_name &&
                     purchaseRequest.status !== "Reimbursed" && (
                       <Pencil
                         className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"
-                        onClick={() => {
-                          setSelectedReimburseUserID("");
-                          setUserSearch("");
-                          setReimburseChoiceOpen(true);
-                        }}
+                        onClick={() => setReimburseChoiceOpen(true)}
                       />
                     )}
                 </div>

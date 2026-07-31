@@ -1,0 +1,55 @@
+gateway:
+  name: jiffy-gateway
+  version: 0.1.0
+  env: ${ENV:DEV}
+  timeouts:
+    dial: 5s
+    headers: 30s
+    idle: 50s
+    overall: 0
+
+listeners:
+  gateway:
+    port: "10310"
+    cors:
+      enabled: true
+      allowed_origins: ["*"]
+      allow_credentials: false
+  admin:
+    port: "10300"
+    auth:
+      type: basic
+      username: ${KERBECS_USER:admin}
+      password: ${KERBECS_PASSWORD:admin}
+
+providers:
+  static:
+    watch: false
+
+upstreams:
+  jiffy:
+    name: jiffy
+    version: 0.1.0
+    instances:
+      - http://jiffy:9999
+
+  web:
+    name: jiffy-web
+    version: 0.1.0
+    instances:
+      - http://web:5173
+
+routes:
+  - name: jiffy-api
+    match:
+      path: /api/*
+    upstream: jiffy
+    rewrite:
+      strip_prefix: /api
+    envelope: passthrough
+
+  - name: jiffy-web
+    match:
+      path: /*
+    upstream: web
+    envelope: passthrough

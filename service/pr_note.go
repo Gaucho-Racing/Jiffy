@@ -17,7 +17,7 @@ func GetNotesForPR(prID int) ([]model.PurchaseRequestNote, error) {
 	}
 
 	for i := range notes {
-		notes[i].User, _ = GetUser(notes[i].UserID)
+		notes[i].User, _ = GetUser(notes[i].UserID, "")
 	}
 
 	return notes, nil
