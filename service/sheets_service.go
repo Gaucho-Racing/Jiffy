@@ -8,6 +8,7 @@ import (
 	"jiffy/model"
 	"jiffy/utils"
 	"strconv"
+	"strings"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
@@ -17,6 +18,16 @@ import (
 
 var SheetClient *sheets.Service
 
+// decodeServiceAccount accepts the Google key file as raw JSON or base64, so
+// it can be pasted into Vault as-is.
+func decodeServiceAccount(value string) ([]byte, error) {
+	value = strings.TrimSpace(value)
+	if strings.HasPrefix(value, "{") {
+		return []byte(value), nil
+	}
+	return base64.StdEncoding.DecodeString(value)
+}
+
 func InitializeDrive() {
 	if config.DriveServiceAccount == "" {
 		utils.SugarLogger.Warnln("DRIVE_SERVICE_ACCOUNT not set - Google Sheets integration disabled")
@@ -24,7 +35,7 @@ func InitializeDrive() {
 	}
 
 	ctx := context.Background()
-	decoded, err := base64.StdEncoding.DecodeString(config.DriveServiceAccount)
+	decoded, err := decodeServiceAccount(config.DriveServiceAccount)
 	if err != nil {
 		utils.SugarLogger.Errorf("Error decoding service account; Google Sheets disabled: %v", err)
 		return
