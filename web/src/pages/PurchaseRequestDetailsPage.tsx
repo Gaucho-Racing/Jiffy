@@ -28,6 +28,7 @@ import { ApprovalsStatusTab } from "@/pages/PurchaseRequestDetailsPageTabs/Appro
 import { AttachmentsTab } from "@/pages/PurchaseRequestDetailsPageTabs/AttachmentsTab";
 import { NotesTab } from "@/pages/PurchaseRequestDetailsPageTabs/NotesTab";
 import { requestYearLabel } from "@/lib/academic-year";
+import { isInnerCircle } from "@/models/user";
 
 export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();
@@ -73,11 +74,7 @@ export default function PurchaseRequestDetailsPage() {
 
   const canApprove = () => {
     // rly need to change to (to add) custom approvers
-    return (
-      currentUser.groups.includes("Admins") ||
-      currentUser.groups.includes("Officers") ||
-      currentUser.groups.includes("Leads")
-    );
+    return isInnerCircle(currentUser);
   };
 
   const canAdvance = () => {

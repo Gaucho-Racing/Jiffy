@@ -9,7 +9,11 @@ import { JIFFY_API_URL } from "@/consts/config";
 import axios from "axios";
 import { notify } from "@/lib/notify";
 import { ApproverGroup, initApproverGroup } from "@/models/approver_group";
-import { User, initUser } from "@/models/user";
+import {
+  User,
+  initUser,
+  isInnerCircle as isInnerCircleUser,
+} from "@/models/user";
 import { UserSearch } from "@/components/UserSearch";
 import { Department } from "@/models/departments";
 import { MultiSelect, type Option } from "@/components/ui/multi-select";
@@ -48,13 +52,7 @@ export default function ApproverGroupsEditPage() {
   const [thresholdCents, setThresholdCents] = useState(1); // Default to 0.01 (1 cent)
   const [name, setName] = useState<string>("");
 
-  const isInnerCircle = () => {
-    return (
-      currentUser.groups.includes("Admins") ||
-      currentUser.groups.includes("Officers") ||
-      currentUser.groups.includes("Leads")
-    );
-  };
+  const isInnerCircle = () => isInnerCircleUser(currentUser);
 
   useEffect(() => {
     checkAuth();

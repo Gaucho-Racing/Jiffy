@@ -12,6 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { logout } from "@/lib/auth";
 import { useUser } from "@/lib/store";
+import { isInnerCircle as isInnerCircleUser } from "@/models/user";
 import { Button } from "./ui/button";
 import sheetsLogo from "../../public/logo/apps/sheets-logo.png";
 
@@ -40,13 +41,7 @@ const Header = (props: HeaderProps) => {
       .catch(() => {});
   }, []);
 
-  const isInnerCircle = () => {
-    return (
-      currentUser.groups.includes("Admins") ||
-      currentUser.groups.includes("Officers") ||
-      currentUser.groups.includes("Leads")
-    );
-  };
+  const isInnerCircle = () => isInnerCircleUser(currentUser);
 
   return (
     <div

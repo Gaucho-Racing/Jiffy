@@ -96,6 +96,7 @@ func AuthChecker() gin.HandlerFunc {
 			c.Set("Auth-Audience", claimStringSliceFirst(claims, "aud"))
 			c.Set("Auth-Scope", claimString(claims, "scope"))
 			c.Set("Auth-Groups", claimStringSlice(claims, "groups"))
+			c.Set("Auth-GroupIDs", claimStringSlice(claims, "group_ids"))
 		}
 		c.Next()
 	}
@@ -217,7 +218,19 @@ func RequestTokenHasGroupName(c *gin.Context, groupName string) bool {
 }
 
 func RequestTokenIsInnerCircle(c *gin.Context) bool {
-	return model.IsInnerCircle(GetRequestTokenGroupNames(c))
+	return model.IsInnerCircle(GetRequestTokenGroupIDs(c))
+}
+
+func GetRequestTokenGroupIDs(c *gin.Context) []string {
+	groupIDs, exists := c.Get("Auth-GroupIDs")
+	if !exists {
+		return claimStringSlice(GetRequestTokenClaims(c), "group_ids")
+	}
+	value, ok := groupIDs.([]string)
+	if !ok {
+		return []string{}
+	}
+	return value
 }
 
 func RequestTokenIsAdmin(c *gin.Context) bool {

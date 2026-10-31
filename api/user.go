@@ -36,5 +36,6 @@ func GetCurrentUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
+	user.InnerCircle = RequestTokenIsInnerCircle(c)
 	c.JSON(http.StatusOK, user)
 }
