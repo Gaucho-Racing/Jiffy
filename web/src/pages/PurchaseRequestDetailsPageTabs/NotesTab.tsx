@@ -19,9 +19,14 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 interface NotesTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
   onCreateNote: (note: string) => Promise<void>;
+  readOnly?: boolean;
 }
 
-export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
+export function NotesTab({
+  purchaseRequest,
+  onCreateNote,
+  readOnly = false,
+}: NotesTabProps) {
   const [showAddNoteDialog, setShowAddNoteDialog] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,7 +82,11 @@ export function NotesTab({ purchaseRequest, onCreateNote }: NotesTabProps) {
           <div>
             <h3 className="text-2xl font-semibold">Activity & Note Log</h3>
           </div>
-          <OutlineButton onClick={handleAddNoteButton}>Add Note</OutlineButton>
+          {!readOnly && (
+            <OutlineButton onClick={handleAddNoteButton}>
+              Add Note
+            </OutlineButton>
+          )}
         </div>
 
         <div className="space-y-2">

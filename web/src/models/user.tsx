@@ -19,6 +19,8 @@ export interface User {
   avatar_url: string;
   initial_role: string;
   groups: string[];
+  inner_circle: boolean;
+  admin: boolean;
   updated_at: string;
   created_at: string;
 }
@@ -44,19 +46,16 @@ export const initUser: User = {
   avatar_url: "",
   initial_role: "",
   groups: [],
+  inner_circle: false,
+  admin: false,
   updated_at: "",
   created_at: "",
 };
 
 export function isAdmin(user: User | null | undefined): boolean {
-  return !!user?.groups?.includes("Admins");
+  return !!user?.admin;
 }
 
 export function isInnerCircle(user: User | null | undefined): boolean {
-  const groups = user?.groups ?? [];
-  return (
-    groups.includes("Admins") ||
-    groups.includes("Officers") ||
-    groups.includes("Leads")
-  );
+  return !!user?.inner_circle;
 }

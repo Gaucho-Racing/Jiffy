@@ -37,7 +37,7 @@ function LoginPage() {
 
   const loginSentinel = async () => {
     const redirect_url = window.location.origin + "/auth/login";
-    const scope = "user:read";
+    const scope = "user:read groups:read";
     let oauthUrl = `${SENTINEL_OAUTH_BASE_URL}?client_id=${SENTINEL_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect_url)}&scope=${encodeURIComponent(scope)}`;
     const route = queryParameters.get("route");
     if (route) {

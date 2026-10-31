@@ -22,9 +22,19 @@ type User struct {
 	AvatarURL             string   `json:"avatar_url"`
 	InitialRole           string   `json:"initial_role"`
 	Groups                []string `json:"groups"`
+	InnerCircle           bool     `json:"inner_circle"`
+	Admin                 bool     `json:"admin"`
 	UpdatedAt             string   `json:"updated_at"`
 	CreatedAt             string   `json:"created_at"`
 }
+
+// InnerCircleGroupID is the Sentinel group whose members get inner-circle
+// access in Jiffy. Tokens carry it in group_ids when groups:read is granted
+// and the group is linked to the Jiffy application in Sentinel.
+const InnerCircleGroupID = "grp_01m68qzysqcr5xhtv9wytaqqxv"
+
+// AdminGroupID is the Sentinel Admins group, read from group_ids the same way.
+const AdminGroupID = "grp_01kqs3w6h82xkdnft94vpj7qrm"
 
 func (user User) String() string {
 	return "(" + user.ID + ")" + " " + user.FirstName + " " + user.LastName + " [" + user.Email + "]"
@@ -34,20 +44,12 @@ func (user User) HasGroup(group string) bool {
 	return HasGroup(user.Groups, group)
 }
 
-func (user User) IsAdmin() bool {
-	return user.HasGroup("Admins")
-}
-
 func (user User) IsOfficer() bool {
 	return user.HasGroup("Officers")
 }
 
 func (user User) IsLead() bool {
 	return user.HasGroup("Leads")
-}
-
-func (user User) IsInnerCircle() bool {
-	return IsInnerCircle(user.Groups)
 }
 
 // HasGroup reports whether groups contains name.
@@ -60,12 +62,12 @@ func HasGroup(groups []string, name string) bool {
 	return false
 }
 
-// IsInnerCircle is Admins, Officers, or Leads (replaces old d_* roles).
-func IsInnerCircle(groups []string) bool {
-	return HasGroup(groups, "Admins") || HasGroup(groups, "Officers") || HasGroup(groups, "Leads")
+// IsInnerCircle reports whether groupIDs includes the inner-circle Sentinel group.
+func IsInnerCircle(groupIDs []string) bool {
+	return HasGroup(groupIDs, InnerCircleGroupID)
 }
 
-// IsAdminGroup reports whether groups includes Admins.
-func IsAdminGroup(groups []string) bool {
-	return HasGroup(groups, "Admins")
+// IsAdmin reports whether groupIDs includes the Admins Sentinel group.
+func IsAdmin(groupIDs []string) bool {
+	return HasGroup(groupIDs, AdminGroupID)
 }

@@ -10,6 +10,9 @@ import (
 )
 
 func CreateAttachment(prID int, userID string, file *multipart.FileHeader, attachment model.PurchaseRequestAttachment) (model.PurchaseRequestAttachment, error) {
+	if err := EnsureCurrentPurchaseRequestYear(prID); err != nil {
+		return model.PurchaseRequestAttachment{}, err
+	}
 	url, err := UploadFileToS3(file, prID)
 	if err != nil {
 		utils.SugarLogger.Errorf("Failed to upload file to S3: %v", err)

@@ -29,7 +29,7 @@ func CreateNote(c *gin.Context) {
 
 	note, err := service.CreateNote(prID, request.Type, GetRequestUserID(c), request.Note)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		writeMutationError(c, err, http.StatusInternalServerError)
 		return
 	}
 

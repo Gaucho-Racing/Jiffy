@@ -7,10 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllUsers(c *gin.Context) {
-	users, err := service.GetAllUsers()
+func SearchUsers(c *gin.Context) {
+	if GetRequestUserID(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Sign in to search people"})
+		return
+	}
+	users, err := service.ListDirectory(GetRequestToken(c))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadGateway, gin.H{"message": "People search is unavailable right now"})
 		return
 	}
 	c.JSON(http.StatusOK, users)
@@ -32,5 +36,7 @@ func GetCurrentUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
+	user.InnerCircle = RequestTokenIsInnerCircle(c)
+	user.Admin = RequestTokenIsAdmin(c)
 	c.JSON(http.StatusOK, user)
 }

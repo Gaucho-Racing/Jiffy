@@ -27,6 +27,8 @@ import { RequestDetailsTab } from "@/pages/PurchaseRequestDetailsPageTabs/Reques
 import { ApprovalsStatusTab } from "@/pages/PurchaseRequestDetailsPageTabs/ApprovalsStatusTab";
 import { AttachmentsTab } from "@/pages/PurchaseRequestDetailsPageTabs/AttachmentsTab";
 import { NotesTab } from "@/pages/PurchaseRequestDetailsPageTabs/NotesTab";
+import { requestYearLabel } from "@/lib/academic-year";
+import { isInnerCircle } from "@/models/user";
 
 export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();
@@ -72,11 +74,7 @@ export default function PurchaseRequestDetailsPage() {
 
   const canApprove = () => {
     // rly need to change to (to add) custom approvers
-    return (
-      currentUser.groups.includes("Admins") ||
-      currentUser.groups.includes("Officers") ||
-      currentUser.groups.includes("Leads")
-    );
+    return isInnerCircle(currentUser);
   };
 
   const canAdvance = () => {
@@ -87,8 +85,11 @@ export default function PurchaseRequestDetailsPage() {
     return purchaseRequest.user_id === currentUser.id || canApprove();
   };
 
+  const readOnly = purchaseRequest.editable === false;
+
   const canEdit = () => {
     return (
+      !readOnly &&
       purchaseRequest.user_id === currentUser.id &&
       (purchaseRequest.status ===
         PurchaseRequestStatus.PurchaseRequestPending ||
@@ -358,6 +359,19 @@ export default function PurchaseRequestDetailsPage() {
                 </OutlineButton>
               </div>
             </div>
+            {readOnly && (
+              <div className="m-6">
+                <Card className="border-neutral-700">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-neutral-300">
+                      This {requestYearLabel(purchaseRequest.year)} purchase
+                      request is read-only. This year&apos;s requests stay
+                      editable.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
             {purchaseRequest.status ===
               PurchaseRequestStatus.PurchaseRequestRejected &&
               purchaseRequest.user_id === currentUser.id && (
@@ -399,15 +413,16 @@ export default function PurchaseRequestDetailsPage() {
                     department={department}
                     isLoading={isLoading}
                     onUpdate={fetchPurchaseRequest}
-                    canAdvance={canAdvance()}
+                    canAdvance={canAdvance() && !readOnly}
+                    readOnly={readOnly}
                   />
                 </TabsContent>
                 <TabsContent value="approvals" className="min-h-[600px]">
                   <ApprovalsStatusTab
                     currentUser={currentUser}
                     purchaseRequest={purchaseRequest}
-                    canApprove={canApprove()}
-                    canAdvance={canAdvance()}
+                    canApprove={canApprove() && !readOnly}
+                    canAdvance={canAdvance() && !readOnly}
                     onEditApproval={editApproval}
                     onAdvanceStatus={advanceStatus}
                   />
@@ -416,12 +431,14 @@ export default function PurchaseRequestDetailsPage() {
                   <AttachmentsTab
                     purchaseRequest={purchaseRequest}
                     onUploadAttachment={uploadAttachment}
+                    readOnly={readOnly}
                   />
                 </TabsContent>
                 <TabsContent value="notes" className="min-h-[600px]">
                   <NotesTab
                     purchaseRequest={purchaseRequest}
                     onCreateNote={createNote}
+                    readOnly={readOnly}
                   />
                 </TabsContent>
               </Tabs>

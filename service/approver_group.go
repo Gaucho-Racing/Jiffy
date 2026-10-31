@@ -15,9 +15,73 @@ func GetAllApproverGroups(accessToken string) ([]model.ApproverGroup, error) {
 	if err := database.DB.Find(&approverGroups).Error; err != nil {
 		return nil, err
 	}
+	if len(approverGroups) == 0 {
+		return approverGroups, nil
+	}
+
+	groupIDs := make([]string, len(approverGroups))
+	for i, group := range approverGroups {
+		groupIDs[i] = group.ID
+	}
+
+	var departmentLinks []model.ApproverGroupDepartment
+	if err := database.DB.Where("approver_group_id IN ?", groupIDs).Find(&departmentLinks).Error; err != nil {
+		return nil, err
+	}
+	var approverLinks []model.ApproverGroupApprover
+	if err := database.DB.Where("approver_group_id IN ?", groupIDs).Find(&approverLinks).Error; err != nil {
+		return nil, err
+	}
+
+	seenDepartments := map[string]struct{}{}
+	var departmentIDs []string
+	for _, link := range departmentLinks {
+		if _, ok := seenDepartments[link.DepartmentID]; ok {
+			continue
+		}
+		seenDepartments[link.DepartmentID] = struct{}{}
+		departmentIDs = append(departmentIDs, link.DepartmentID)
+	}
+	departmentsByID := map[string]model.Department{}
+	if len(departmentIDs) > 0 {
+		var departments []model.Department
+		if err := database.DB.Where("id IN ?", departmentIDs).Find(&departments).Error; err != nil {
+			return nil, err
+		}
+		hydrateDepartments(departments)
+		for _, department := range departments {
+			departmentsByID[department.ID] = department
+		}
+	}
+
+	userIDs := make([]string, 0, len(approverLinks))
+	for _, link := range approverLinks {
+		userIDs = append(userIDs, link.UserID)
+	}
+	usersByID := GetUsers(userIDs, accessToken)
+
+	departmentsForGroup := map[string][]model.Department{}
+	for _, link := range departmentLinks {
+		if department, ok := departmentsByID[link.DepartmentID]; ok {
+			departmentsForGroup[link.ApproverGroupID] = append(departmentsForGroup[link.ApproverGroupID], department)
+		}
+	}
+	approversForGroup := map[string][]model.User{}
+	for _, link := range approverLinks {
+		if user, ok := usersByID[link.UserID]; ok {
+			approversForGroup[link.ApproverGroupID] = append(approversForGroup[link.ApproverGroupID], user)
+		} else {
+			approversForGroup[link.ApproverGroupID] = append(approversForGroup[link.ApproverGroupID], model.User{ID: link.UserID, Groups: []string{}})
+		}
+	}
+
 	for i := range approverGroups {
-		approverGroups[i].Departments = GetDepartmentsForApproverGroup(approverGroups[i].ID)
-		approverGroups[i].Approvers = GetApproversForApproverGroup(approverGroups[i].ID, accessToken)
+		approverGroups[i].Departments = departmentsForGroup[approverGroups[i].ID]
+		approvers := approversForGroup[approverGroups[i].ID]
+		if approvers == nil {
+			approvers = []model.User{}
+		}
+		approverGroups[i].Approvers = approvers
 	}
 	return approverGroups, nil
 }
@@ -35,21 +99,36 @@ func GetApproverGroup(groupID string, accessToken string) (model.ApproverGroup, 
 		return model.ApproverGroup{}, err
 	}
 	approverGroup.Departments = GetDepartmentsForApproverGroup(groupID)
-	approverGroup.Approvers = GetApproversForApproverGroup(groupID, accessToken)
+	approvers := GetApproversForApproverGroup(groupID, accessToken)
+	if usersNeedDirectory(usersByID(approvers)) {
+		warmDirectory(accessToken)
+		approvers = GetApproversForApproverGroup(groupID, accessToken)
+	}
+	approverGroup.Approvers = approvers
 	return approverGroup, nil
 }
 
 func GetDepartmentsForApproverGroup(groupID string) []model.Department {
-	var departments []model.Department
-	var departmentIDs []string
-	if err := database.DB.Table("approver_group_department").Where("approver_group_id = ?", groupID).Pluck("department_id", &departmentIDs).Error; err != nil {
+	departmentIDs := GetDepartmentIDsForApproverGroup(groupID)
+	if len(departmentIDs) == 0 {
 		return nil
 	}
-	for _, departmentID := range departmentIDs {
-		department, _ := GetDepartmentByID(departmentID)
-		departments = append(departments, department)
+	var departments []model.Department
+	if err := database.DB.Where("id IN ?", departmentIDs).Find(&departments).Error; err != nil {
+		return nil
 	}
-	return departments
+	hydrateDepartments(departments)
+	byID := make(map[string]model.Department, len(departments))
+	for _, department := range departments {
+		byID[department.ID] = department
+	}
+	ordered := make([]model.Department, 0, len(departmentIDs))
+	for _, departmentID := range departmentIDs {
+		if department, ok := byID[departmentID]; ok {
+			ordered = append(ordered, department)
+		}
+	}
+	return ordered
 }
 
 func GetApproversForApproverGroup(groupID string, accessToken string) []model.User {

@@ -113,7 +113,9 @@ export default function NewPurchaseRequestPage() {
             Authorization: `Bearer ${localStorage.getItem("sentinel_access_token")}`,
           },
         });
-        setDepartments(response.data);
+        setDepartments(
+          response.data.filter((department: Department) => department.active),
+        );
       } catch (error: any) {
         notify.error(
           error.response?.data?.message || "Failed to fetch departments",

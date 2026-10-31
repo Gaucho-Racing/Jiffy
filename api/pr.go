@@ -27,7 +27,7 @@ func GetPurchaseRequestByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid purchase request ID"})
 		return
 	}
-	pr := service.GetPurchaseRequestByID(id, GetRequestUserID(c), GetRequestTokenGroupNames(c), GetRequestToken(c))
+	pr := service.GetPurchaseRequestByID(id, GetRequestUserID(c), GetRequestTokenGroupIDs(c), GetRequestToken(c))
 	if pr.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Purchase request not found"})
 		return
@@ -43,7 +43,7 @@ func CreatePurchaseRequest(c *gin.Context) {
 	}
 	updatedPR, err := service.CreatePurchaseRequest(pr, GetRequestUserID(c), GetRequestToken(c))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		writeMutationError(c, err, http.StatusInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, updatedPR)
@@ -111,9 +111,9 @@ func UpdatePurchaseRequestFields(c *gin.Context) {
 		return
 	}
 
-	result, err := service.UpdatePurchaseRequestFields(id, GetRequestUserID(c), GetRequestTokenGroupNames(c), GetRequestToken(c), updates)
+	result, err := service.UpdatePurchaseRequestFields(id, GetRequestUserID(c), GetRequestTokenGroupIDs(c), GetRequestToken(c), updates)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		writeMutationError(c, err, http.StatusBadRequest)
 		return
 	}
 
@@ -135,9 +135,9 @@ func UpdatePurchaseRequestStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	result, err := service.UpdatePurchaseRequestStatus(id, request.Status, request.Note, GetRequestUserID(c), GetRequestTokenGroupNames(c), GetRequestToken(c))
+	result, err := service.UpdatePurchaseRequestStatus(id, request.Status, request.Note, GetRequestUserID(c), GetRequestTokenGroupIDs(c), GetRequestToken(c))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		writeMutationError(c, err, http.StatusInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -150,7 +150,7 @@ func DeletePurchaseRequest(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid purchase request ID"})
 		return
 	}
-	existingPR := service.GetPurchaseRequestByID(id, GetRequestUserID(c), GetRequestTokenGroupNames(c), GetRequestToken(c))
+	existingPR := service.GetPurchaseRequestByID(id, GetRequestUserID(c), GetRequestTokenGroupIDs(c), GetRequestToken(c))
 	if existingPR.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Purchase request not found"})
 		return
@@ -165,7 +165,7 @@ func DeletePurchaseRequest(c *gin.Context) {
 		return
 	}
 	if err := service.DeletePurchaseRequest(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		writeMutationError(c, err, http.StatusInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Purchase request deleted successfully"})

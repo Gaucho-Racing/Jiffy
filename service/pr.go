@@ -32,6 +32,7 @@ func GetAllPurchaseRequestsWithToken(accessToken string) []model.PurchaseRequest
 		if user, ok := users[prs[i].UserID]; ok {
 			prs[i].User = user
 		}
+		AnnotatePurchaseRequest(&prs[i])
 	}
 	return prs
 }
@@ -61,14 +62,15 @@ func GetActionRequiredPurchaseRequests(userID string, accessToken string) []mode
 				break
 			}
 		}
-		if hasActionable {
+		if hasActionable && EffectivePurchaseRequestYear(pr) == CurrentPurchaseRequestYear() {
+			AnnotatePurchaseRequest(&pr)
 			filtered = append(filtered, pr)
 		}
 	}
 	return filtered
 }
 
-func GetPurchaseRequestByID(id int, userID string, viewerGroups []string, accessToken string) model.PurchaseRequest {
+func GetPurchaseRequestByID(id int, userID string, viewerGroupIDs []string, accessToken string) model.PurchaseRequest {
 	var pr model.PurchaseRequest
 	if err := database.DB.Preload("Items").Preload("Approvals", func(db *gorm.DB) *gorm.DB {
 		return db.Order("id ASC")
@@ -97,6 +99,11 @@ func GetPurchaseRequestByID(id int, userID string, viewerGroups []string, access
 		ids = append(ids, pr.Attachments[i].UserID)
 	}
 	users := GetUsers(ids, accessToken)
+	if usersNeedDirectory(users) {
+		warmDirectory(accessToken)
+		users = GetUsers(ids, accessToken)
+	}
+	enrichAvatars(users)
 
 	if user, ok := users[pr.UserID]; ok {
 		pr.User = user
@@ -132,9 +139,10 @@ func GetPurchaseRequestByID(id int, userID string, viewerGroups []string, access
 			pr.Attachments[i].User = user
 		}
 	}
-	if pr.UserID != userID && !model.IsInnerCircle(viewerGroups) {
+	if pr.UserID != userID && !model.IsInnerCircle(viewerGroupIDs) {
 		pr.ShippingAddressID = ""
 		pr.ShippingAddress = model.ShippingAddress{} // hide address
+		AnnotatePurchaseRequest(&pr)
 		return pr
 	}
 	if pr.ShippingAddressID != "" {
@@ -142,6 +150,7 @@ func GetPurchaseRequestByID(id int, userID string, viewerGroups []string, access
 			pr.ShippingAddress = address
 		}
 	}
+	AnnotatePurchaseRequest(&pr)
 	return pr
 }
 
@@ -151,11 +160,16 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string, accessToken 
 	var existingPR model.PurchaseRequest
 	if isNew {
 		pr.UserID = userID
+		pr.Year = CurrentPurchaseRequestYear()
 	} else {
 		existingPR = GetPurchaseRequestByID(pr.ID, userID, nil, accessToken)
 		if existingPR.ID == 0 {
 			return model.PurchaseRequest{}, errors.New("purchase request not found")
 		}
+		if !existingPR.Editable {
+			return model.PurchaseRequest{}, ErrPriorYearReadOnly
+		}
+		pr.Year = existingPR.Year
 		if existingPR.UserID != userID {
 			return model.PurchaseRequest{}, errors.New("you can only edit your own purchase requests")
 		}
@@ -257,10 +271,13 @@ func CreatePurchaseRequest(pr model.PurchaseRequest, userID string, accessToken 
 	return pr, nil
 }
 
-func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus, note string, userID string, viewerGroups []string, accessToken string) (model.PurchaseRequest, error) {
-	existingPR := GetPurchaseRequestByID(prID, userID, viewerGroups, accessToken)
+func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus, note string, userID string, viewerGroupIDs []string, accessToken string) (model.PurchaseRequest, error) {
+	existingPR := GetPurchaseRequestByID(prID, userID, viewerGroupIDs, accessToken)
 	if existingPR.ID == 0 {
 		return model.PurchaseRequest{}, errors.New("purchase request not found")
+	}
+	if !existingPR.Editable {
+		return model.PurchaseRequest{}, ErrPriorYearReadOnly
 	}
 
 	if strings.TrimSpace(userID) == "" {
@@ -295,24 +312,27 @@ func UpdatePurchaseRequestStatus(prID int, newStatus model.PurchaseRequestStatus
 	}
 	_, _ = CreateNote(prID, model.NoteStatusChanged, userID, message)
 
-	return GetPurchaseRequestByID(prID, userID, viewerGroups, accessToken), nil
+	return GetPurchaseRequestByID(prID, userID, viewerGroupIDs, accessToken), nil
 }
 
-func UpdatePurchaseRequestFields(prID int, userID string, viewerGroups []string, accessToken string, updates map[string]interface{}) (model.PurchaseRequest, error) {
+func UpdatePurchaseRequestFields(prID int, userID string, viewerGroupIDs []string, accessToken string, updates map[string]interface{}) (model.PurchaseRequest, error) {
 	if len(updates) == 0 {
 		return model.PurchaseRequest{}, errors.New("no fields provided")
 	}
 
-	existingPR := GetPurchaseRequestByID(prID, userID, viewerGroups, accessToken)
+	existingPR := GetPurchaseRequestByID(prID, userID, viewerGroupIDs, accessToken)
 	if existingPR.ID == 0 {
 		return model.PurchaseRequest{}, errors.New("purchase request not found")
+	}
+	if !existingPR.Editable {
+		return model.PurchaseRequest{}, ErrPriorYearReadOnly
 	}
 
 	if strings.TrimSpace(userID) == "" {
 		return model.PurchaseRequest{}, errors.New("user not found")
 	}
 
-	if existingPR.UserID != userID && !model.IsInnerCircle(viewerGroups) {
+	if existingPR.UserID != userID && !model.IsInnerCircle(viewerGroupIDs) {
 		return model.PurchaseRequest{}, errors.New("you can only edit your own purchase requests")
 	}
 
@@ -413,10 +433,13 @@ func UpdatePurchaseRequestFields(prID int, userID string, viewerGroups []string,
 		_, _ = CreateNote(prID, model.NoteRequestAmended, userID, noteMessage)
 	}
 
-	return GetPurchaseRequestByID(prID, userID, viewerGroups, accessToken), nil
+	return GetPurchaseRequestByID(prID, userID, viewerGroupIDs, accessToken), nil
 }
 
 func DeletePurchaseRequest(prID int) error {
+	if err := EnsureCurrentPurchaseRequestYear(prID); err != nil {
+		return err
+	}
 	if err := DeleteAllApprovals(prID); err != nil {
 		utils.SugarLogger.Errorf("Error deleting approvals for PR %d: %v", prID, err)
 		return err

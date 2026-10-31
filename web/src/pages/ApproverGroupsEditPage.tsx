@@ -9,11 +9,16 @@ import { JIFFY_API_URL } from "@/consts/config";
 import axios from "axios";
 import { notify } from "@/lib/notify";
 import { ApproverGroup, initApproverGroup } from "@/models/approver_group";
-import { User } from "@/models/user";
+import {
+  User,
+  initUser,
+  isInnerCircle as isInnerCircleUser,
+} from "@/models/user";
+import { UserSearch } from "@/components/UserSearch";
 import { Department } from "@/models/departments";
 import { MultiSelect, type Option } from "@/components/ui/multi-select";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, XIcon } from "lucide-react";
 import { CardHeader, CardContent, Card } from "@/components/ui/card";
 import { OutlineButton } from "@/components/ui/outline-button";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
@@ -47,13 +52,7 @@ export default function ApproverGroupsEditPage() {
   const [thresholdCents, setThresholdCents] = useState(1); // Default to 0.01 (1 cent)
   const [name, setName] = useState<string>("");
 
-  const isInnerCircle = () => {
-    return (
-      currentUser.groups.includes("Admins") ||
-      currentUser.groups.includes("Officers") ||
-      currentUser.groups.includes("Leads")
-    );
-  };
+  const isInnerCircle = () => isInnerCircleUser(currentUser);
 
   useEffect(() => {
     checkAuth();
@@ -91,7 +90,6 @@ export default function ApproverGroupsEditPage() {
         ]);
 
         setApproverGroup(groupRes.data);
-        // User directory search is paused — keep current approvers as the only options.
         setUsers(groupRes.data.approvers || []);
         setDepartments(departmentsRes.data);
         setSelectedUserIds(
@@ -112,18 +110,26 @@ export default function ApproverGroupsEditPage() {
     fetchData();
   }, []);
 
-  const departmentOptions: Option[] = departments.map((d) => ({
-    value: d.id,
-    label: d.name,
-  }));
+  const departmentOptions: Option[] = departments
+    .filter((d) => d.active || selectedDepartmentIds.includes(d.id))
+    .map((d) => ({
+      value: d.id,
+      label: d.active ? d.name : `${d.name} (past season)`,
+    }));
 
-  const userOptions: Option[] = users.map((u) => ({
-    value: u.id,
-    label: `${u.first_name} ${u.last_name}`,
-  }));
+  const rememberUser = (user: User) => {
+    setUsers((current) =>
+      current.some((existing) => existing.id === user.id)
+        ? current
+        : [...current, user],
+    );
+    setSelectedUserIds((current) =>
+      current.includes(user.id) ? current : [...current, user.id],
+    );
+  };
 
-  const setSelectedUsers = (selectedIds: string[]) => {
-    setSelectedUserIds(selectedIds);
+  const removeApprover = (userID: string) => {
+    setSelectedUserIds((current) => current.filter((id) => id !== userID));
   };
 
   const setSelectedDepartments = (selectedIds: string[]) => {
@@ -136,8 +142,9 @@ export default function ApproverGroupsEditPage() {
       return;
     }
 
-    const selectedUserObjects = users.filter((u) =>
-      selectedUserIds.includes(u.id),
+    const selectedUserObjects = selectedUserIds.map(
+      (userID) =>
+        users.find((user) => user.id === userID) ?? { ...initUser, id: userID },
     );
     const selectedDepartmentObjects = departments.filter((d) =>
       selectedDepartmentIds.includes(d.id),
@@ -308,11 +315,33 @@ export default function ApproverGroupsEditPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>Approvers</Label>
-                      <MultiSelect
-                        options={userOptions}
-                        value={selectedUserIds}
-                        onChange={setSelectedUsers}
+                      <UserSearch
+                        excludeIds={selectedUserIds}
+                        onSelect={rememberUser}
                       />
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {selectedUserIds.map((userID) => {
+                          const user = users.find(
+                            (candidate) => candidate.id === userID,
+                          );
+                          const label = user
+                            ? `${user.first_name} ${user.last_name}`.trim() ||
+                              user.username ||
+                              userID
+                            : userID;
+                          return (
+                            <button
+                              key={userID}
+                              type="button"
+                              onClick={() => removeApprover(userID)}
+                              className="inline-flex items-center gap-1 rounded-md border border-neutral-700 px-2 py-1 text-sm"
+                            >
+                              {label}
+                              <XIcon className="h-3 w-3 text-gray-400" />
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

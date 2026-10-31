@@ -4,6 +4,8 @@ import "time"
 
 type PurchaseRequest struct {
 	ID                    int                         `json:"id" gorm:"primaryKey;autoIncrement"`
+	Year                  int                         `json:"year" gorm:"index"`
+	Editable              bool                        `json:"editable" gorm:"-"`
 	DepartmentID          string                      `json:"department_id"`
 	Component             string                      `json:"component"`
 	UserID                string                      `json:"user_id"`

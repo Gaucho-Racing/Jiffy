@@ -32,11 +32,13 @@ interface AttachmentsTabProps {
     type: string,
     description: string,
   ) => Promise<void>;
+  readOnly?: boolean;
 }
 
 export function AttachmentsTab({
   purchaseRequest,
   onUploadAttachment,
+  readOnly = false,
 }: AttachmentsTabProps) {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -135,9 +137,11 @@ export function AttachmentsTab({
           <div>
             <h3 className="text-2xl font-semibold">Receipts & Attachments</h3>
           </div>
-          <OutlineButton onClick={handleUploadButton}>
-            Upload Attachment
-          </OutlineButton>
+          {!readOnly && (
+            <OutlineButton onClick={handleUploadButton}>
+              Upload Attachment
+            </OutlineButton>
+          )}
         </div>
         <div className="mb-7">
           <p className="text-sm text-red-400">

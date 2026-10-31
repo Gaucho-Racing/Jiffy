@@ -24,6 +24,9 @@ func GetNotesForPR(prID int) ([]model.PurchaseRequestNote, error) {
 }
 
 func CreateNote(prID int, noteType model.NoteType, userID string, message string) (model.PurchaseRequestNote, error) {
+	if err := EnsureCurrentPurchaseRequestYear(prID); err != nil {
+		return model.PurchaseRequestNote{}, err
+	}
 	note := model.PurchaseRequestNote{
 		ID:                uuid.New().String(),
 		PurchaseRequestID: prID,

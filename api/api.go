@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"jiffy/config"
 	"jiffy/model"
 	"jiffy/service"
@@ -33,7 +34,7 @@ func SetupRouter() *gin.Engine {
 func InitializeRoutes(router *gin.Engine) {
 	router.GET("/ping", Ping)
 	router.POST("/auth/login", Login)
-	router.GET("/users", GetAllUsers)
+	router.GET("/users", SearchUsers)
 	router.GET("/users/@me", GetCurrentUser)
 	router.GET("/users/:userID", GetUser)
 	router.GET("/purchase-requests", GetAllPurchaseRequests)
@@ -95,6 +96,7 @@ func AuthChecker() gin.HandlerFunc {
 			c.Set("Auth-Audience", claimStringSliceFirst(claims, "aud"))
 			c.Set("Auth-Scope", claimString(claims, "scope"))
 			c.Set("Auth-Groups", claimStringSlice(claims, "groups"))
+			c.Set("Auth-GroupIDs", claimStringSlice(claims, "group_ids"))
 		}
 		c.Next()
 	}
@@ -149,6 +151,14 @@ func claimStringSliceFirst(claims map[string]interface{}, key string) string {
 		return ""
 	}
 	return groups[0]
+}
+
+func writeMutationError(c *gin.Context, err error, fallback int) {
+	status := fallback
+	if errors.Is(err, service.ErrPriorYearReadOnly) {
+		status = http.StatusForbidden
+	}
+	c.JSON(status, gin.H{"message": err.Error(), "error": err.Error()})
 }
 
 func UnauthorizedPanicHandler() gin.HandlerFunc {
@@ -208,11 +218,23 @@ func RequestTokenHasGroupName(c *gin.Context, groupName string) bool {
 }
 
 func RequestTokenIsInnerCircle(c *gin.Context) bool {
-	return model.IsInnerCircle(GetRequestTokenGroupNames(c))
+	return model.IsInnerCircle(GetRequestTokenGroupIDs(c))
+}
+
+func GetRequestTokenGroupIDs(c *gin.Context) []string {
+	groupIDs, exists := c.Get("Auth-GroupIDs")
+	if !exists {
+		return claimStringSlice(GetRequestTokenClaims(c), "group_ids")
+	}
+	value, ok := groupIDs.([]string)
+	if !ok {
+		return []string{}
+	}
+	return value
 }
 
 func RequestTokenIsAdmin(c *gin.Context) bool {
-	return model.IsAdminGroup(GetRequestTokenGroupNames(c))
+	return model.IsAdmin(GetRequestTokenGroupIDs(c))
 }
 
 func GetRequestTokenGroupNames(c *gin.Context) []string {

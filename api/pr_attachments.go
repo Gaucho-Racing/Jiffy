@@ -47,7 +47,7 @@ func UploadAttachment(c *gin.Context) {
 
 	result, err := service.CreateAttachment(prID, userID, file, attachment)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		writeMutationError(c, err, http.StatusInternalServerError)
 		return
 	}
 

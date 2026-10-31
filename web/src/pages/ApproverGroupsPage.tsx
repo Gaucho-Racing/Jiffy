@@ -8,6 +8,7 @@ import { JIFFY_API_URL } from "@/consts/config";
 import axios from "axios";
 import { notify } from "@/lib/notify";
 import { ApproverGroup } from "@/models/approver_group";
+import { isInnerCircle as isInnerCircleUser } from "@/models/user";
 import {
   Card,
   CardContent,
@@ -26,13 +27,7 @@ export default function ApproverGroupsPage() {
   const currentUser = useUser();
   const [approverGroups, setApproverGroups] = useState<ApproverGroup[]>([]);
 
-  const isInnerCircle = () => {
-    return (
-      currentUser.groups.includes("Admins") ||
-      currentUser.groups.includes("Officers") ||
-      currentUser.groups.includes("Leads")
-    );
-  };
+  const isInnerCircle = () => isInnerCircleUser(currentUser);
 
   useEffect(() => {
     checkAuth().then(() => {});

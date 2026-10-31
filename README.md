@@ -41,6 +41,19 @@ The compose stack starts:
 
 Optional integrations (Discord, S3, Google Sheets) can be left blank in `example.env` for basic API/UI development. Auth against Sentinel requires the client secret and service-account token.
 
+## Google Sheets
+
+The dump writes the current academic year (September 1 through August 31, Pacific Time) into one spreadsheet. It does not need a code change to point at a new workbook.
+
+1. In Google Cloud, create a service account and enable the Google Sheets API.
+2. Create a key as JSON. Base64-encode that file and put it in `DRIVE_SERVICE_ACCOUNT` (production Vault secret `jiffy-prod.drive_service_account`). The previous service account no longer exists, so this has to be a new one.
+3. Create a spreadsheet. Add a tab named `Pending and Rejected`, plus one tab per department name (`Aerodynamics`, `Business`, `Chassis`, `Data`, `Drivetrain`, `Firmware`, `High Voltage`, `Low Voltage`, `Suspension`, `Systems`). The job writes item rows from `B6` through column `W` and clears those cells first.
+4. Share the spreadsheet with the service account email as an Editor.
+5. Set `PURCHASE_REQUESTS_SHEET_ID` to the id in the sheet URL (`/spreadsheets/d/<id>/`). Leave it empty to keep writing the old GR26 workbook. The header button reads this from the API.
+6. The cron runs only when `ENV=PROD` and `SHEETS_CRON` is set (production uses `30 * * * *`). `POST /sheets` runs one dump immediately.
+
+Copy the spreadsheet before the next September 1 if last season's tabs should stay in Sheets. The job clears the workbook and writes only the current academic year. Jiffy still keeps the older purchase requests.
+
 ## Contributing
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".

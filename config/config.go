@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 var Version = "2.3.3"
 var Env = os.Getenv("ENV")
@@ -50,5 +53,30 @@ var S3 = struct {
 }
 
 var DriveServiceAccount = os.Getenv("DRIVE_SERVICE_ACCOUNT")
-var GR26PurchaseRequestsSheetID = "1ZLmZxU0ZGiXS--56xRe0yNJlGU9n3NGLopQwtf0JLyw"
+
+// PurchaseRequestsSheetID is the workbook the dump writes. Set
+// PURCHASE_REQUESTS_SHEET_ID to a new spreadsheet. Empty keeps the previous
+// GR26 workbook so an existing deploy does not change destination.
+var PurchaseRequestsSheetID = firstNonEmpty(os.Getenv("PURCHASE_REQUESTS_SHEET_ID"), "1ZLmZxU0ZGiXS--56xRe0yNJlGU9n3NGLopQwtf0JLyw")
 var SheetsCron = os.Getenv("SHEETS_CRON")
+
+func PurchaseRequestsSheetURL() string {
+	if PurchaseRequestsSheetID == "" {
+		return ""
+	}
+	return "https://docs.google.com/spreadsheets/d/" + PurchaseRequestsSheetID + "/"
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+// NotifyURL is the Notify API base, including the /api prefix.
+// Empty outside production unless set; production defaults in the Notify client.
+var NotifyURL = os.Getenv("NOTIFY_URL")
