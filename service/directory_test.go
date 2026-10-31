@@ -2,30 +2,25 @@ package service
 
 import "testing"
 
-func TestFilterDirectoryByNameOrUsername(t *testing.T) {
+func TestDirectorySummariesMatchNotifyList(t *testing.T) {
 	people := []sentinelListUser{
-		{ID: "usr_a", FirstName: "Ada", LastName: "Lovelace", Username: "ada"},
 		{ID: "usr_b", FirstName: "Grace", LastName: "Hopper", Username: "grace"},
-		{ID: "usr_c", FirstName: "Alan", LastName: "Turing", Username: "turing"},
+		{ID: "usr_a", FirstName: "Ada", LastName: "Lovelace", Username: "ada", AvatarURL: "https://example/ada.png"},
 		{ID: "", FirstName: "Skip", LastName: "Me", Username: "skip"},
+		{ID: "usr_c", Username: "noname"},
 	}
 
-	byName := filterDirectory(people, "lovelace", 6)
-	if len(byName) != 1 || byName[0].ID != "usr_a" {
-		t.Fatalf("name search = %+v", byName)
+	got := directorySummaries(people)
+	if len(got) != 3 {
+		t.Fatalf("len = %d, want 3: %+v", len(got), got)
 	}
-
-	byUsername := filterDirectory(people, "TUR", 6)
-	if len(byUsername) != 1 || byUsername[0].Username != "turing" {
-		t.Fatalf("username search = %+v", byUsername)
+	if got[0].ID != "usr_a" || got[0].Name != "Ada Lovelace" || got[0].AvatarURL == "" {
+		t.Fatalf("first = %+v", got[0])
 	}
-
-	limited := filterDirectory(people, "a", 1)
-	if len(limited) != 1 {
-		t.Fatalf("limit = %d, want 1", len(limited))
+	if got[1].Name != "Grace Hopper" {
+		t.Fatalf("second = %+v", got[1])
 	}
-
-	if got := filterDirectory(people, "   ", 6); len(got) != 0 {
-		t.Fatalf("blank query returned %d users", len(got))
+	if got[2].ID != "usr_c" || got[2].Name != "noname" {
+		t.Fatalf("username fallback = %+v", got[2])
 	}
 }

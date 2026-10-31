@@ -32,25 +32,27 @@ var (
 	directoryAt     time.Time
 )
 
-// SearchDirectory filters the Sentinel user list by name or username.
-// Notify's playground does the same filter in the browser after GET /users.
-// That Notify route is limited to Notify admins, so Jiffy asks Sentinel
-// directly with the signed-in member's token. Jiffy login already requests
-// user:read, which is the scope Sentinel's user list checks.
-func SearchDirectory(accessToken string, query string, limit int) ([]model.User, error) {
-	query = strings.TrimSpace(query)
-	if query == "" {
-		return []model.User{}, nil
-	}
-	if limit <= 0 {
-		limit = 6
-	}
+// DirectoryUser is the slice Notify's playground keeps for its name search:
+// a display name, username, and avatar. Jiffy also keeps the usr_ id because
+// approver groups and reimbursement recipients are stored that way.
+type DirectoryUser struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Username  string `json:"username"`
+	AvatarURL string `json:"avatar_url"`
+}
+
+// ListDirectory returns every Sentinel user for the browser to filter.
+// Notify does this in GET /users, then the playground matches name or
+// username locally and shows at most six hits. That Notify route is limited
+// to Notify admins, so this list is loaded with the signed-in member's token.
+func ListDirectory(accessToken string) ([]DirectoryUser, error) {
 	people, err := loadDirectory(accessToken)
 	if err != nil {
 		utils.SugarLogger.Warnf("sentinel user directory unavailable: %v", err)
 		return nil, err
 	}
-	return filterDirectory(people, query, limit), nil
+	return directorySummaries(people), nil
 }
 
 func warmDirectory(accessToken string) {
@@ -96,14 +98,6 @@ func loadDirectory(accessToken string) ([]sentinelListUser, error) {
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(people, func(i, j int) bool {
-		left := strings.ToLower(strings.TrimSpace(people[i].FirstName + " " + people[i].LastName))
-		right := strings.ToLower(strings.TrimSpace(people[j].FirstName + " " + people[j].LastName))
-		if left == right {
-			return strings.ToLower(people[i].Username) < strings.ToLower(people[j].Username)
-		}
-		return left < right
-	})
 	for _, person := range people {
 		storeSentinelUser(sentinelDirectoryUser{
 			ID:        person.ID,
@@ -147,36 +141,27 @@ func fetchDirectory(accessToken string) ([]sentinelListUser, error) {
 	return nil, last
 }
 
-func filterDirectory(people []sentinelListUser, query string, limit int) []model.User {
-	needle := strings.ToLower(strings.TrimSpace(query))
-	if needle == "" || limit <= 0 {
-		return []model.User{}
-	}
-	matches := make([]model.User, 0, limit)
-	for _, person := range people {
-		if strings.TrimSpace(person.ID) == "" {
+func directorySummaries(people []sentinelListUser) []DirectoryUser {
+	summaries := make([]DirectoryUser, 0, len(people))
+	for _, user := range people {
+		if strings.TrimSpace(user.ID) == "" {
 			continue
 		}
-		name := strings.ToLower(strings.TrimSpace(person.FirstName + " " + person.LastName))
-		username := strings.ToLower(person.Username)
-		if !strings.Contains(name, needle) && !strings.Contains(username, needle) {
-			continue
+		name := strings.TrimSpace(user.FirstName + " " + user.LastName)
+		if name == "" {
+			name = user.Username
 		}
-		matches = append(matches, model.User{
-			ID:        person.ID,
-			EntityID:  person.EntityID,
-			Username:  person.Username,
-			FirstName: person.FirstName,
-			LastName:  person.LastName,
-			Email:     person.Email,
-			AvatarURL: person.AvatarURL,
-			Groups:    []string{},
+		summaries = append(summaries, DirectoryUser{
+			ID:        user.ID,
+			Name:      name,
+			Username:  user.Username,
+			AvatarURL: user.AvatarURL,
 		})
-		if len(matches) == limit {
-			break
-		}
 	}
-	return matches
+	sort.Slice(summaries, func(i, j int) bool {
+		return strings.ToLower(summaries[i].Name) < strings.ToLower(summaries[j].Name)
+	})
+	return summaries
 }
 
 func applyCachedDirectoryProfile(user model.User) model.User {

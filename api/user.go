@@ -12,7 +12,7 @@ func SearchUsers(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Sign in to search people"})
 		return
 	}
-	users, err := service.SearchDirectory(GetRequestToken(c), c.Query("q"), 6)
+	users, err := service.ListDirectory(GetRequestToken(c))
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"message": "People search is unavailable right now"})
 		return
