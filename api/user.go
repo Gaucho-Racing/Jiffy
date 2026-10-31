@@ -37,5 +37,6 @@ func GetCurrentUser(c *gin.Context) {
 		return
 	}
 	user.InnerCircle = RequestTokenIsInnerCircle(c)
+	user.Admin = RequestTokenIsAdmin(c)
 	c.JSON(http.StatusOK, user)
 }

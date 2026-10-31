@@ -62,6 +62,7 @@ import {
   applyComponentDepartmentUpdate,
 } from "@/components/ComponentSelectField";
 import { getUser, useUser } from "@/lib/store";
+import { isAdmin } from "@/models/user";
 import { checkCredentials } from "@/lib/auth";
 import React from "react";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
@@ -167,12 +168,7 @@ export default function EditPurchaseRequestPage() {
         );
         const purchaseRequestData = response.data;
         const user = getUser();
-        if (
-          !(
-            purchaseRequestData.user_id === user.id ||
-            user.groups.includes("Admins")
-          )
-        ) {
+        if (!(purchaseRequestData.user_id === user.id || isAdmin(user))) {
           notify.error("You can only edit your own purchase requests");
           navigate("/");
           return;

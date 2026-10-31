@@ -23,6 +23,7 @@ type User struct {
 	InitialRole           string   `json:"initial_role"`
 	Groups                []string `json:"groups"`
 	InnerCircle           bool     `json:"inner_circle"`
+	Admin                 bool     `json:"admin"`
 	UpdatedAt             string   `json:"updated_at"`
 	CreatedAt             string   `json:"created_at"`
 }
@@ -32,16 +33,15 @@ type User struct {
 // and the group is linked to the Jiffy application in Sentinel.
 const InnerCircleGroupID = "grp_01m68qzysqcr5xhtv9wytaqqxv"
 
+// AdminGroupID is the Sentinel Admins group, read from group_ids the same way.
+const AdminGroupID = "grp_01kqs3w6h82xkdnft94vpj7qrm"
+
 func (user User) String() string {
 	return "(" + user.ID + ")" + " " + user.FirstName + " " + user.LastName + " [" + user.Email + "]"
 }
 
 func (user User) HasGroup(group string) bool {
 	return HasGroup(user.Groups, group)
-}
-
-func (user User) IsAdmin() bool {
-	return user.HasGroup("Admins")
 }
 
 func (user User) IsOfficer() bool {
@@ -67,7 +67,7 @@ func IsInnerCircle(groupIDs []string) bool {
 	return HasGroup(groupIDs, InnerCircleGroupID)
 }
 
-// IsAdminGroup reports whether groups includes Admins.
-func IsAdminGroup(groups []string) bool {
-	return HasGroup(groups, "Admins")
+// IsAdmin reports whether groupIDs includes the Admins Sentinel group.
+func IsAdmin(groupIDs []string) bool {
+	return HasGroup(groupIDs, AdminGroupID)
 }

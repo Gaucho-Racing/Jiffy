@@ -234,7 +234,7 @@ func GetRequestTokenGroupIDs(c *gin.Context) []string {
 }
 
 func RequestTokenIsAdmin(c *gin.Context) bool {
-	return model.IsAdminGroup(GetRequestTokenGroupNames(c))
+	return model.IsAdmin(GetRequestTokenGroupIDs(c))
 }
 
 func GetRequestTokenGroupNames(c *gin.Context) []string {
