@@ -110,10 +110,12 @@ export default function ApproverGroupsEditPage() {
     fetchData();
   }, []);
 
-  const departmentOptions: Option[] = departments.map((d) => ({
-    value: d.id,
-    label: d.name,
-  }));
+  const departmentOptions: Option[] = departments
+    .filter((d) => d.active || selectedDepartmentIds.includes(d.id))
+    .map((d) => ({
+      value: d.id,
+      label: d.active ? d.name : `${d.name} (past season)`,
+    }));
 
   const rememberUser = (user: User) => {
     setUsers((current) =>

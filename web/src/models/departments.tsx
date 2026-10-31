@@ -1,6 +1,7 @@
 export interface Department {
   id: string;
   name: string;
+  active: boolean;
   approvers: DepartmentApprover[];
   budgets: DepartmentBudget[];
   updated_at: Date;

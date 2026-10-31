@@ -9,47 +9,33 @@ import (
 	"github.com/google/uuid"
 )
 
+// currentDepartments are the departments new purchase requests can use this
+// season. Departments not listed stay in the table for past requests but are
+// marked inactive.
+var currentDepartments = []model.Department{
+	{ID: "AER", Name: "Aerodynamics"},
+	{ID: "BUS", Name: "Business"},
+	{ID: "CHE", Name: "Chassis & Ergonomics"},
+	{ID: "DDA", Name: "Driverless / Data Acquisition"},
+	{ID: "DVT", Name: "Drivetrain"},
+	{ID: "ECS", Name: "Electronic Controls"},
+	{ID: "LVH", Name: "LV Power & Harness (Integration)"},
+	{ID: "PWT", Name: "Powertrain"},
+	{ID: "SUS", Name: "Suspension"},
+}
+
 func InitializeDepartments() {
-	CreateDepartment(model.Department{
-		ID:   "AER",
-		Name: "Aerodynamics",
-	})
-	CreateDepartment(model.Department{
-		ID:   "BUS",
-		Name: "Business",
-	})
-	CreateDepartment(model.Department{
-		ID:   "CHS",
-		Name: "Chassis",
-	})
-	CreateDepartment(model.Department{
-		ID:   "DAT",
-		Name: "Data",
-	})
-	CreateDepartment(model.Department{
-		ID:   "DVT",
-		Name: "Drivetrain",
-	})
-	CreateDepartment(model.Department{
-		ID:   "FRM",
-		Name: "Firmware",
-	})
-	CreateDepartment(model.Department{
-		ID:   "HVT",
-		Name: "High Voltage",
-	})
-	CreateDepartment(model.Department{
-		ID:   "LVT",
-		Name: "Low Voltage",
-	})
-	CreateDepartment(model.Department{
-		ID:   "SUS",
-		Name: "Suspension",
-	})
-	CreateDepartment(model.Department{
-		ID:   "SYS",
-		Name: "Systems",
-	})
+	ids := make([]string, 0, len(currentDepartments))
+	for _, department := range currentDepartments {
+		department.Active = true
+		if _, err := CreateDepartment(department); err != nil {
+			utils.SugarLogger.Errorf("Error creating department %s: %v", department.ID, err)
+		}
+		ids = append(ids, department.ID)
+	}
+	if err := database.DB.Exec("UPDATE department SET active = (id IN ?)", ids).Error; err != nil {
+		utils.SugarLogger.Errorf("Error marking inactive departments: %v", err)
+	}
 }
 
 func GetAllDepartments() ([]model.Department, error) {

@@ -558,14 +558,21 @@ export default function EditPurchaseRequestPage() {
                             <SelectValue placeholder="Select a department" />
                           </SelectTrigger>
                           <SelectContent>
-                            {departments.map((department) => (
-                              <SelectItem
-                                key={department.id}
-                                value={department.id}
-                              >
-                                {department.name}
-                              </SelectItem>
-                            ))}
+                            {departments
+                              .filter(
+                                (department) =>
+                                  department.active ||
+                                  department.id ===
+                                    purchaseRequest.department_id,
+                              )
+                              .map((department) => (
+                                <SelectItem
+                                  key={department.id}
+                                  value={department.id}
+                                >
+                                  {department.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>

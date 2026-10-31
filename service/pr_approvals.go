@@ -133,6 +133,10 @@ func CreateInitialApprovals(prID int) ([]model.PurchaseRequestApproval, error) {
 		}
 	}
 
+	if len(initialApprovals) == 0 {
+		utils.SugarLogger.Infof("No approver groups apply to PR %d (department %s)", prID, pr.DepartmentID)
+		return []model.PurchaseRequestApproval{}, nil
+	}
 	if err := database.DB.Create(&initialApprovals).Error; err != nil {
 		utils.SugarLogger.Errorf("Error creating initial approvals for PR %d: %v", prID, err)
 		return []model.PurchaseRequestApproval{}, err

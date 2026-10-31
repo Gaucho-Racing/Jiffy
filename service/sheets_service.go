@@ -215,6 +215,9 @@ func PopulateGR26PurchaseRequestsSheet() {
 	// Populate Sheets
 	populateSheet("Pending and Rejected", pendingPurchaseRequests)
 	for _, dept := range departments {
+		if !dept.Active && len(departmentPRs[dept.ID]) == 0 {
+			continue
+		}
 		populateSheet(dept.Name, departmentPRs[dept.ID])
 	}
 

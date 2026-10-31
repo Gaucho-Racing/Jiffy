@@ -7,21 +7,6 @@ import (
 	"time"
 )
 
-// purchaseRequestYearBackfillSQL sets year from created_at for rows that
-// predate the column. September 1 Pacific Time starts the next academic year.
-// Zero means unset; a real year is never zero.
-const purchaseRequestYearBackfillSQL = `
-	UPDATE purchase_request
-	SET year = (
-		EXTRACT(YEAR FROM created_at AT TIME ZONE 'America/Los_Angeles')::int
-		- CASE
-			WHEN EXTRACT(MONTH FROM created_at AT TIME ZONE 'America/Los_Angeles')::int >= 9 THEN 0
-			ELSE 1
-		END
-	)
-	WHERE year = 0
-`
-
 // ErrPriorYearReadOnly is returned when a mutation targets a purchase request
 // from a year other than the current one.
 var ErrPriorYearReadOnly = errors.New("purchase requests from prior years are read-only")
@@ -86,9 +71,4 @@ func EnsureCurrentPurchaseRequestYear(prID int) error {
 		return ErrPriorYearReadOnly
 	}
 	return nil
-}
-
-// BackfillPurchaseRequestYears fills year on rows that predate the column.
-func BackfillPurchaseRequestYears() error {
-	return database.DB.Exec(purchaseRequestYearBackfillSQL).Error
 }
