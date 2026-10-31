@@ -14,6 +14,15 @@ import { PurchaseRequest } from "@/models/pr";
 import { DataTable } from "@/components/data-table";
 import { AlertTriangle } from "lucide-react";
 
+function pacificCalendarYear() {
+  return Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      year: "numeric",
+    }).format(new Date()),
+  );
+}
+
 function App() {
   const navigate = useNavigate();
   const currentUser = useUser();
@@ -25,7 +34,20 @@ function App() {
     PurchaseRequest[]
   >([]);
   const [hasLoadedActionRequired, setHasLoadedActionRequired] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(() => pacificCalendarYear());
   const actionRequiredCount = actionRequiredRequests.length;
+  const requestYears = Array.from(
+    new Set(
+      purchaseRequests
+        .map((request) => request.year)
+        .filter((year) => year > 0)
+        .concat(pacificCalendarYear()),
+    ),
+  ).sort((a, b) => b - a);
+  const visibleRequests = purchaseRequests.filter(
+    (request) => (request.year || pacificCalendarYear()) === selectedYear,
+  );
+  const viewingCurrentYear = selectedYear === pacificCalendarYear();
 
   const pulseDurationSeconds =
     actionRequiredCount > 0
@@ -151,7 +173,31 @@ function App() {
                   </h2>
                 </div>
 
-                <DataTable data={purchaseRequests} />
+                <div className="mb-6 flex flex-wrap items-center gap-2">
+                  {requestYears.map((year) => (
+                    <button
+                      key={year}
+                      type="button"
+                      onClick={() => setSelectedYear(year)}
+                      className={`rounded-md border px-3 py-1 text-sm ${
+                        year === selectedYear
+                          ? "border-white bg-white text-black"
+                          : "border-neutral-700 text-neutral-300"
+                      }`}
+                    >
+                      {year}
+                      {year === pacificCalendarYear() ? " (current)" : ""}
+                    </button>
+                  ))}
+                </div>
+                {!viewingCurrentYear && (
+                  <p className="mb-6 text-sm text-neutral-400">
+                    {selectedYear} purchase requests are read-only. This
+                    year&apos;s requests stay editable.
+                  </p>
+                )}
+
+                <DataTable data={visibleRequests} />
               </>
             )}
           </div>

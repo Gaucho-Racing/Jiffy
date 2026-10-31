@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"jiffy/config"
 	"jiffy/model"
 	"jiffy/service"
@@ -149,6 +150,14 @@ func claimStringSliceFirst(claims map[string]interface{}, key string) string {
 		return ""
 	}
 	return groups[0]
+}
+
+func writeMutationError(c *gin.Context, err error, fallback int) {
+	status := fallback
+	if errors.Is(err, service.ErrPriorYearReadOnly) {
+		status = http.StatusForbidden
+	}
+	c.JSON(status, gin.H{"message": err.Error(), "error": err.Error()})
 }
 
 func UnauthorizedPanicHandler() gin.HandlerFunc {

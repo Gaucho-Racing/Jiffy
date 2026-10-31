@@ -43,7 +43,7 @@ func CreatePurchaseRequest(c *gin.Context) {
 	}
 	updatedPR, err := service.CreatePurchaseRequest(pr, GetRequestUserID(c), GetRequestToken(c))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		writeMutationError(c, err, http.StatusInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, updatedPR)
@@ -113,7 +113,7 @@ func UpdatePurchaseRequestFields(c *gin.Context) {
 
 	result, err := service.UpdatePurchaseRequestFields(id, GetRequestUserID(c), GetRequestTokenGroupNames(c), GetRequestToken(c), updates)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		writeMutationError(c, err, http.StatusBadRequest)
 		return
 	}
 
@@ -137,7 +137,7 @@ func UpdatePurchaseRequestStatus(c *gin.Context) {
 	}
 	result, err := service.UpdatePurchaseRequestStatus(id, request.Status, request.Note, GetRequestUserID(c), GetRequestTokenGroupNames(c), GetRequestToken(c))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		writeMutationError(c, err, http.StatusInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -165,7 +165,7 @@ func DeletePurchaseRequest(c *gin.Context) {
 		return
 	}
 	if err := service.DeletePurchaseRequest(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		writeMutationError(c, err, http.StatusInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Purchase request deleted successfully"})

@@ -293,6 +293,20 @@ func GetCurrentUser(accessToken string, userID string) (model.User, error) {
 	if user.Groups == nil {
 		user.Groups = []string{}
 	}
+	storeSentinelUser(sentinelDirectoryUser{
+		ID:        user.ID,
+		EntityID:  user.EntityID,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		AvatarURL: user.AvatarURL,
+	})
+	if strings.TrimSpace(user.AvatarURL) == "" {
+		filled := map[string]model.User{user.ID: user}
+		enrichAvatars(filled)
+		user.AvatarURL = filled[user.ID].AvatarURL
+	}
 	return user, nil
 }
 
@@ -314,4 +328,107 @@ func parseSentinelError(statusCode int, body []byte) error {
 
 func isSentinelUserID(id string) bool {
 	return strings.HasPrefix(id, "usr_")
+}
+
+func sentinelServiceToken() string {
+	if token := strings.TrimSpace(config.Sentinel.Token); token != "" {
+		return token
+	}
+	return strings.TrimSpace(config.Sentinel.SAToken)
+}
+
+func sentinelGet(path string, out any) error {
+	token := sentinelServiceToken()
+	if token == "" {
+		return fmt.Errorf("SENTINEL_TOKEN is not configured")
+	}
+	req, err := http.NewRequest(http.MethodGet, sentinelBaseURL()+path, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := sentinelHTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return parseSentinelError(resp.StatusCode, body)
+	}
+	if err := json.Unmarshal(body, out); err != nil {
+		return err
+	}
+	return nil
+}
+
+type sentinelDirectoryUser struct {
+	ID        string `json:"id"`
+	EntityID  string `json:"entity_id"`
+	Username  string `json:"username"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatar_url"`
+}
+
+type sentinelEntityProfile struct {
+	ID            string `json:"id"`
+	ExternalAuths []struct {
+		Provider   string         `json:"provider"`
+		ExternalID string         `json:"external_id"`
+		Metadata   map[string]any `json:"metadata"`
+	} `json:"external_auths"`
+}
+
+func fetchSentinelUser(userID string) (sentinelDirectoryUser, error) {
+	if cached, ok := cachedSentinelUser(userID); ok {
+		return cached, nil
+	}
+	var user sentinelDirectoryUser
+	if err := sentinelGet("/api/users/"+url.PathEscape(userID), &user); err != nil {
+		return sentinelDirectoryUser{}, err
+	}
+	storeSentinelUser(user)
+	return user, nil
+}
+
+func fetchSentinelEntity(entityID string) (sentinelEntityProfile, error) {
+	if cached, ok := cachedSentinelEntity(entityID); ok {
+		return cached, nil
+	}
+	var entity sentinelEntityProfile
+	if err := sentinelGet("/api/entities/"+url.PathEscape(entityID), &entity); err != nil {
+		return sentinelEntityProfile{}, err
+	}
+	storeSentinelEntity(entity)
+	return entity, nil
+}
+
+func entityIDForDiscordUser(discordID string) (string, error) {
+	var entity sentinelEntityProfile
+	if err := sentinelGet("/api/core/entity/external/DISCORD/"+url.PathEscape(discordID), &entity); err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(entity.ID) == "" {
+		return "", fmt.Errorf("sentinel entity lookup returned no id")
+	}
+	storeSentinelEntity(entity)
+	return entity.ID, nil
+}
+
+func discordIDForEntity(entityID string) (string, error) {
+	entity, err := fetchSentinelEntity(entityID)
+	if err != nil {
+		return "", err
+	}
+	for _, auth := range entity.ExternalAuths {
+		if auth.Provider == "DISCORD" && strings.TrimSpace(auth.ExternalID) != "" {
+			return auth.ExternalID, nil
+		}
+	}
+	return "", fmt.Errorf("entity %s has no Discord account", entityID)
 }

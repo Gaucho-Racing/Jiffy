@@ -177,6 +177,11 @@ export default function EditPurchaseRequestPage() {
           navigate("/");
           return;
         }
+        if (purchaseRequestData.editable === false) {
+          notify.error("Purchase requests from prior years are read-only");
+          navigate(`/pr/${id}`);
+          return;
+        }
         if (
           purchaseRequestData.status !== "Request Rejected" &&
           purchaseRequestData.status !== "Pending Approval"

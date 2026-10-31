@@ -40,15 +40,3 @@ func DelayedMessageDelete(channelID string, messageID string, delay time.Duratio
 	time.Sleep(delay)
 	_ = Discord.ChannelMessageDelete(channelID, messageID)
 }
-
-func SendDirectMessage(userID string, message string) {
-	channel, err := Discord.UserChannelCreate(userID)
-	if err != nil {
-		utils.SugarLogger.Errorln(err)
-		return
-	}
-	_, err = Discord.ChannelMessageSend(channel.ID, message)
-	if err != nil {
-		utils.SugarLogger.Errorln(err)
-	}
-}

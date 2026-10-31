@@ -23,6 +23,11 @@ func RegisterSheetsCronJob() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			defer func() {
+				if recovered := recover(); recovered != nil {
+					utils.SugarLogger.Errorf("Google Sheets dump panicked: %v", recovered)
+				}
+			}()
 			service.PopulateGR26PurchaseRequestsSheet()
 		}()
 		wg.Wait()

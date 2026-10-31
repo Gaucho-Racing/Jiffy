@@ -55,19 +55,68 @@ func InitializeDepartments() {
 func GetAllDepartments() ([]model.Department, error) {
 	var departments []model.Department
 	err := database.DB.Order("name").Find(&departments).Error
-	for i, department := range departments {
-		departments[i].Approvers = GetApproversForDepartment(department.ID)
-		departments[i].Budgets = GetBudgetsForDepartment(department.ID)
-	}
+	hydrateDepartments(departments)
 	return departments, err
 }
 
 func GetDepartmentByID(id string) (model.Department, error) {
 	var department model.Department
 	err := database.DB.Where("id = ?", id).First(&department).Error
-	department.Approvers = GetApproversForDepartment(department.ID)
-	department.Budgets = GetBudgetsForDepartment(department.ID)
-	return department, err
+	if err != nil {
+		return department, err
+	}
+	loaded := []model.Department{department}
+	hydrateDepartments(loaded)
+	return loaded[0], nil
+}
+
+// hydrateDepartments loads approvers and budgets for the given departments in
+// a fixed number of queries. The approver rules page used to do this once per
+// department and once per approver.
+func hydrateDepartments(departments []model.Department) {
+	if len(departments) == 0 {
+		return
+	}
+	ids := make([]string, 0, len(departments))
+	index := make(map[string]int, len(departments))
+	for i := range departments {
+		ids = append(ids, departments[i].ID)
+		index[departments[i].ID] = i
+		departments[i].Approvers = []model.User{}
+		departments[i].Budgets = []model.DepartmentBudget{}
+	}
+
+	var approverRows []model.DepartmentApprover
+	if err := database.DB.Where("department_id IN ?", ids).Find(&approverRows).Error; err != nil {
+		utils.SugarLogger.Errorf("Error loading department approvers: %v", err)
+	}
+	userIDs := make([]string, 0, len(approverRows))
+	for _, row := range approverRows {
+		userIDs = append(userIDs, row.UserID)
+	}
+	users := GetUsers(userIDs, "")
+	for _, row := range approverRows {
+		i, ok := index[row.DepartmentID]
+		if !ok {
+			continue
+		}
+		if user, found := users[row.UserID]; found {
+			departments[i].Approvers = append(departments[i].Approvers, user)
+		}
+	}
+
+	var budgets []model.DepartmentBudget
+	if err := database.DB.Where("department_id IN ?", ids).Order("date").Find(&budgets).Error; err != nil {
+		utils.SugarLogger.Errorf("Error loading department budgets: %v", err)
+		return
+	}
+	for _, budget := range budgets {
+		i, ok := index[budget.DepartmentID]
+		if !ok {
+			continue
+		}
+		departments[i].Budgets = append(departments[i].Budgets, budget)
+	}
 }
 
 func CreateDepartment(department model.Department) (model.Department, error) {
@@ -88,18 +137,9 @@ func CreateDepartment(department model.Department) (model.Department, error) {
 }
 
 func GetApproversForDepartment(departmentID string) []model.User {
-	var approverIds []string
-	database.DB.Table("department_approver").Where("department_id = ?", departmentID).Pluck("user_id", &approverIds)
-	approvers := make([]model.User, 0)
-	for _, approverId := range approverIds {
-		user, err := GetUser(approverId, "")
-		if err != nil {
-			utils.SugarLogger.Errorln("Error getting approver with id: " + approverId + " for department: " + departmentID)
-		} else {
-			approvers = append(approvers, user)
-		}
-	}
-	return approvers
+	loaded := []model.Department{{ID: departmentID}}
+	hydrateDepartments(loaded)
+	return loaded[0].Approvers
 }
 
 func AddApproverToDepartment(departmentID string, approverID string) error {

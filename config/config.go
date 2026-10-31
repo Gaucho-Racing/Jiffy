@@ -52,3 +52,7 @@ var S3 = struct {
 var DriveServiceAccount = os.Getenv("DRIVE_SERVICE_ACCOUNT")
 var GR26PurchaseRequestsSheetID = "1ZLmZxU0ZGiXS--56xRe0yNJlGU9n3NGLopQwtf0JLyw"
 var SheetsCron = os.Getenv("SHEETS_CRON")
+
+// NotifyURL is the Notify API base, including the /api prefix.
+// Empty outside production unless set; production defaults in the Notify client.
+var NotifyURL = os.Getenv("NOTIFY_URL")

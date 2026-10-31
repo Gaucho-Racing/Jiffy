@@ -119,6 +119,8 @@ export interface PurchaseRequestNote {
 
 export interface PurchaseRequest {
   id: number;
+  year: number;
+  editable: boolean;
   department_id: string;
   component: string;
   user_id: string;
@@ -174,6 +176,8 @@ export const initPurchaseRequestItem: PurchaseRequestItem = {
 
 export const initPurchaseRequest: PurchaseRequest = {
   id: 0,
+  year: 0,
+  editable: true,
   department_id: "",
   component: "",
   user_id: "",

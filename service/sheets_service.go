@@ -7,8 +7,6 @@ import (
 	"jiffy/config"
 	"jiffy/model"
 	"jiffy/utils"
-	"log"
-
 	"strconv"
 
 	"golang.org/x/oauth2/google"
@@ -28,22 +26,31 @@ func InitializeDrive() {
 	ctx := context.Background()
 	decoded, err := base64.StdEncoding.DecodeString(config.DriveServiceAccount)
 	if err != nil {
-		utils.SugarLogger.Fatalln("Error decoding service account: %v\n", err)
+		utils.SugarLogger.Errorf("Error decoding service account; Google Sheets disabled: %v", err)
+		return
 	}
-	creds, err := google.CredentialsFromJSON(ctx, []byte(decoded), drive.DriveScope)
+	// The Sheets API rejects a token that only has the Drive scope. Request
+	// both so a service account shared on the workbook can read and write it.
+	creds, err := google.CredentialsFromJSON(ctx, decoded, sheets.SpreadsheetsScope, drive.DriveScope)
 	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
+		utils.SugarLogger.Errorf("Unable to parse Drive service account; Google Sheets disabled: %v", err)
+		return
 	}
 
 	srv, err := sheets.NewService(ctx, option.WithCredentials(creds))
 	if err != nil {
-		log.Fatalf("Unable to create Sheets service: %v", err)
+		utils.SugarLogger.Errorf("Unable to create Sheets service; Google Sheets disabled: %v", err)
+		return
 	}
 	SheetClient = srv
 	utils.SugarLogger.Infoln("Google Sheets service initialized")
 }
 
 func PopulateGR26PurchaseRequestsSheet() {
+	if SheetClient == nil {
+		utils.SugarLogger.Errorln("Google Sheets client is not initialized; skipping purchase request dump")
+		return
+	}
 	// Helper function to clear and populate a sheet
 	populateSheet := func(sheetName string, purchaseRequests []model.PurchaseRequest) {
 		// Get sheet ID by name
@@ -75,7 +82,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 							SheetId:          int64(sheetId),
 							StartRowIndex:    5,  // B6 starts at index 5
 							StartColumnIndex: 1,  // B column
-							EndColumnIndex:   22, // W column
+							EndColumnIndex:   23, // exclusive; clears through column W
 						},
 						Fields: "userEnteredValue",
 					},
@@ -88,10 +95,17 @@ func PopulateGR26PurchaseRequestsSheet() {
 			utils.SugarLogger.Errorf("Unable to clear data from sheet %s: %v", sheetName, err)
 			return
 		}
+		writable := make([]model.PurchaseRequest, 0, len(purchaseRequests))
 		totalNumItems := 0
 		for _, purchaseRequest := range purchaseRequests {
+			if len(purchaseRequest.Items) == 0 {
+				utils.SugarLogger.Warnf("Skipping purchase request %d in sheet %s because it has no items", purchaseRequest.ID, sheetName)
+				continue
+			}
+			writable = append(writable, purchaseRequest)
 			totalNumItems += len(purchaseRequest.Items)
 		}
+		purchaseRequests = writable
 		// Prepare values
 		itemIndex := 0
 		values := make([][]interface{}, totalNumItems)
@@ -150,6 +164,13 @@ func PopulateGR26PurchaseRequestsSheet() {
 			itemIndex += numItems
 		}
 
+		// An empty Values.Update is rejected by the Sheets API. The clear above
+		// already removed previous rows.
+		if len(values) == 0 {
+			utils.SugarLogger.Infof("Cleared %s sheet; no purchase request items to write", sheetName)
+			return
+		}
+
 		// Write data (can still use A1 notation for updates as it's more convenient)
 		writeRange := fmt.Sprintf("'%s'!B6:W", sheetName)
 		writeRequest := &sheets.ValueRange{
@@ -179,7 +200,11 @@ func PopulateGR26PurchaseRequestsSheet() {
 		allPurchaseRequests[i], allPurchaseRequests[j] = allPurchaseRequests[j], allPurchaseRequests[i]
 	}
 
+	currentYear := CurrentPurchaseRequestYear()
 	for _, purchaseRequest := range allPurchaseRequests {
+		if EffectivePurchaseRequestYear(purchaseRequest) != currentYear {
+			continue
+		}
 		if purchaseRequest.Status == model.PurchaseRequestPending || purchaseRequest.Status == model.PurchaseRequestRejected {
 			pendingPurchaseRequests = append(pendingPurchaseRequests, purchaseRequest)
 		} else {

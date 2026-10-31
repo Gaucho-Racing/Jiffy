@@ -47,6 +47,15 @@ func InitializeDB() error {
 		)
 		utils.SugarLogger.Infoln("AutoMigration complete")
 		DB = db
+		// Year is the Pacific Time calendar year of created_at. Zero means the
+		// column was just added; leave any later explicit year alone.
+		if err := db.Exec(`
+			UPDATE purchase_request
+			SET year = EXTRACT(YEAR FROM created_at AT TIME ZONE 'America/Los_Angeles')::int
+			WHERE year = 0
+		`).Error; err != nil {
+			utils.SugarLogger.Errorf("purchase request year backfill failed: %v", err)
+		}
 	}
 	return nil
 }

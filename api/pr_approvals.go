@@ -21,7 +21,7 @@ func EditApproval(c *gin.Context) {
 	}
 	result, err := service.EditApproval(approvalID, model.ApprovalStatus(request.Status), request.Note, GetRequestUserID(c), GetRequestToken(c))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		writeMutationError(c, err, http.StatusBadRequest)
 		return
 	}
 	c.JSON(http.StatusOK, result)

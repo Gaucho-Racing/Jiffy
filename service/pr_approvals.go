@@ -35,6 +35,9 @@ func EditApproval(approvalID string, status model.ApprovalStatus, note string, u
 	if !isApprover(approval.ApproverGroupID, userID) {
 		return model.PurchaseRequestApproval{}, errors.New("you are not an approver for this type of approval")
 	}
+	if err := EnsureCurrentPurchaseRequestYear(approval.PurchaseRequestID); err != nil {
+		return model.PurchaseRequestApproval{}, err
+	}
 
 	approval.UserID = userID
 	approval.User, _ = GetUser(userID, accessToken)
