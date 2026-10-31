@@ -143,12 +143,6 @@ func ValidateToken(token string) (map[string]interface{}, error) {
 	return claims, nil
 }
 
-// GetAllUsers is paused — Sentinel app tokens cannot list the directory.
-// Callers that depended on pickers should stay disabled.
-func GetAllUsers() ([]model.User, error) {
-	return []model.User{}, nil
-}
-
 // GetUser resolves display info for a stored user id from local sources only
 // (unmigrated_users + user_id_migration). Live Sentinel profile reads stay on
 // GetCurrentUser / @me — calling Sentinel per nested user is too slow and
@@ -247,6 +241,9 @@ func GetUsers(ids []string, accessToken string) map[string]model.User {
 		}
 	}
 
+	for id, user := range out {
+		out[id] = applyCachedDirectoryProfile(user)
+	}
 	return out
 }
 
@@ -342,6 +339,13 @@ func sentinelGet(path string, out any) error {
 	if token == "" {
 		return fmt.Errorf("SENTINEL_TOKEN is not configured")
 	}
+	return sentinelGetWithToken(token, path, out)
+}
+
+func sentinelGetWithToken(token string, path string, out any) error {
+	if strings.TrimSpace(token) == "" {
+		return fmt.Errorf("access token is required")
+	}
 	req, err := http.NewRequest(http.MethodGet, sentinelBaseURL()+path, nil)
 	if err != nil {
 		return err
@@ -352,7 +356,7 @@ func sentinelGet(path string, out any) error {
 		return err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
 	if err != nil {
 		return err
 	}

@@ -8,5 +8,8 @@ import (
 )
 
 func Ping(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "Jiffy v" + config.Version + " is online!"})
+	c.JSON(http.StatusOK, gin.H{
+		"message":                     "Jiffy v" + config.Version + " is online!",
+		"purchase_requests_sheet_url": config.PurchaseRequestsSheetURL(),
+	})
 }

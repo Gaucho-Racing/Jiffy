@@ -99,6 +99,10 @@ func GetPurchaseRequestByID(id int, userID string, viewerGroups []string, access
 		ids = append(ids, pr.Attachments[i].UserID)
 	}
 	users := GetUsers(ids, accessToken)
+	if usersNeedDirectory(users) {
+		warmDirectory(accessToken)
+		users = GetUsers(ids, accessToken)
+	}
 	enrichAvatars(users)
 
 	if user, ok := users[pr.UserID]; ok {

@@ -54,7 +54,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 	// Helper function to clear and populate a sheet
 	populateSheet := func(sheetName string, purchaseRequests []model.PurchaseRequest) {
 		// Get sheet ID by name
-		spreadsheet, err := SheetClient.Spreadsheets.Get(config.GR26PurchaseRequestsSheetID).Do()
+		spreadsheet, err := SheetClient.Spreadsheets.Get(config.PurchaseRequestsSheetID).Do()
 		if err != nil {
 			utils.SugarLogger.Errorf("Unable to get spreadsheet: %v", err)
 			return
@@ -90,7 +90,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 			},
 		}
 
-		_, err = SheetClient.Spreadsheets.BatchUpdate(config.GR26PurchaseRequestsSheetID, clearRequest).Do()
+		_, err = SheetClient.Spreadsheets.BatchUpdate(config.PurchaseRequestsSheetID, clearRequest).Do()
 		if err != nil {
 			utils.SugarLogger.Errorf("Unable to clear data from sheet %s: %v", sheetName, err)
 			return
@@ -176,7 +176,7 @@ func PopulateGR26PurchaseRequestsSheet() {
 		writeRequest := &sheets.ValueRange{
 			Values: values,
 		}
-		_, err = SheetClient.Spreadsheets.Values.Update(config.GR26PurchaseRequestsSheetID, writeRange, writeRequest).
+		_, err = SheetClient.Spreadsheets.Values.Update(config.PurchaseRequestsSheetID, writeRange, writeRequest).
 			ValueInputOption("USER_ENTERED").
 			Do()
 		if err != nil {

@@ -39,6 +39,8 @@ import axios from "axios";
 import { JIFFY_API_URL } from "@/consts/config";
 import { notify } from "@/lib/notify";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
+import { UserSearch } from "@/components/UserSearch";
+import { User } from "@/models/user";
 
 interface RequestDetailsTabProps {
   purchaseRequest: Partial<PurchaseRequest>;
@@ -46,6 +48,7 @@ interface RequestDetailsTabProps {
   isLoading: boolean;
   onUpdate?: () => void;
   canAdvance?: boolean;
+  readOnly?: boolean;
 }
 
 export function RequestDetailsTab({
@@ -54,6 +57,7 @@ export function RequestDetailsTab({
   isLoading,
   onUpdate,
   canAdvance = false,
+  readOnly = false,
 }: RequestDetailsTabProps) {
   const currentUser = useUser();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -355,11 +359,18 @@ export function RequestDetailsTab({
           <DialogHeader>
             <DialogTitle>Set Reimburse To</DialogTitle>
             <DialogDescription>
-              User directory search is paused under the new Sentinel auth model.
-              You can still set yourself as the reimbursement recipient.
+              Search by name or username, or set yourself as the recipient.
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-3 py-4">
+            <UserSearch
+              excludeIds={
+                purchaseRequest.reimburse_to_user_id
+                  ? [purchaseRequest.reimburse_to_user_id]
+                  : []
+              }
+              onSelect={(user: User) => submitReimburseUser(user.id)}
+            />
             <Button
               variant="outline"
               onClick={() => {
@@ -422,13 +433,15 @@ export function RequestDetailsTab({
                   <p className="pb-2 font-medium text-gray-400">
                     Reimburse To - (Who Paid?)
                   </p>
-                  {!purchaseRequest.reimburse_to_user?.first_name && (
-                    <Pencil
-                      className="h-6 w-6 cursor-pointer text-green-400 hover:text-green-600"
-                      onClick={() => setReimburseChoiceOpen(true)}
-                    />
-                  )}
-                  {purchaseRequest.reimburse_to_user?.first_name &&
+                  {!readOnly &&
+                    !purchaseRequest.reimburse_to_user?.first_name && (
+                      <Pencil
+                        className="h-6 w-6 cursor-pointer text-green-400 hover:text-green-600"
+                        onClick={() => setReimburseChoiceOpen(true)}
+                      />
+                    )}
+                  {!readOnly &&
+                    purchaseRequest.reimburse_to_user?.first_name &&
                     purchaseRequest.status !== "Reimbursed" && (
                       <Pencil
                         className="h-4 w-4 cursor-pointer text-gray-600 hover:text-white"

@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { JIFFY_API_URL } from "@/consts/config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +20,25 @@ interface HeaderProps {
   style?: React.CSSProperties;
 }
 
+const fallbackSheetURL =
+  "https://docs.google.com/spreadsheets/d/1ZLmZxU0ZGiXS--56xRe0yNJlGU9n3NGLopQwtf0JLyw/";
+
 const Header = (props: HeaderProps) => {
   const navigate = useNavigate();
   const currentUser = useUser();
+  const [sheetURL, setSheetURL] = useState(fallbackSheetURL);
+
+  useEffect(() => {
+    axios
+      .get(`${JIFFY_API_URL}/ping`)
+      .then((response) => {
+        const url = response.data?.purchase_requests_sheet_url;
+        if (typeof url === "string" && url !== "") {
+          setSheetURL(url);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const isInnerCircle = () => {
     return (
@@ -49,10 +68,7 @@ const Header = (props: HeaderProps) => {
               Manage Approver Rules
             </Button>
           )}
-          <a
-            href="https://docs.google.com/spreadsheets/d/1ZLmZxU0ZGiXS--56xRe0yNJlGU9n3NGLopQwtf0JLyw/"
-            target="_blank"
-          >
+          <a href={sheetURL} target="_blank">
             <Button variant="outline">
               <img src={sheetsLogo} alt="Google Sheets" className="mr-3 h-5" />
               View in Google Sheets

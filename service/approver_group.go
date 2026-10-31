@@ -99,7 +99,12 @@ func GetApproverGroup(groupID string, accessToken string) (model.ApproverGroup, 
 		return model.ApproverGroup{}, err
 	}
 	approverGroup.Departments = GetDepartmentsForApproverGroup(groupID)
-	approverGroup.Approvers = GetApproversForApproverGroup(groupID, accessToken)
+	approvers := GetApproversForApproverGroup(groupID, accessToken)
+	if usersNeedDirectory(usersByID(approvers)) {
+		warmDirectory(accessToken)
+		approvers = GetApproversForApproverGroup(groupID, accessToken)
+	}
+	approverGroup.Approvers = approvers
 	return approverGroup, nil
 }
 

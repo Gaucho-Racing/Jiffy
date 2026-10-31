@@ -27,6 +27,7 @@ import { RequestDetailsTab } from "@/pages/PurchaseRequestDetailsPageTabs/Reques
 import { ApprovalsStatusTab } from "@/pages/PurchaseRequestDetailsPageTabs/ApprovalsStatusTab";
 import { AttachmentsTab } from "@/pages/PurchaseRequestDetailsPageTabs/AttachmentsTab";
 import { NotesTab } from "@/pages/PurchaseRequestDetailsPageTabs/NotesTab";
+import { requestYearLabel } from "@/lib/academic-year";
 
 export default function PurchaseRequestDetailsPage() {
   const navigate = useNavigate();
@@ -366,8 +367,9 @@ export default function PurchaseRequestDetailsPage() {
                 <Card className="border-neutral-700">
                   <CardContent className="pt-6">
                     <p className="text-sm text-neutral-300">
-                      This {purchaseRequest.year} purchase request is read-only.
-                      This year&apos;s requests stay editable.
+                      This {requestYearLabel(purchaseRequest.year)} purchase
+                      request is read-only. This year&apos;s requests stay
+                      editable.
                     </p>
                   </CardContent>
                 </Card>
@@ -415,6 +417,7 @@ export default function PurchaseRequestDetailsPage() {
                     isLoading={isLoading}
                     onUpdate={fetchPurchaseRequest}
                     canAdvance={canAdvance() && !readOnly}
+                    readOnly={readOnly}
                   />
                 </TabsContent>
                 <TabsContent value="approvals" className="min-h-[600px]">

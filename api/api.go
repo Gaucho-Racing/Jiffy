@@ -34,7 +34,7 @@ func SetupRouter() *gin.Engine {
 func InitializeRoutes(router *gin.Engine) {
 	router.GET("/ping", Ping)
 	router.POST("/auth/login", Login)
-	router.GET("/users", GetAllUsers)
+	router.GET("/users", SearchUsers)
 	router.GET("/users/@me", GetCurrentUser)
 	router.GET("/users/:userID", GetUser)
 	router.GET("/purchase-requests", GetAllPurchaseRequests)

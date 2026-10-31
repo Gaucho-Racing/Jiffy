@@ -7,6 +7,21 @@ import (
 	"time"
 )
 
+// purchaseRequestYearBackfillSQL sets year from created_at for rows that
+// predate the column. September 1 Pacific Time starts the next academic year.
+// Zero means unset; a real year is never zero.
+const purchaseRequestYearBackfillSQL = `
+	UPDATE purchase_request
+	SET year = (
+		EXTRACT(YEAR FROM created_at AT TIME ZONE 'America/Los_Angeles')::int
+		- CASE
+			WHEN EXTRACT(MONTH FROM created_at AT TIME ZONE 'America/Los_Angeles')::int >= 9 THEN 0
+			ELSE 1
+		END
+	)
+	WHERE year = 0
+`
+
 // ErrPriorYearReadOnly is returned when a mutation targets a purchase request
 // from a year other than the current one.
 var ErrPriorYearReadOnly = errors.New("purchase requests from prior years are read-only")
@@ -19,19 +34,28 @@ var purchaseRequestLocation = func() *time.Location {
 	return loc
 }()
 
-// PurchaseRequestYear is the calendar year of t in Pacific Time, which is how
-// Jiffy separates seasons. Records are stored with created_at; the year column
-// is that timestamp's year and is not a separate school-year calendar.
+// PurchaseRequestYear is the academic year of t in Pacific Time. A new year
+// starts every September 1. The stored number is the September it started, so
+// October 2026 and May 2027 are both 2026 (the 2026–27 season).
 func PurchaseRequestYear(t time.Time) int {
 	if t.IsZero() {
 		return CurrentPurchaseRequestYear()
 	}
-	return t.In(purchaseRequestLocation).Year()
+	return academicYear(t)
 }
 
 // CurrentPurchaseRequestYear is the year new purchase requests belong to.
 func CurrentPurchaseRequestYear() int {
-	return time.Now().In(purchaseRequestLocation).Year()
+	return academicYear(time.Now())
+}
+
+func academicYear(t time.Time) int {
+	local := t.In(purchaseRequestLocation)
+	year := local.Year()
+	if local.Month() < time.September {
+		year--
+	}
+	return year
 }
 
 // EffectivePurchaseRequestYear uses the stored year, or created_at when a row
@@ -64,12 +88,7 @@ func EnsureCurrentPurchaseRequestYear(prID int) error {
 	return nil
 }
 
-// BackfillPurchaseRequestYears sets year from created_at for rows that
-// predate the column. Zero means unset; a real year is never zero.
+// BackfillPurchaseRequestYears fills year on rows that predate the column.
 func BackfillPurchaseRequestYears() error {
-	return database.DB.Exec(`
-		UPDATE purchase_request
-		SET year = EXTRACT(YEAR FROM created_at AT TIME ZONE 'America/Los_Angeles')::int
-		WHERE year = 0
-	`).Error
+	return database.DB.Exec(purchaseRequestYearBackfillSQL).Error
 }

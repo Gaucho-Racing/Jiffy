@@ -13,15 +13,7 @@ import { notify } from "@/lib/notify";
 import { PurchaseRequest } from "@/models/pr";
 import { DataTable } from "@/components/data-table";
 import { AlertTriangle } from "lucide-react";
-
-function pacificCalendarYear() {
-  return Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Los_Angeles",
-      year: "numeric",
-    }).format(new Date()),
-  );
-}
+import { academicYearStart, requestYearLabel } from "@/lib/academic-year";
 
 function App() {
   const navigate = useNavigate();
@@ -34,20 +26,20 @@ function App() {
     PurchaseRequest[]
   >([]);
   const [hasLoadedActionRequired, setHasLoadedActionRequired] = useState(false);
-  const [selectedYear, setSelectedYear] = useState(() => pacificCalendarYear());
+  const [selectedYear, setSelectedYear] = useState(() => academicYearStart());
   const actionRequiredCount = actionRequiredRequests.length;
   const requestYears = Array.from(
     new Set(
       purchaseRequests
         .map((request) => request.year)
         .filter((year) => year > 0)
-        .concat(pacificCalendarYear()),
+        .concat(academicYearStart()),
     ),
   ).sort((a, b) => b - a);
   const visibleRequests = purchaseRequests.filter(
-    (request) => (request.year || pacificCalendarYear()) === selectedYear,
+    (request) => (request.year || academicYearStart()) === selectedYear,
   );
-  const viewingCurrentYear = selectedYear === pacificCalendarYear();
+  const viewingCurrentYear = selectedYear === academicYearStart();
 
   const pulseDurationSeconds =
     actionRequiredCount > 0
@@ -185,8 +177,8 @@ function App() {
                           : "border-neutral-700 text-neutral-300"
                       }`}
                     >
-                      {year}
-                      {year === pacificCalendarYear() ? " (current)" : ""}
+                      {requestYearLabel(year)}
+                      {year === academicYearStart() ? " (current)" : ""}
                     </button>
                   ))}
                 </div>
