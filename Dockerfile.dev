@@ -1,7 +1,8 @@
 FROM golang:1.24-alpine
 
 RUN apk --no-cache add ca-certificates git tzdata
-RUN go install github.com/air-verse/air@latest
+# v1.63+ needs Go 1.25. This image is Go 1.24, matching go.mod.
+RUN go install github.com/air-verse/air@v1.62.0
 
 WORKDIR /app
 
