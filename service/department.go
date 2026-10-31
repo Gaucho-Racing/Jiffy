@@ -19,10 +19,14 @@ var currentDepartments = []model.Department{
 	{ID: "DDA", Name: "Driverless / Data Acquisition"},
 	{ID: "DVT", Name: "Drivetrain"},
 	{ID: "ECS", Name: "Electronic Controls"},
-	{ID: "LVH", Name: "LV Power & Harness (Integration)"},
+	{ID: "EPH", Name: "EP&H / Integration"},
 	{ID: "PWT", Name: "Powertrain"},
 	{ID: "SUS", Name: "Suspension"},
 }
+
+// unusedDepartmentIDs were seeded briefly and replaced before any request or
+// approver group used them. They are deleted only while still unreferenced.
+var unusedDepartmentIDs = []string{"LVH"}
 
 func InitializeDepartments() {
 	ids := make([]string, 0, len(currentDepartments))
@@ -35,6 +39,16 @@ func InitializeDepartments() {
 	}
 	if err := database.DB.Exec("UPDATE department SET active = (id IN ?)", ids).Error; err != nil {
 		utils.SugarLogger.Errorf("Error marking inactive departments: %v", err)
+	}
+	if err := database.DB.Exec(`
+		DELETE FROM department
+		WHERE id IN ?
+			AND NOT EXISTS (SELECT 1 FROM purchase_request WHERE department_id = department.id)
+			AND NOT EXISTS (SELECT 1 FROM approver_group_department WHERE department_id = department.id)
+			AND NOT EXISTS (SELECT 1 FROM department_approver WHERE department_id = department.id)
+			AND NOT EXISTS (SELECT 1 FROM department_budget WHERE department_id = department.id)
+	`, unusedDepartmentIDs).Error; err != nil {
+		utils.SugarLogger.Errorf("Error removing unused departments: %v", err)
 	}
 }
 
